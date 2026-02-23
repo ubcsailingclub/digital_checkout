@@ -1,6 +1,14 @@
 package com.ubcsc.checkout.ui.member
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.plus
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,33 +18,46 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsBoat
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ubcsc.checkout.R
-import com.ubcsc.checkout.ui.theme.CoralRed
+import com.ubcsc.checkout.ui.theme.ActiveAmber
+import com.ubcsc.checkout.ui.theme.CardBlue
+import com.ubcsc.checkout.ui.theme.DeepOcean
 import com.ubcsc.checkout.ui.theme.DigitalCheckoutTheme
-import com.ubcsc.checkout.ui.theme.GoldYellow
-import com.ubcsc.checkout.ui.theme.NavyBlue
+import com.ubcsc.checkout.ui.theme.DividerColor
+import com.ubcsc.checkout.ui.theme.TealLight
+import com.ubcsc.checkout.ui.theme.TealMid
+import com.ubcsc.checkout.ui.theme.TextMuted
+import com.ubcsc.checkout.ui.theme.TextSecondary
+import com.ubcsc.checkout.ui.theme.UnavailableRed
 import com.ubcsc.checkout.viewmodel.ActiveCheckout
 import com.ubcsc.checkout.viewmodel.CheckoutViewModel
 import com.ubcsc.checkout.viewmodel.Member
@@ -44,22 +65,19 @@ import kotlinx.coroutines.delay
 
 private const val INACTIVITY_TIMEOUT_MS = 30_000L
 
+private fun enterTransition() = fadeIn(tween(300)) + slideInVertically(tween(300)) { it / 4 }
+
 @Composable
-fun MemberScreen(
-    member: Member,
-    viewModel: CheckoutViewModel
-) {
-    // Auto-return to idle after inactivity
+fun MemberScreen(member: Member, viewModel: CheckoutViewModel) {
     LaunchedEffect(Unit) {
         delay(INACTIVITY_TIMEOUT_MS)
         viewModel.resetToIdle()
     }
-
     MemberContent(
         member = member,
         onCheckout = { viewModel.onCheckoutSelected(member) },
-        onCheckin = { viewModel.onCheckinSelected(member) },
-        onCancel = { viewModel.onCancel() }
+        onCheckin  = { viewModel.onCheckinSelected(member) },
+        onCancel   = { viewModel.onCancel() }
     )
 }
 
@@ -67,150 +85,189 @@ fun MemberScreen(
 private fun MemberContent(
     member: Member,
     onCheckout: () -> Unit,
-    onCheckin: () -> Unit,
-    onCancel: () -> Unit
+    onCheckin:  () -> Unit,
+    onCancel:   () -> Unit
 ) {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DeepOcean),
+        contentAlignment = Alignment.Center
     ) {
-        Column(
+        // Subtle top accent bar
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(48.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .height(4.dp)
+                .background(
+                    Brush.horizontalGradient(listOf(TealMid, TealLight, TealMid))
+                )
+        )
+
+        // Cancel — top right
+        TextButton(
+            onClick = onCancel,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(16.dp)
         ) {
-            // Member info card
-            Card(
-                modifier = Modifier.fillMaxWidth(0.65f),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            Text(
+                stringResource(R.string.cancel_button),
+                color = TextMuted,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
+        AnimatedVisibility(visible = visible, enter = enterTransition()) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(48.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                // Avatar
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(CircleShape)
+                        .background(CardBlue)
+                        .border(2.dp, TealMid, CircleShape),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Person,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(64.dp)
+                        tint = TealLight,
+                        modifier = Modifier.size(44.dp)
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = member.name,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = NavyBlue
-                    )
+                }
 
-                    member.activeCheckout?.let { checkout ->
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = GoldYellow.copy(alpha = 0.15f)),
-                            shape = RoundedCornerShape(8.dp)
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Welcome back",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = TextSecondary,
+                    letterSpacing = 1.sp
+                )
+
+                Text(
+                    text = member.name,
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+
+                // Active checkout badge
+                member.activeCheckout?.let { checkout ->
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50.dp))
+                            .background(ActiveAmber.copy(alpha = 0.15f))
+                            .border(1.dp, ActiveAmber.copy(alpha = 0.4f), RoundedCornerShape(50.dp))
+                            .padding(horizontal = 20.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.DirectionsBoat,
+                            contentDescription = null,
+                            tint = ActiveAmber,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Currently out: ${checkout.craftName}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = ActiveAmber,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(40.dp))
+
+                // Divider
+                Box(
+                    modifier = Modifier
+                        .width(280.dp)
+                        .height(1.dp)
+                        .background(DividerColor)
+                )
+
+                Spacer(modifier = Modifier.height(40.dp))
+
+                // Action buttons
+                Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                    if (member.activeCheckout == null) {
+                        // Checkout button — primary
+                        ElevatedButton(
+                            onClick = onCheckout,
+                            modifier = Modifier
+                                .height(72.dp)
+                                .width(260.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.elevatedButtonColors(
+                                containerColor = TealMid,
+                                contentColor   = Color.White
+                            ),
+                            elevation = ButtonDefaults.elevatedButtonElevation(8.dp)
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.DirectionsBoat,
-                                    contentDescription = null,
-                                    tint = GoldYellow,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = stringResource(R.string.member_active_session, checkout.craftName),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = NavyBlue
-                                )
-                            }
+                            Icon(Icons.Filled.DirectionsBoat, null, Modifier.size(22.dp))
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                stringResource(R.string.member_checkout_action),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    } else {
+                        // Check-in button — accent red
+                        ElevatedButton(
+                            onClick = onCheckin,
+                            modifier = Modifier
+                                .height(72.dp)
+                                .width(260.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.elevatedButtonColors(
+                                containerColor = UnavailableRed,
+                                contentColor   = Color.White
+                            ),
+                            elevation = ButtonDefaults.elevatedButtonElevation(8.dp)
+                        ) {
+                            Icon(Icons.Filled.DirectionsBoat, null, Modifier.size(22.dp))
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                stringResource(R.string.member_checkin_action),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
                     }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // Action buttons
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                if (member.activeCheckout == null) {
-                    Button(
-                        onClick = onCheckout,
-                        modifier = Modifier
-                            .height(72.dp)
-                            .width(240.dp),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(Icons.Filled.DirectionsBoat, contentDescription = null)
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = stringResource(R.string.member_checkout_action),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                } else {
-                    Button(
-                        onClick = onCheckin,
-                        modifier = Modifier
-                            .height(72.dp)
-                            .width(240.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = CoralRed)
-                    ) {
-                        Icon(Icons.Filled.DirectionsBoat, contentDescription = null)
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = stringResource(R.string.member_checkin_action),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                }
-
-                OutlinedButton(
-                    onClick = onCancel,
-                    modifier = Modifier
-                        .height(72.dp)
-                        .width(160.dp),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.cancel_button),
-                        style = MaterialTheme.typography.titleMedium
-                    )
                 }
             }
         }
     }
 }
 
-@Preview(widthDp = 960, heightDp = 600, showBackground = true)
+@Preview(widthDp = 960, heightDp = 600, showBackground = true, backgroundColor = 0xFF0D1B2A)
 @Composable
-private fun MemberScreenPreview() {
+private fun MemberPreviewNoCheckout() {
     DigitalCheckoutTheme {
-        MemberContent(
-            member = Member("1", "Alex Sailor", activeCheckout = null),
-            onCheckout = {}, onCheckin = {}, onCancel = {}
-        )
+        MemberContent(Member("1", "Alex Sailor"), {}, {}, {})
     }
 }
 
-@Preview(widthDp = 960, heightDp = 600, showBackground = true)
+@Preview(widthDp = 960, heightDp = 600, showBackground = true, backgroundColor = 0xFF0D1B2A)
 @Composable
-private fun MemberScreenWithCheckoutPreview() {
+private fun MemberPreviewWithCheckout() {
     DigitalCheckoutTheme {
         MemberContent(
-            member = Member(
-                "1", "Alex Sailor",
-                activeCheckout = ActiveCheckout("s1", "LZ01", "Laser #1")
-            ),
-            onCheckout = {}, onCheckin = {}, onCancel = {}
+            Member("1", "Alex Sailor", ActiveCheckout("s1", "LZ01", "Laser #1")),
+            {}, {}, {}
         )
     }
 }

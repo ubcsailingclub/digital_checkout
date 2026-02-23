@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Compose handles theming; this is only needed by the Activity window background -->
-    <style name="Theme.DigitalCheckout" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Compose owns all theming. This sets the Activity window background
+         to match the dark ocean colour so there's no white flash on launch. -->
+    <style name="Theme.DigitalCheckout" parent="android:Theme.Material.NoTitleBar.Fullscreen">
+        <item name="android:windowBackground">@color/deep_ocean</item>
+        <item name="android:statusBarColor">@color/deep_ocean</item>
+        <item name="android:navigationBarColor">@color/deep_ocean</item>
+    </style>
 </resources>

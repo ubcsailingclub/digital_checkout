@@ -2,31 +2,30 @@ package com.ubcsc.checkout.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 
-private val LightColorScheme = lightColorScheme(
-    primary = OceanBlue,
-    onPrimary = Color.White,
-    primaryContainer = WaveBlue,
-    onPrimaryContainer = Color.White,
-    secondary = NavyBlue,
-    onSecondary = Color.White,
-    background = SailWhite,
-    onBackground = NavyBlue,
-    surface = Color.White,
-    onSurface = NavyBlue,
-    error = CoralRed,
-    onError = Color.White,
+private val DarkColorScheme = darkColorScheme(
+    primary              = TealMid,
+    onPrimary            = White,
+    primaryContainer     = TealDark,
+    onPrimaryContainer   = TealLight,
+    secondary            = TealLight,
+    onSecondary          = DeepOcean,
+    background           = DeepOcean,
+    onBackground         = TextPrimary,
+    surface              = OceanSurface,
+    onSurface            = TextPrimary,
+    surfaceVariant       = CardBlue,
+    onSurfaceVariant     = TextSecondary,
+    outline              = DividerColor,
+    error                = UnavailableRed,
+    onError              = White,
 )
 
 @Composable
-fun DigitalCheckoutTheme(
-    content: @Composable () -> Unit
-) {
+fun DigitalCheckoutTheme(content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme = LightColorScheme,
+        colorScheme = DarkColorScheme,
         content = content
     )
 }
