@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">UBCSC Digital Checkout</string>
+    <string name="idle_title">UBC Sailing Club</string>
+    <string name="idle_subtitle">Tap your membership card to get started</string>
+    <string name="idle_nfc_unavailable">NFC is not available on this device</string>
+    <string name="idle_nfc_disabled">NFC is disabled — enable it in Settings</string>
+    <string name="member_greeting">Welcome, %s</string>
+    <string name="member_checkout_action">Check Out a Boat</string>
+    <string name="member_checkin_action">Return Your Boat</string>
+    <string name="member_active_session">Currently out: %s</string>
+    <string name="craft_select_title">Select a Boat</string>
+    <string name="confirm_checkout_title">Confirm Checkout</string>
+    <string name="confirm_checkin_title">Confirm Return</string>
+    <string name="confirm_button">Confirm</string>
+    <string name="cancel_button">Cancel</string>
+    <string name="result_success_checkout">Enjoy your sail!</string>
+    <string name="result_success_checkin">Boat returned. See you next time!</string>
+    <string name="result_error_title">Something went wrong</string>
+    <string name="result_returning">Returning to home…</string>
+    <string name="unknown_member">Unknown member</string>
+    <string name="available">Available</string>
+    <string name="unavailable">Unavailable</string>
+</resources>

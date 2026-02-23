@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Compose handles theming; this is only needed by the Activity window background -->
+    <style name="Theme.DigitalCheckout" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
