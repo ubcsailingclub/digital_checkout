@@ -3,7 +3,6 @@ package com.ubcsc.checkout.ui.member
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.plus
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -257,7 +256,7 @@ private fun MemberContent(
 @Composable
 private fun MemberPreviewNoCheckout() {
     DigitalCheckoutTheme {
-        MemberContent(Member("1", "Alex Sailor"), {}, {}, {})
+        MemberContent(Member("1", "Alex Sailor", ""), {}, {}, {})
     }
 }
 
@@ -266,7 +265,7 @@ private fun MemberPreviewNoCheckout() {
 private fun MemberPreviewWithCheckout() {
     DigitalCheckoutTheme {
         MemberContent(
-            Member("1", "Alex Sailor", ActiveCheckout("s1", "LZ01", "Laser #1")),
+            Member("1", "Alex Sailor", "", ActiveCheckout(1, "LZ01", "Laser #1")),
             {}, {}, {}
         )
     }

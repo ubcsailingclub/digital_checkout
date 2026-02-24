@@ -18,10 +18,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Nfc
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,6 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ubcsc.checkout.BuildConfig
 import com.ubcsc.checkout.R
 import com.ubcsc.checkout.ui.theme.DeepOcean
 import com.ubcsc.checkout.ui.theme.DigitalCheckoutTheme
@@ -62,11 +67,17 @@ fun IdleScreen(viewModel: CheckoutViewModel) {
         !nfcAdapter.isEnabled -> stringResource(R.string.idle_nfc_disabled)
         else -> null
     }
-    IdleContent(nfcWarning = nfcWarning)
+    IdleContent(
+        nfcWarning  = nfcWarning,
+        onDebugScan = if (BuildConfig.DEBUG) viewModel::onCardScanned else null
+    )
 }
 
 @Composable
-private fun IdleContent(nfcWarning: String?) {
+private fun IdleContent(
+    nfcWarning:  String?,
+    onDebugScan: ((String) -> Unit)? = null
+) {
     // Three ripple rings with staggered offsets
     val infiniteTransition = rememberInfiniteTransition(label = "ripple")
     val rippleDuration = 2400
@@ -181,7 +192,7 @@ private fun IdleContent(nfcWarning: String?) {
                 )
             } else {
                 Text(
-                    text = "Tap your membership card\nto get started",
+                    text = "Tap your Jericho card\nto get started",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Light,
                     color = Color.White.copy(alpha = 0.92f),
@@ -191,7 +202,7 @@ private fun IdleContent(nfcWarning: String?) {
             }
         }
 
-        // Clock in bottom-right corner
+        // Clock — bottom-right
         Text(
             text = timeText,
             style = MaterialTheme.typography.bodyMedium,
@@ -200,6 +211,51 @@ private fun IdleContent(nfcWarning: String?) {
                 .align(Alignment.BottomEnd)
                 .padding(24.dp)
         )
+
+        // DEBUG ONLY — simulate card scan without NFC hardware
+        if (onDebugScan != null) {
+            var debugUid by remember { mutableStateOf("") }
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "DEV",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFFFFB300),
+                    modifier = Modifier.padding(end = 4.dp)
+                )
+                OutlinedTextField(
+                    value = debugUid,
+                    onValueChange = { debugUid = it },
+                    label = { Text("Card UID") },
+                    singleLine = true,
+                    modifier = Modifier.width(220.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor        = Color.White,
+                        unfocusedTextColor      = Color.White.copy(alpha = 0.7f),
+                        focusedBorderColor      = TealLight,
+                        unfocusedBorderColor    = Color.White.copy(alpha = 0.3f),
+                        focusedLabelColor       = TealLight,
+                        unfocusedLabelColor     = Color.White.copy(alpha = 0.5f),
+                        focusedContainerColor   = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                    )
+                )
+                Button(
+                    onClick = {
+                        onDebugScan(debugUid.trim())
+                        debugUid = ""
+                    },
+                    enabled = debugUid.isNotBlank()
+                ) {
+                    Text("Scan")
+                }
+            }
+        }
     }
 }
 
@@ -210,4 +266,10 @@ private fun currentTime(): String =
 @Composable
 private fun IdlePreview() {
     DigitalCheckoutTheme { IdleContent(nfcWarning = null) }
+}
+
+@Preview(widthDp = 960, heightDp = 600, showBackground = true, backgroundColor = 0xFF0D1B2A)
+@Composable
+private fun IdleDebugPreview() {
+    DigitalCheckoutTheme { IdleContent(nfcWarning = null, onDebugScan = {}) }
 }

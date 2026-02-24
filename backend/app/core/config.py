@@ -9,15 +9,14 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 8000
 
-    database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/digital_checkout"
+    database_url: str = "sqlite:///./digital_checkout.db"
 
-    # Wild Apricot (backend only)
-    wa_client_id: str | None = None
-    wa_client_secret: str | None = None
-    wa_refresh_token: str | None = None
+    # Wild Apricot — API key auth (same pattern as BlackbeardBot)
+    wa_api_key: str | None = None
+    wa_account_id: int | None = None
 
-    # Example kiosk key placeholder
-    kiosk_api_key_example: str | None = None
+    # Kiosk authentication — set a strong random value in .env
+    kiosk_api_key: str = "change-me-in-dotenv"
 
     model_config = SettingsConfigDict(
         env_file=".env",

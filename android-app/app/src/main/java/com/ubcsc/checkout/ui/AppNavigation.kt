@@ -9,7 +9,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.ubcsc.checkout.ui.confirm.ConfirmScreen
+import com.ubcsc.checkout.ui.craft.BoatSelectScreen
 import com.ubcsc.checkout.ui.craft.CraftSelectScreen
+import com.ubcsc.checkout.ui.crew.AddCrewScreen
 import com.ubcsc.checkout.ui.idle.IdleScreen
 import com.ubcsc.checkout.ui.member.MemberScreen
 import com.ubcsc.checkout.ui.result.ResultScreen
@@ -20,6 +22,8 @@ object Routes {
     const val IDLE = "idle"
     const val MEMBER = "member"
     const val CRAFT_SELECT = "craft_select"
+    const val BOAT_SELECT  = "boat_select"
+    const val CREW = "crew"
     const val CONFIRM = "confirm"
     const val RESULT = "result"
 }
@@ -43,6 +47,13 @@ fun AppNavigation(
             }
             is CheckoutUiState.SelectingCraft -> navController.navigate(Routes.CRAFT_SELECT) {
                 popUpTo(Routes.MEMBER)
+            }
+            is CheckoutUiState.SelectingBoat -> navController.navigate(Routes.BOAT_SELECT) {
+                popUpTo(Routes.CRAFT_SELECT)
+            }
+            is CheckoutUiState.AddingCrew,
+            is CheckoutUiState.AwaitingCrewCard -> navController.navigate(Routes.CREW) {
+                popUpTo(Routes.BOAT_SELECT)
             }
             is CheckoutUiState.ConfirmCheckout,
             is CheckoutUiState.ConfirmCheckin -> navController.navigate(Routes.CONFIRM) {
@@ -76,6 +87,20 @@ fun AppNavigation(
                 crafts = state.crafts,
                 viewModel = viewModel
             )
+        }
+
+        composable(Routes.BOAT_SELECT) {
+            val state = uiState as? CheckoutUiState.SelectingBoat ?: return@composable
+            BoatSelectScreen(
+                member     = state.member,
+                fleetClass = state.fleetClass,
+                crafts     = state.crafts,
+                viewModel  = viewModel
+            )
+        }
+
+        composable(Routes.CREW) {
+            AddCrewScreen(uiState = uiState, viewModel = viewModel)
         }
 
         composable(Routes.CONFIRM) {

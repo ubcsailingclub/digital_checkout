@@ -2,6 +2,7 @@
 from app.models.member import Member, MemberCard
 from app.models.craft import Craft
 from app.models.checkout_session import CheckoutSession
+from app.models.crew import SessionCrewMember
 
 __all__ = [
     "Base",
@@ -9,4 +10,5 @@ __all__ = [
     "MemberCard",
     "Craft",
     "CheckoutSession",
+    "SessionCrewMember",
 ]

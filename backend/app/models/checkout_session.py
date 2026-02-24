@@ -1,6 +1,6 @@
 ﻿from datetime import datetime
 
-from sqlalchemy import BIGINT, Boolean, CheckConstraint, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import Boolean, CheckConstraint, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base
@@ -10,7 +10,7 @@ from app.models.mixins import TimestampMixin
 class CheckoutSession(TimestampMixin, Base):
     __tablename__ = "checkout_sessions"
 
-    id: Mapped[int] = mapped_column(BIGINT, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     member_id: Mapped[int] = mapped_column(ForeignKey("members.id"), nullable=False)
     craft_id: Mapped[int] = mapped_column(ForeignKey("craft.id"), nullable=False)

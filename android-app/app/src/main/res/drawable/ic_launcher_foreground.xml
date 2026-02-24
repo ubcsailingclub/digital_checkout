@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Simple sailing boat silhouette for the launcher icon -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Teal NFC / wave arc as a stand-in icon -->
+    <path
+        android:fillColor="#00ACC1"
+        android:pathData="M54,28 C38,28 25,41 25,57 C25,62 26.5,66.5 29,70 L34,70 C31,66.5 29.5,62 29.5,57 C29.5,43.5 40.5,32.5 54,32.5 C67.5,32.5 78.5,43.5 78.5,57 C78.5,62 77,66.5 74,70 L79,70 C81.5,66.5 83,62 83,57 C83,41 70,28 54,28Z" />
+    <path
+        android:fillColor="#4DD0E1"
+        android:pathData="M54,38 C43,38 34,47 34,58 C34,62 35.2,65.7 37.2,68.8 L42,68.8 C39.5,65.8 38,62 38,58 C38,49.2 45.2,42 54,42 C62.8,42 70,49.2 70,58 C70,62 68.5,65.8 66,68.8 L70.8,68.8 C72.8,65.7 74,62 74,58 C74,47 65,38 54,38Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,50 C49,50 45,54 45,59 C45,62 46.3,64.7 48.4,66.5 L59.6,66.5 C61.7,64.7 63,62 63,59 C63,54 59,50 54,50Z" />
+    <!-- Hull -->
+    <path
+        android:fillColor="#00ACC1"
+        android:pathData="M36,72 L72,72 L69,80 L39,80Z" />
+</vector>

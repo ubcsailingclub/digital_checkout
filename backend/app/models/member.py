@@ -1,6 +1,6 @@
 ﻿from __future__ import annotations
 
-from sqlalchemy import BIGINT, Boolean, ForeignKey, Index, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -10,8 +10,8 @@ from app.models.mixins import TimestampMixin
 class Member(TimestampMixin, Base):
     __tablename__ = "members"
 
-    id: Mapped[int] = mapped_column(BIGINT, primary_key=True, autoincrement=True)
-    wa_contact_id: Mapped[int] = mapped_column(BIGINT, unique=True, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    wa_contact_id: Mapped[int] = mapped_column(Integer, unique=True, nullable=False)
 
     full_name: Mapped[str] = mapped_column(Text, nullable=False)
     first_name: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -36,7 +36,7 @@ class Member(TimestampMixin, Base):
 class MemberCard(TimestampMixin, Base):
     __tablename__ = "member_cards"
 
-    id: Mapped[int] = mapped_column(BIGINT, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     member_id: Mapped[int] = mapped_column(ForeignKey("members.id", ondelete="CASCADE"), nullable=False)
 
     card_uid: Mapped[str] = mapped_column(Text, nullable=False)

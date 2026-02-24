@@ -1,0 +1,166 @@
+{
+  "fleets": [
+    {
+      "class": "RS Quest",
+      "boats": [
+        { "code": "QT01", "name": "Quest #1" },
+        { "code": "QT02", "name": "Quest #2" },
+        { "code": "QT03", "name": "Quest #3" },
+        { "code": "QT04", "name": "Quest #4" },
+        { "code": "QT05", "name": "Quest #5" },
+        { "code": "QT06", "name": "Quest #6" },
+        { "code": "QT07", "name": "Quest #7" },
+        { "code": "QT08", "name": "Quest #8" }
+      ]
+    },
+    {
+      "class": "RS Quest Spinnaker",
+      "boats": [
+        { "code": "QS01", "name": "Quest #1 + Spinnaker" },
+        { "code": "QS02", "name": "Quest #2 + Spinnaker" },
+        { "code": "QS03", "name": "Quest #3 + Spinnaker" },
+        { "code": "QS04", "name": "Quest #4 + Spinnaker" },
+        { "code": "QS05", "name": "Quest #5 + Spinnaker" },
+        { "code": "QS06", "name": "Quest #6 + Spinnaker" },
+        { "code": "QS07", "name": "Quest #7 + Spinnaker" },
+        { "code": "QS08", "name": "Quest #8 + Spinnaker" }
+      ]
+    },
+    {
+      "class": "Laser",
+      "boats": [
+        { "code": "LZ01", "name": "Laser 51" },
+        { "code": "LZ02", "name": "Laser 52" },
+        { "code": "LZ03", "name": "Laser 53" },
+        { "code": "LZ04", "name": "Laser 54" },
+        { "code": "LZ05", "name": "Laser 55" },
+        { "code": "LZ06", "name": "Laser 56" },
+        { "code": "LZ07", "name": "Laser 57" },
+        { "code": "LZ08", "name": "Laser 58" }
+      ]
+    },
+    {
+      "class": "Vanguard 15",
+      "boats": [
+        { "code": "VG01", "name": "Vanguard #1" },
+        { "code": "VG02", "name": "Vanguard #2" },
+        { "code": "VG03", "name": "Vanguard #3" }
+      ]
+    },
+    {
+      "class": "RS500",
+      "boats": [
+        { "code": "R501", "name": "Exwing" },
+        { "code": "R502", "name": "Tied Fighter" }
+      ]
+    },
+    {
+      "class": "RS800",
+      "boats": [
+        { "code": "R801", "name": "Millenium Falcon" },
+        { "code": "R802", "name": "Death Star" },
+        { "code": "R803", "name": "Lady Luck" }
+      ]
+    },
+    {
+      "class": "Hobie 16",
+      "boats": [
+        { "code": "HB01", "name": "Coconut" },
+        { "code": "HB02", "name": "TBFKA Babe" },
+        { "code": "HB03", "name": "Hobie 5" },
+        { "code": "HB04", "name": "Other Blueberry" }
+      ]
+    },
+    {
+      "class": "Nacra F18",
+      "boats": [
+        { "code": "F181", "name": "1107" },
+        { "code": "F182", "name": "689" }
+      ]
+    },
+    {
+      "class": "Windsurfer L1",
+      "boats": [
+        { "code": "WL101", "name": "Naish Kailua 250L (2010) #1" },
+        { "code": "WL102", "name": "Naish Kailua 250L (2010) #2" },
+        { "code": "WL103", "name": "Bic HiFly Motion 200L (2007) #1" },
+        { "code": "WL104", "name": "Bic HiFly Motion 200L (2007) #2" },
+        { "code": "WL105", "name": "Future Fly Yalla 230L (2024) #1" },
+        { "code": "WL106", "name": "Future Fly Yalla 230L (2024) #2" },
+        { "code": "WL107", "name": "Bic Breeze Wind SUP 215L #1" },
+        { "code": "WL108", "name": "Bic Breeze Wind SUP 215L #2" }
+      ]
+    },
+    {
+      "class": "Windsurfer L2",
+      "boats": [
+        { "code": "WL201", "name": "Bic Breeze Wind SUP 215L #3" },
+        { "code": "WL202", "name": "Bic Breeze Wind SUP 215L #4" },
+        { "code": "WL203", "name": "Naish Kailua 160L (2006-2012)" },
+        { "code": "WL204", "name": "Naish Kailua 140L (2010) #1" },
+        { "code": "WL205", "name": "Naish Kailua 140L (2010) #2" },
+        { "code": "WL206", "name": "Starboard AtomIQ 160L (~2002)" },
+        { "code": "WL207", "name": "Mistral One-Design 200L (2007) #1" },
+        { "code": "WL208", "name": "Mistral One-Design 200L (2007) #2" },
+        { "code": "WL209", "name": "Starboard Go 150L (2004)" }
+      ]
+    },
+    {
+      "class": "Windsurfer L2.5",
+      "boats": [
+        { "code": "WL251", "name": "Tabou Rocket 145L (2015)" },
+        { "code": "WL252", "name": "Bic Techno 133L (2011-2014) #1" },
+        { "code": "WL253", "name": "Bic Techno 133L (2011-2014) #2" },
+        { "code": "WL254", "name": "Fanatic Falcon 120L (2014) #1" },
+        { "code": "WL255", "name": "Fanatic Falcon 120L (2014) #2" }
+      ]
+    },
+    {
+      "class": "Windsurfer L3",
+      "boats": [
+        { "code": "WL301", "name": "Naish Global Wave 78L (2009)" },
+        { "code": "WL302", "name": "Roberts Slalom 8'3\" x 30\" (Custom)" },
+        { "code": "WL303", "name": "Naish Global Wave 87L (2007)" },
+        { "code": "WL304", "name": "Naish Freestyle 100L (2010)" },
+        { "code": "WL305", "name": "JP Super-X 104L (2004)" },
+        { "code": "WL306", "name": "F2 Spice 106L (2008)" },
+        { "code": "WL307", "name": "RRD Freestyle Wave 108L (2013)" },
+        { "code": "WL308", "name": "Naish Freeride Slalom 115L (2007)" },
+        { "code": "WL309", "name": "Fanatic Quad 87L (2013)" },
+        { "code": "WL310", "name": "Naish Hover 122L (2018)" },
+        { "code": "WL311", "name": "Naish Freestyle Wave 90L (2010)" },
+        { "code": "WL312", "name": "Starboard Carve 99L (~1997)" }
+      ]
+    },
+    {
+      "class": "Kayak",
+      "boats": [
+        { "code": "KP01", "name": "Plastic Single #1" },
+        { "code": "KP02", "name": "Plastic Single #2" },
+        { "code": "KP03", "name": "Plastic Single #3" },
+        { "code": "KP04", "name": "Plastic Single #4" },
+        { "code": "KP05", "name": "Plastic Single #5" },
+        { "code": "KP06", "name": "Plastic Single #6" },
+        { "code": "KF01", "name": "Fibreglass Single M #1" },
+        { "code": "KF02", "name": "Fibreglass Single M #2" },
+        { "code": "KF03", "name": "Fibreglass Single M #3" },
+        { "code": "KF04", "name": "Fibreglass Single M #4" },
+        { "code": "KF05", "name": "Fibreglass Single S" },
+        { "code": "KF06", "name": "Fibreglass Single L" },
+        { "code": "KD01", "name": "Double Kayak #1" },
+        { "code": "KD02", "name": "Double Kayak #2" },
+        { "code": "KD03", "name": "Double Kayak #3" }
+      ]
+    },
+    {
+      "class": "SUP",
+      "boats": [
+        { "code": "SP01", "name": "SUP #1" },
+        { "code": "SP02", "name": "SUP #2" },
+        { "code": "SP03", "name": "SUP #3" },
+        { "code": "SP04", "name": "SUP #4" },
+        { "code": "SP05", "name": "SUP #5" }
+      ]
+    }
+  ]
+}

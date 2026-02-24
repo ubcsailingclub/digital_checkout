@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,7 +36,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,6 +48,7 @@ import com.ubcsc.checkout.ui.theme.DividerColor
 import com.ubcsc.checkout.ui.theme.TealLight
 import com.ubcsc.checkout.ui.theme.TealMid
 import com.ubcsc.checkout.ui.theme.TextMuted
+import com.ubcsc.checkout.ui.theme.TextSecondary
 import com.ubcsc.checkout.ui.theme.UnavailableRed
 import com.ubcsc.checkout.ui.util.CraftImageMapper
 import com.ubcsc.checkout.viewmodel.CheckoutViewModel
@@ -57,56 +56,36 @@ import com.ubcsc.checkout.viewmodel.Craft
 import com.ubcsc.checkout.viewmodel.Member
 import kotlinx.coroutines.delay
 
-private const val INACTIVITY_TIMEOUT_MS = 30_000L
-
-private val categoryOrder = listOf("SAILING", "WINDSURF", "KAYAK & SUP")
-
-private fun craftCategory(craftClass: String): String {
-    val upper = craftClass.uppercase().trim()
-    return when {
-        upper.startsWith("WINDSURFER") -> "WINDSURF"
-        upper in setOf("RS QUEST", "RS QUEST SPINNAKER", "LASER", "VANGUARD 15", "RS500", "RS800", "HOBIE 16", "NACRA F18") -> "SAILING"
-        upper in setOf("KAYAK", "SUP") -> "KAYAK & SUP"
-        else -> "OTHER"
-    }
-}
-
-private data class FleetGroup(
-    val craftClass: String,
-    val availableCount: Int,
-    val totalCount: Int
-)
+private const val BOAT_INACTIVITY_TIMEOUT_MS = 30_000L
 
 @Composable
-fun CraftSelectScreen(member: Member, crafts: List<Craft>, viewModel: CheckoutViewModel) {
+fun BoatSelectScreen(
+    member:     Member,
+    fleetClass: String,
+    crafts:     List<Craft>,
+    viewModel:  CheckoutViewModel
+) {
     LaunchedEffect(Unit) {
-        delay(INACTIVITY_TIMEOUT_MS)
+        delay(BOAT_INACTIVITY_TIMEOUT_MS)
         viewModel.resetToIdle()
     }
-    CraftSelectContent(
-        memberName    = member.name,
-        crafts        = crafts,
-        onFleetSelect = { fleetClass -> viewModel.onFleetSelected(member, fleetClass) },
-        onCancel      = { viewModel.onCancel() }
+    BoatSelectContent(
+        memberName   = member.name,
+        fleetClass   = fleetClass,
+        crafts       = crafts,
+        onBoatSelect = { craft -> viewModel.onCraftSelected(member, craft) },
+        onCancel     = { viewModel.onCancel() }
     )
 }
 
 @Composable
-private fun CraftSelectContent(
-    memberName: String,
-    crafts: List<Craft>,
-    onFleetSelect: (String) -> Unit,
-    onCancel: () -> Unit
+private fun BoatSelectContent(
+    memberName:   String,
+    fleetClass:   String,
+    crafts:       List<Craft>,
+    onBoatSelect: (Craft) -> Unit,
+    onCancel:     () -> Unit
 ) {
-    val groupedFleets = crafts
-        .groupBy { it.craftClass }
-        .map { (cls, boats) -> FleetGroup(cls, boats.count { it.isAvailable }, boats.size) }
-        .groupBy { craftCategory(it.craftClass) }
-        .entries
-        .sortedBy { (cat, _) ->
-            categoryOrder.indexOf(cat).let { if (it < 0) Int.MAX_VALUE else it }
-        }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -135,15 +114,15 @@ private fun CraftSelectContent(
             ) {
                 Column {
                     Text(
-                        text = stringResource(R.string.craft_select_title),
-                        style = MaterialTheme.typography.headlineSmall,
+                        text       = fleetClass,
+                        style      = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color      = Color.White
                     )
                     Text(
-                        text = memberName,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TealLight,
+                        text         = memberName,
+                        style        = MaterialTheme.typography.bodyMedium,
+                        color        = TealLight,
                         letterSpacing = 0.5.sp
                     )
                 }
@@ -168,57 +147,40 @@ private fun CraftSelectContent(
             Spacer(modifier = Modifier.height(12.dp))
 
             LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 180.dp),
-                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
+                columns            = GridCells.Adaptive(minSize = 200.dp),
+                contentPadding     = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
+                verticalArrangement   = Arrangement.spacedBy(14.dp),
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                groupedFleets.forEach { (category, fleets) ->
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        CategoryHeader(category)
-                    }
-                    items(fleets, key = { it.craftClass }) { fleet ->
-                        FleetCard(
-                            fleet    = fleet,
-                            onSelect = { if (fleet.availableCount > 0) onFleetSelect(fleet.craftClass) }
-                        )
-                    }
+                items(crafts) { craft ->
+                    BoatCard(
+                        craft    = craft,
+                        onSelect = { if (craft.isAvailable) onBoatSelect(craft) }
+                    )
                 }
             }
         }
     }
 }
 
-@Composable
-private fun CategoryHeader(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.labelMedium,
-        color = TealLight,
-        letterSpacing = 2.sp,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 4.dp)
-    )
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun FleetCard(fleet: FleetGroup, onSelect: () -> Unit) {
-    val hasAvailable = fleet.availableCount > 0
-    val accentColor  = if (hasAvailable) TealMid   else UnavailableRed
-    val iconTint     = if (hasAvailable) TealLight  else TextMuted
-    val cardAlpha    = if (hasAvailable) 1f         else 0.45f
+private fun BoatCard(craft: Craft, onSelect: () -> Unit) {
+    val available   = craft.isAvailable
+    val accentColor = if (available) TealMid   else UnavailableRed
+    val iconTint    = if (available) TealLight  else TextMuted
+    val cardAlpha   = if (available) 1f         else 0.45f
 
     Surface(
         onClick        = onSelect,
-        enabled        = hasAvailable,
+        enabled        = available,
         modifier       = Modifier
             .height(168.dp)
             .alpha(cardAlpha),
         shape          = RoundedCornerShape(16.dp),
         color          = CardBlue,
-        tonalElevation = if (hasAvailable) 6.dp else 0.dp
+        tonalElevation = if (available) 6.dp else 0.dp
     ) {
         Box(
             modifier = Modifier
@@ -238,7 +200,7 @@ private fun FleetCard(fleet: FleetGroup, onSelect: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // Boat icon
+                // Icon
                 Box(
                     modifier = Modifier
                         .size(80.dp)
@@ -247,36 +209,34 @@ private fun FleetCard(fleet: FleetGroup, onSelect: () -> Unit) {
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter        = painterResource(CraftImageMapper.getDrawableRes(fleet.craftClass)),
-                        contentDescription = fleet.craftClass,
-                        modifier       = Modifier.size(60.dp),
-                        contentScale   = ContentScale.Fit,
-                        colorFilter    = ColorFilter.tint(iconTint)
+                        painter            = painterResource(CraftImageMapper.getDrawableRes(craft.craftClass)),
+                        contentDescription = craft.craftClass,
+                        modifier           = Modifier.size(60.dp),
+                        contentScale       = ContentScale.Fit,
+                        colorFilter        = ColorFilter.tint(iconTint)
                     )
                 }
 
-                // Fleet name
+                // Boat name
                 Text(
-                    text       = fleet.craftClass,
+                    text       = craft.displayName,
                     style      = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color      = Color.White,
-                    maxLines   = 1,
-                    textAlign  = TextAlign.Center
+                    maxLines   = 1
                 )
 
-                // Availability count pill
-                AvailabilityChip(available = fleet.availableCount, total = fleet.totalCount)
+                // Status
+                BoatStatusChip(available = available)
             }
         }
     }
 }
 
 @Composable
-private fun AvailabilityChip(available: Int, total: Int) {
-    val hasAny = available > 0
-    val color  = if (hasAny) AvailableGreen else UnavailableRed
-    val label  = if (hasAny) "$available / $total available" else "All out"
+private fun BoatStatusChip(available: Boolean) {
+    val color = if (available) AvailableGreen else UnavailableRed
+    val label = if (available) stringResource(R.string.available) else stringResource(R.string.unavailable)
 
     Box(
         modifier = Modifier
@@ -296,28 +256,18 @@ private fun AvailabilityChip(available: Int, total: Int) {
 
 @Preview(widthDp = 960, heightDp = 600, showBackground = true, backgroundColor = 0xFF0D1B2A)
 @Composable
-private fun CraftSelectPreview() {
+private fun BoatSelectPreview() {
     DigitalCheckoutTheme {
-        CraftSelectContent(
+        BoatSelectContent(
             memberName = "Alex Sailor",
+            fleetClass = "Laser",
             crafts = listOf(
-                Craft("1",  "QT01", "Quest #1",    "RS Quest",    true),
-                Craft("2",  "QT02", "Quest #2",    "RS Quest",    true),
-                Craft("3",  "LZ01", "Laser #1",    "Laser",       true),
-                Craft("4",  "LZ02", "Laser #2",    "Laser",       false),
-                Craft("5",  "VG01", "Vanguard #1", "Vanguard 15", true),
-                Craft("6",  "R501", "RS500 #1",    "RS500",       true),
-                Craft("7",  "R801", "RS800 #1",    "RS800",       false),
-                Craft("8",  "HB01", "Hobie #1",    "Hobie 16",    true),
-                Craft("9",  "F181", "Nacra #1",    "Nacra F18",   true),
-                Craft("10", "WS01", "L1",          "Windsurfer",  true),
-                Craft("11", "WS02", "L2",          "Windsurfer",  true),
-                Craft("12", "WS03", "L3",          "Windsurfer",  false),
-                Craft("13", "KY01", "Kayak #1",    "Kayak",       true),
-                Craft("14", "KY02", "Kayak #2",    "Kayak",       true),
-                Craft("15", "SP01", "SUP #1",      "SUP",         true),
+                Craft("5", "LZ01", "Laser #1", "Laser", true),
+                Craft("6", "LZ02", "Laser #2", "Laser", true),
+                Craft("7", "LZ03", "Laser #3", "Laser", false),
+                Craft("8", "LZ04", "Laser #4", "Laser", true),
             ),
-            onFleetSelect = {}, onCancel = {}
+            onBoatSelect = {}, onCancel = {}
         )
     }
 }

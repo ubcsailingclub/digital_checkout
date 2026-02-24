@@ -1,4 +1,4 @@
-﻿from sqlalchemy import BIGINT, Boolean, Index, Integer, JSON, String, Text
+﻿from sqlalchemy import Boolean, Index, Integer, JSON, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base
@@ -8,7 +8,7 @@ from app.models.mixins import TimestampMixin
 class Craft(TimestampMixin, Base):
     __tablename__ = "craft"
 
-    id: Mapped[int] = mapped_column(BIGINT, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     craft_code: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     display_name: Mapped[str] = mapped_column(Text, nullable=False)
