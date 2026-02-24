@@ -227,16 +227,24 @@ private fun BoatCard(craft: Craft, onSelect: () -> Unit) {
                 )
 
                 // Status
-                BoatStatusChip(available = available)
+                BoatStatusChip(available = available, expectedReturnTime = craft.expectedReturnTime)
             }
         }
     }
 }
 
 @Composable
-private fun BoatStatusChip(available: Boolean) {
+private fun BoatStatusChip(
+    available: Boolean,
+    expectedReturnTime: java.time.LocalTime? = null
+) {
     val color = if (available) AvailableGreen else UnavailableRed
-    val label = if (available) stringResource(R.string.available) else stringResource(R.string.unavailable)
+    val label = when {
+        available -> stringResource(R.string.available)
+        expectedReturnTime != null ->
+            "Back by ${expectedReturnTime.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a"))}"
+        else -> stringResource(R.string.unavailable)
+    }
 
     Box(
         modifier = Modifier
@@ -264,8 +272,8 @@ private fun BoatSelectPreview() {
             crafts = listOf(
                 Craft("5", "LZ01", "Laser #1", "Laser", true),
                 Craft("6", "LZ02", "Laser #2", "Laser", true),
-                Craft("7", "LZ03", "Laser #3", "Laser", false),
-                Craft("8", "LZ04", "Laser #4", "Laser", true),
+                Craft("7", "LZ03", "Laser #3", "Laser", false, java.time.LocalTime.of(15, 30)),
+                Craft("8", "LZ04", "Laser #4", "Laser", false),
             ),
             onBoatSelect = {}, onCancel = {}
         )

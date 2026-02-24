@@ -7,11 +7,12 @@ import com.google.gson.annotations.SerializedName
 // ---------------------------------------------------------------------------
 
 data class CraftDto(
-    @SerializedName("id")           val id: Int,
-    @SerializedName("code")         val code: String,
-    @SerializedName("display_name") val displayName: String,
-    @SerializedName("craft_class")  val craftClass: String?,
-    @SerializedName("is_available") val isAvailable: Boolean
+    @SerializedName("id")                   val id: Int,
+    @SerializedName("code")                 val code: String,
+    @SerializedName("display_name")         val displayName: String,
+    @SerializedName("craft_class")          val craftClass: String?,
+    @SerializedName("is_available")         val isAvailable: Boolean,
+    @SerializedName("expected_return_time") val expectedReturnTime: String? = null
 )
 
 data class ActiveCheckoutDto(

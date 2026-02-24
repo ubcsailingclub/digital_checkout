@@ -66,7 +66,7 @@ private fun craftCategory(craftClass: String): String {
     return when {
         upper.startsWith("WINDSURFER") -> "WINDSURF"
         upper in setOf("RS QUEST", "RS QUEST SPINNAKER", "LASER", "VANGUARD 15", "RS500", "RS800", "HOBIE 16", "NACRA F18") -> "SAILING"
-        upper in setOf("KAYAK", "SUP") -> "KAYAK & SUP"
+        upper.startsWith("KAYAK") || upper == "SUP" -> "KAYAK & SUP"
         else -> "OTHER"
     }
 }
@@ -74,7 +74,8 @@ private fun craftCategory(craftClass: String): String {
 private data class FleetGroup(
     val craftClass: String,
     val availableCount: Int,
-    val totalCount: Int
+    val totalCount: Int,
+    val soonestReturn: java.time.LocalTime? = null   // earliest ETR among checked-out boats
 )
 
 @Composable
@@ -100,7 +101,17 @@ private fun CraftSelectContent(
 ) {
     val groupedFleets = crafts
         .groupBy { it.craftClass }
-        .map { (cls, boats) -> FleetGroup(cls, boats.count { it.isAvailable }, boats.size) }
+        .map { (cls, boats) ->
+            FleetGroup(
+                craftClass     = cls,
+                availableCount = boats.count { it.isAvailable },
+                totalCount     = boats.size,
+                soonestReturn  = boats
+                    .filter { !it.isAvailable }
+                    .mapNotNull { it.expectedReturnTime }
+                    .minOrNull()
+            )
+        }
         .groupBy { craftCategory(it.craftClass) }
         .entries
         .sortedBy { (cat, _) ->
@@ -266,17 +277,30 @@ private fun FleetCard(fleet: FleetGroup, onSelect: () -> Unit) {
                 )
 
                 // Availability count pill
-                AvailabilityChip(available = fleet.availableCount, total = fleet.totalCount)
+                AvailabilityChip(
+                    available     = fleet.availableCount,
+                    total         = fleet.totalCount,
+                    soonestReturn = fleet.soonestReturn
+                )
             }
         }
     }
 }
 
 @Composable
-private fun AvailabilityChip(available: Int, total: Int) {
+private fun AvailabilityChip(
+    available: Int,
+    total: Int,
+    soonestReturn: java.time.LocalTime? = null
+) {
     val hasAny = available > 0
     val color  = if (hasAny) AvailableGreen else UnavailableRed
-    val label  = if (hasAny) "$available / $total available" else "All out"
+    val label  = when {
+        hasAny -> "$available / $total available"
+        soonestReturn != null ->
+            "Back by ${soonestReturn.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a"))}"
+        else -> "All out"
+    }
 
     Box(
         modifier = Modifier

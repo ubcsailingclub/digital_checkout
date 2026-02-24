@@ -39,7 +39,8 @@ data class Craft(
     val code: String,
     val displayName: String,
     val craftClass: String,
-    val isAvailable: Boolean
+    val isAvailable: Boolean,
+    val expectedReturnTime: java.time.LocalTime? = null
 )
 
 data class CrewEntry(
@@ -325,12 +326,30 @@ private fun MemberDto.toDomain(cardUid: String) = Member(
 )
 
 private fun CraftDto.toDomain() = Craft(
-    id          = id.toString(),
-    code        = code,
-    displayName = displayName,
-    craftClass  = craftClass ?: "",
-    isAvailable = isAvailable
+    id                 = id.toString(),
+    code               = code,
+    displayName        = displayName,
+    craftClass         = craftClass ?: "",
+    isAvailable        = isAvailable,
+    expectedReturnTime = expectedReturnTime?.let { parseEtrTime(it) }
 )
+
+/**
+ * Parse an ETR ISO string from the server into a local-timezone [LocalTime].
+ * The server stores datetimes as naive UTC (no offset suffix), so we try
+ * LocalDateTime first, then fall back to OffsetDateTime if an offset is present.
+ */
+private fun parseEtrTime(iso: String): java.time.LocalTime? =
+    runCatching {
+        java.time.LocalDateTime.parse(iso)
+            .atOffset(java.time.ZoneOffset.UTC)
+            .atZoneSameInstant(java.time.ZoneId.systemDefault())
+            .toLocalTime()
+    }.recoverCatching {
+        java.time.OffsetDateTime.parse(iso)
+            .atZoneSameInstant(java.time.ZoneId.systemDefault())
+            .toLocalTime()
+    }.getOrNull()
 
 private fun CrewEntry.toDto() = CrewInputDto(
     name    = name,
