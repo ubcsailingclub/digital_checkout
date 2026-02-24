@@ -80,8 +80,21 @@ def main() -> None:
 
                 next_id += 1
 
+        # Deactivate any crafts that are no longer listed in fleet.json
+        all_codes_in_json = {
+            boat["code"]
+            for fleet in data["fleets"]
+            for boat in fleet["boats"]
+        }
+        deactivated = 0
+        for craft in db.execute(select(Craft).where(Craft.is_active == True)).scalars():
+            if craft.craft_code not in all_codes_in_json:
+                craft.is_active = False
+                craft.status = "unavailable"
+                deactivated += 1
+
         db.commit()
-        print(f"Done — {inserted} inserted, {updated} updated")
+        print(f"Done — {inserted} inserted, {updated} updated, {deactivated} deactivated")
 
 
 if __name__ == "__main__":

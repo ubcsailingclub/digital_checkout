@@ -12,6 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -91,29 +92,29 @@ fun AddCrewScreen(uiState: CheckoutUiState, viewModel: CheckoutViewModel) {
     when (uiState) {
         is CheckoutUiState.AddingCrew ->
             AddCrewContent(
-                memberName  = uiState.member.name,
-                craftName   = uiState.craft.displayName,
-                crew        = uiState.crew,
+                memberName    = uiState.member.name,
+                craftName     = uiState.craft.displayName,
+                crew          = uiState.crew,
                 isAwaitingNfc = false,
-                onAddByName = { name -> viewModel.onAddCrewByName(uiState, name) },
-                onAddGuest  = { viewModel.onAddCrewAsGuest(uiState) },
-                onScanCard  = { viewModel.onScanForCrew(uiState) },
-                onRemove    = { idx -> viewModel.onRemoveCrew(uiState, idx) },
-                onDone      = { viewModel.onCrewDone(uiState, null) },
-                onCancel    = { viewModel.onCancel() }
+                onAddByName   = { name -> viewModel.onAddCrewByName(uiState, name) },
+                onAddGuest    = { viewModel.onAddCrewAsGuest(uiState) },
+                onScanCard    = { viewModel.onScanForCrew(uiState) },
+                onRemove      = { idx -> viewModel.onRemoveCrew(uiState, idx) },
+                onDone        = { viewModel.onCrewDone(uiState, null) },
+                onCancel      = { viewModel.onCancel() }
             )
         is CheckoutUiState.AwaitingCrewCard ->
             AddCrewContent(
-                memberName  = uiState.member.name,
-                craftName   = uiState.craft.displayName,
-                crew        = uiState.crew,
+                memberName    = uiState.member.name,
+                craftName     = uiState.craft.displayName,
+                crew          = uiState.crew,
                 isAwaitingNfc = true,
-                onAddByName = {},
-                onAddGuest  = {},
-                onScanCard  = {},
-                onRemove    = {},
-                onDone      = {},
-                onCancel    = { viewModel.onCancelCrewScan() }
+                onAddByName   = {},
+                onAddGuest    = {},
+                onScanCard    = {},
+                onRemove      = {},
+                onDone        = {},
+                onCancel      = { viewModel.onCancelCrewScan() }
             )
         else -> Unit
     }
@@ -191,139 +192,265 @@ private fun AddCrewContent(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Row(
+            // Responsive body
+            BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 24.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(24.dp)
+                    .padding(horizontal = 20.dp, vertical = 8.dp)
             ) {
-                // Left panel: crew list
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(CardBlue)
-                        .border(1.dp, DividerColor, RoundedCornerShape(16.dp))
-                        .padding(20.dp)
-                ) {
-                    Text(
-                        text  = "Crew  (${crew.size})",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = TealLight,
-                        letterSpacing = 1.5.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
+                val isPortrait = maxWidth < 600.dp
 
-                    if (crew.isEmpty()) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-                            contentAlignment = Alignment.Center
+                if (isPortrait) {
+                    // -----------------------------------------------------------
+                    // Portrait: input at top, crew panel (with Continue) below
+                    // -----------------------------------------------------------
+                    Column(modifier = Modifier.fillMaxSize()) {
+
+                        // NFC wait OR input controls
+                        AnimatedVisibility(
+                            visible = isAwaitingNfc,
+                            enter   = fadeIn(tween(200)),
+                            exit    = fadeOut(tween(200))
                         ) {
-                            Text(
-                                text  = "Solo sail — no crew required",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = TextMuted
-                            )
+                            NfcWaitPanel()
                         }
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        AnimatedVisibility(
+                            visible = !isAwaitingNfc,
+                            enter   = fadeIn(tween(200)),
+                            exit    = fadeOut(tween(200))
                         ) {
-                            itemsIndexed(crew) { index, entry ->
-                                CrewRow(entry = entry, onRemove = { onRemove(index) })
-                                if (index < crew.lastIndex) {
-                                    HorizontalDivider(
-                                        modifier = Modifier.padding(vertical = 4.dp),
-                                        color = DividerColor
-                                    )
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                NameInputField(onSubmit = onAddByName)
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    FilledTonalButton(
+                                        onClick  = onScanCard,
+                                        modifier = Modifier.weight(1f).height(48.dp),
+                                        shape    = RoundedCornerShape(12.dp),
+                                        colors   = ButtonDefaults.filledTonalButtonColors(
+                                            containerColor = TealMid.copy(alpha = 0.15f),
+                                            contentColor   = TealLight
+                                        )
+                                    ) {
+                                        Icon(Icons.Filled.CreditCard, null, modifier = Modifier.size(18.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("Scan Card", fontWeight = FontWeight.Medium)
+                                    }
+                                    OutlinedButton(
+                                        onClick  = onAddGuest,
+                                        modifier = Modifier.weight(1f).height(48.dp),
+                                        shape    = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Filled.PersonAdd, null,
+                                            tint     = TextSecondary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("Guest", color = TextSecondary, fontWeight = FontWeight.Medium)
+                                    }
                                 }
                             }
                         }
-                    }
-                }
 
-                // Right panel: add actions + done button
-                Column(
-                    modifier = Modifier
-                        .width(280.dp)
-                        .fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    AnimatedVisibility(
-                        visible = isAwaitingNfc,
-                        enter   = fadeIn(tween(200)),
-                        exit    = fadeOut(tween(200))
-                    ) {
-                        NfcWaitPanel()
-                    }
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                    AnimatedVisibility(
-                        visible = !isAwaitingNfc,
-                        enter   = fadeIn(tween(200)),
-                        exit    = fadeOut(tween(200))
-                    ) {
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            NameInputField(onSubmit = onAddByName)
+                        // Crew panel: list + Continue button — takes remaining space
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(CardBlue)
+                                .border(1.dp, DividerColor, RoundedCornerShape(16.dp))
+                                .padding(16.dp)
+                        ) {
+                            Text(
+                                text          = "Crew  (${crew.size})",
+                                style         = MaterialTheme.typography.labelMedium,
+                                color         = TealLight,
+                                letterSpacing = 1.5.sp,
+                                fontWeight    = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
 
-                            FilledTonalButton(
-                                onClick  = onScanCard,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(52.dp),
-                                shape    = RoundedCornerShape(12.dp),
-                                colors   = ButtonDefaults.filledTonalButtonColors(
-                                    containerColor = TealMid.copy(alpha = 0.15f),
-                                    contentColor   = TealLight
-                                )
-                            ) {
-                                Icon(Icons.Filled.CreditCard, null, modifier = Modifier.size(20.dp))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Scan Member Card", fontWeight = FontWeight.Medium)
+                            if (crew.isEmpty()) {
+                                Box(
+                                    modifier         = Modifier.fillMaxWidth().weight(1f),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        "Solo sail — no crew required",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = TextMuted
+                                    )
+                                }
+                            } else {
+                                LazyColumn(
+                                    modifier            = Modifier.fillMaxWidth().weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    itemsIndexed(crew) { index, entry ->
+                                        CrewRow(entry = entry, onRemove = { onRemove(index) })
+                                        if (index < crew.lastIndex) {
+                                            HorizontalDivider(
+                                                modifier = Modifier.padding(vertical = 4.dp),
+                                                color    = DividerColor
+                                            )
+                                        }
+                                    }
+                                }
                             }
 
-                            OutlinedButton(
-                                onClick  = onAddGuest,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(52.dp),
-                                shape    = RoundedCornerShape(12.dp)
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            ElevatedButton(
+                                onClick   = onDone,
+                                enabled   = !isAwaitingNfc,
+                                modifier  = Modifier.fillMaxWidth().height(52.dp),
+                                shape     = RoundedCornerShape(12.dp),
+                                colors    = ButtonDefaults.elevatedButtonColors(
+                                    containerColor = TealMid,
+                                    contentColor   = Color.White
+                                ),
+                                elevation = ButtonDefaults.elevatedButtonElevation(8.dp)
                             ) {
-                                Icon(
-                                    Icons.Filled.PersonAdd, null,
-                                    tint = TextSecondary,
-                                    modifier = Modifier.size(20.dp)
+                                Text(
+                                    "Continue  →",
+                                    fontWeight = FontWeight.SemiBold,
+                                    style      = MaterialTheme.typography.titleMedium
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Add Guest", color = TextSecondary, fontWeight = FontWeight.Medium)
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    ElevatedButton(
-                        onClick  = onDone,
-                        enabled  = !isAwaitingNfc,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        shape    = RoundedCornerShape(12.dp),
-                        colors   = ButtonDefaults.elevatedButtonColors(
-                            containerColor = TealMid,
-                            contentColor   = Color.White
-                        ),
-                        elevation = ButtonDefaults.elevatedButtonElevation(8.dp)
+                } else {
+                    // -----------------------------------------------------------
+                    // Landscape: crew panel (with Continue) on left, controls on right
+                    // -----------------------------------------------------------
+                    Row(
+                        modifier              = Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.spacedBy(24.dp)
                     ) {
-                        Text(
-                            "Continue  →",
-                            fontWeight = FontWeight.SemiBold,
-                            style = MaterialTheme.typography.titleMedium
-                        )
+                        // Left panel: crew list + Continue button
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(CardBlue)
+                                .border(1.dp, DividerColor, RoundedCornerShape(16.dp))
+                                .padding(20.dp)
+                        ) {
+                            Text(
+                                text          = "Crew  (${crew.size})",
+                                style         = MaterialTheme.typography.labelMedium,
+                                color         = TealLight,
+                                letterSpacing = 1.5.sp,
+                                fontWeight    = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            if (crew.isEmpty()) {
+                                Box(
+                                    modifier         = Modifier.fillMaxWidth().weight(1f),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        "Solo sail — no crew required",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = TextMuted
+                                    )
+                                }
+                            } else {
+                                LazyColumn(
+                                    modifier            = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    itemsIndexed(crew) { index, entry ->
+                                        CrewRow(entry = entry, onRemove = { onRemove(index) })
+                                        if (index < crew.lastIndex) {
+                                            HorizontalDivider(
+                                                modifier = Modifier.padding(vertical = 4.dp),
+                                                color    = DividerColor
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            ElevatedButton(
+                                onClick   = onDone,
+                                enabled   = !isAwaitingNfc,
+                                modifier  = Modifier.fillMaxWidth().height(56.dp),
+                                shape     = RoundedCornerShape(12.dp),
+                                colors    = ButtonDefaults.elevatedButtonColors(
+                                    containerColor = TealMid,
+                                    contentColor   = Color.White
+                                ),
+                                elevation = ButtonDefaults.elevatedButtonElevation(8.dp)
+                            ) {
+                                Text(
+                                    "Continue  →",
+                                    fontWeight = FontWeight.SemiBold,
+                                    style      = MaterialTheme.typography.titleMedium
+                                )
+                            }
+                        }
+
+                        // Right panel: add controls only
+                        Column(
+                            modifier            = Modifier.width(260.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            AnimatedVisibility(
+                                visible = isAwaitingNfc,
+                                enter   = fadeIn(tween(200)),
+                                exit    = fadeOut(tween(200))
+                            ) {
+                                NfcWaitPanel()
+                            }
+
+                            AnimatedVisibility(
+                                visible = !isAwaitingNfc,
+                                enter   = fadeIn(tween(200)),
+                                exit    = fadeOut(tween(200))
+                            ) {
+                                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    NameInputField(onSubmit = onAddByName)
+
+                                    FilledTonalButton(
+                                        onClick  = onScanCard,
+                                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                                        shape    = RoundedCornerShape(12.dp),
+                                        colors   = ButtonDefaults.filledTonalButtonColors(
+                                            containerColor = TealMid.copy(alpha = 0.15f),
+                                            contentColor   = TealLight
+                                        )
+                                    ) {
+                                        Icon(Icons.Filled.CreditCard, null, modifier = Modifier.size(20.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Scan Member Card", fontWeight = FontWeight.Medium)
+                                    }
+
+                                    OutlinedButton(
+                                        onClick  = onAddGuest,
+                                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                                        shape    = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Filled.PersonAdd, null,
+                                            tint     = TextSecondary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Add Guest", color = TextSecondary, fontWeight = FontWeight.Medium)
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -334,12 +461,12 @@ private fun AddCrewContent(
 @Composable
 private fun CrewRow(entry: CrewEntry, onRemove: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
+        modifier              = Modifier.fillMaxWidth(),
+        verticalAlignment     = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment     = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Box(
@@ -357,20 +484,16 @@ private fun CrewRow(entry: CrewEntry, onRemove: () -> Unit) {
             }
             Column {
                 Text(
-                    text  = entry.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White,
+                    text       = entry.name,
+                    style      = MaterialTheme.typography.bodyLarge,
+                    color      = Color.White,
                     fontWeight = FontWeight.Medium
                 )
                 if (entry.isGuest) {
-                    Text(
-                        text  = "Guest",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = UnavailableRed
-                    )
+                    Text("Guest", style = MaterialTheme.typography.labelSmall, color = UnavailableRed)
                 } else if (entry.cardUid != null) {
                     Text(
-                        text  = "Card: …${entry.cardUid.takeLast(4)}",
+                        "Card: …${entry.cardUid.takeLast(4)}",
                         style = MaterialTheme.typography.labelSmall,
                         color = TextMuted
                     )
@@ -390,10 +513,7 @@ private fun NameInputField(onSubmit: (String) -> Unit) {
 
     fun submit() {
         val trimmed = text.trim()
-        if (trimmed.isNotEmpty()) {
-            onSubmit(trimmed)
-            text = ""
-        }
+        if (trimmed.isNotEmpty()) { onSubmit(trimmed); text = "" }
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -401,18 +521,14 @@ private fun NameInputField(onSubmit: (String) -> Unit) {
             value         = text,
             onValueChange = { text = it },
             placeholder   = { Text("Crew member name…", color = TextMuted) },
-            leadingIcon   = {
-                Icon(Icons.Filled.Person, null, tint = TextMuted, modifier = Modifier.size(20.dp))
-            },
+            leadingIcon   = { Icon(Icons.Filled.Person, null, tint = TextMuted, modifier = Modifier.size(20.dp)) },
             singleLine    = true,
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Words,
                 imeAction      = ImeAction.Done
             ),
             keyboardActions = KeyboardActions(onDone = { submit() }),
-            modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(focusRequester),
+            modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
             shape  = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor   = TealMid,
@@ -423,21 +539,17 @@ private fun NameInputField(onSubmit: (String) -> Unit) {
             )
         )
         ElevatedButton(
-            onClick   = { submit() },
-            enabled   = text.trim().isNotEmpty(),
-            modifier  = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            shape     = RoundedCornerShape(12.dp),
-            colors    = ButtonDefaults.elevatedButtonColors(
-                containerColor = TealMid.copy(alpha = 0.9f),
-                contentColor   = Color.White,
+            onClick  = { submit() },
+            enabled  = text.trim().isNotEmpty(),
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+            shape    = RoundedCornerShape(12.dp),
+            colors   = ButtonDefaults.elevatedButtonColors(
+                containerColor         = TealMid.copy(alpha = 0.9f),
+                contentColor           = Color.White,
                 disabledContainerColor = TealMid.copy(alpha = 0.2f),
                 disabledContentColor   = TextMuted
             )
-        ) {
-            Text("Add Name", fontWeight = FontWeight.Medium)
-        }
+        ) { Text("Add Name", fontWeight = FontWeight.Medium) }
     }
 }
 
@@ -445,12 +557,9 @@ private fun NameInputField(onSubmit: (String) -> Unit) {
 private fun NfcWaitPanel() {
     val infiniteTransition = rememberInfiniteTransition(label = "nfc_pulse")
     val alpha by infiniteTransition.animateFloat(
-        initialValue = 0.3f,
-        targetValue  = 1f,
-        animationSpec = infiniteRepeatable(
-            animation  = tween(900),
-            repeatMode = RepeatMode.Reverse
-        ),
+        initialValue  = 0.3f,
+        targetValue   = 1f,
+        animationSpec = infiniteRepeatable(animation = tween(900), repeatMode = RepeatMode.Reverse),
         label = "nfc_alpha"
     )
 
@@ -467,55 +576,42 @@ private fun NfcWaitPanel() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Icon(
-                Icons.Filled.Nfc, null,
-                tint     = TealLight.copy(alpha = alpha),
-                modifier = Modifier.size(56.dp)
-            )
+            Icon(Icons.Filled.Nfc, null, tint = TealLight.copy(alpha = alpha), modifier = Modifier.size(56.dp))
             Text(
-                text  = "Tap crew member's card",
-                style = MaterialTheme.typography.titleMedium,
-                color = TealLight.copy(alpha = alpha),
+                "Tap crew member's card",
+                style      = MaterialTheme.typography.titleMedium,
+                color      = TealLight.copy(alpha = alpha),
                 fontWeight = FontWeight.SemiBold
             )
-            Text(
-                text  = "Or tap Cancel Scan to go back",
-                style = MaterialTheme.typography.bodySmall,
-                color = TextMuted
-            )
+            Text("Or tap Cancel Scan to go back", style = MaterialTheme.typography.bodySmall, color = TextMuted)
         }
     }
 }
 
 @Preview(widthDp = 960, heightDp = 600, showBackground = true, backgroundColor = 0xFF0D1B2A)
 @Composable
-private fun AddCrewPreview() {
+private fun AddCrewPreviewLandscape() {
     DigitalCheckoutTheme {
         AddCrewContent(
-            memberName    = "Alex Sailor",
-            craftName     = "Vanguard #1",
-            crew          = listOf(
-                CrewEntry("Jordan Lee", isGuest = false),
-                CrewEntry("Guest", isGuest = true)
-            ),
+            memberName = "Alex Sailor", craftName = "Vanguard #1",
+            crew = listOf(CrewEntry("Jordan Lee", false), CrewEntry("Guest", true)),
             isAwaitingNfc = false,
-            onAddByName   = {}, onAddGuest = {}, onScanCard = {},
-            onRemove      = {}, onDone     = {}, onCancel   = {}
+            onAddByName = {}, onAddGuest = {}, onScanCard = {},
+            onRemove = {}, onDone = {}, onCancel = {}
         )
     }
 }
 
-@Preview(widthDp = 960, heightDp = 600, showBackground = true, backgroundColor = 0xFF0D1B2A)
+@Preview(widthDp = 400, heightDp = 860, showBackground = true, backgroundColor = 0xFF0D1B2A)
 @Composable
-private fun NfcWaitPreview() {
+private fun AddCrewPreviewPortrait() {
     DigitalCheckoutTheme {
         AddCrewContent(
-            memberName    = "Alex Sailor",
-            craftName     = "Vanguard #1",
-            crew          = listOf(CrewEntry("Jordan Lee", isGuest = false)),
-            isAwaitingNfc = true,
-            onAddByName   = {}, onAddGuest = {}, onScanCard = {},
-            onRemove      = {}, onDone     = {}, onCancel   = {}
+            memberName = "Alex Sailor", craftName = "Vanguard #1",
+            crew = listOf(CrewEntry("Jordan Lee", false), CrewEntry("Guest", true)),
+            isAwaitingNfc = false,
+            onAddByName = {}, onAddGuest = {}, onScanCard = {},
+            onRemove = {}, onDone = {}, onCancel = {}
         )
     }
 }

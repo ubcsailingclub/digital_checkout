@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr:*)",
+      "Bash(where:*)",
+      "Bash(winget list:*)",
+      "Bash(git remote get-url:*)",
+      "Bash(gh:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(cmd /c \"where gh 2>nul || echo NOT FOUND\")",
+      "Bash(cmd /c \"gh --version 2>nul || echo NOT FOUND\")",
+      "Bash(cmd /c \"dir \"\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\"\" 2>nul\")",
+      "Bash(cmd /c \"dir \"\"C:\\\\Users\\\\Hugo\\\\AppData\\\\Local\\\\Programs\\\\GitHub CLI\\\\gh.exe\"\" 2>nul\")",
+      "Bash(cmd /c \"dir \"\"%LOCALAPPDATA%\\\\Microsoft\\\\WinGet\\\\Packages\"\" 2>nul | findstr /i github\")",
+      "Bash(cmd /c \"dir /s /b \"\"C:\\\\Program Files\\\\gh.exe\"\" 2>nul\")",
+      "Bash(cmd /c \"dir /s /b \"\"%LOCALAPPDATA%\\\\gh.exe\"\" 2>nul\")",
+      "Bash(cmd /c \"dir /s /b \"\"%APPDATA%\\\\gh.exe\"\" 2>nul\")",
+      "Bash(cmd /c \"reg query HKLM\\\\SOFTWARE\\\\GitHub /s 2>nul\")",
+      "Bash(cmd /c \"reg query HKCU\\\\SOFTWARE\\\\GitHub /s 2>nul\")",
+      "Bash(cmd /c \"systeminfo | findstr /i hyper\")",
+      "Bash(cmd /c \"systeminfo 2>nul | findstr /i /c:\"\"hyper-v\"\" /c:\"\"virtualization\"\" /c:\"\"firmware\"\"\")",
+      "Bash(cmd /c \"systeminfo 2>nul\")",
+      "Bash(ls:*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(curl:*)",
+      "Bash(.venv/Scripts/uvicorn.exe:*)",
+      "Bash(cmd /c \"ipconfig | findstr /i \"\"IPv4\"\"\")",
+      "Bash(ipconfig:*)",
+      "Bash(cmd /c \"netsh advfirewall firewall show rule name=all dir=in | findstr /i \"\"8000\"\"\")",
+      "Bash(cmd /c \"netsh advfirewall firewall show rule name=\"\"FastAPI Dev\"\" 2>nul || echo NO_RULE\")",
+      "Bash(.venv/Scripts/python.exe:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(python:*)",
+      "Bash(.venv/Scripts/alembic.exe upgrade:*)",
+      "Bash(tasklist:*)",
+      "Bash(wmic process where \"name=''python.exe''\" get processid,commandline)"
+    ]
+  }
+}

@@ -19,11 +19,7 @@
         { "code": "QS01", "name": "Quest #1 + Spinnaker" },
         { "code": "QS02", "name": "Quest #2 + Spinnaker" },
         { "code": "QS03", "name": "Quest #3 + Spinnaker" },
-        { "code": "QS04", "name": "Quest #4 + Spinnaker" },
-        { "code": "QS05", "name": "Quest #5 + Spinnaker" },
-        { "code": "QS06", "name": "Quest #6 + Spinnaker" },
-        { "code": "QS07", "name": "Quest #7 + Spinnaker" },
-        { "code": "QS08", "name": "Quest #8 + Spinnaker" }
+        { "code": "QS04", "name": "Quest #4 + Spinnaker" }
       ]
     },
     {
