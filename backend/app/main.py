@@ -1,4 +1,5 @@
 ﻿import logging
+import os
 from contextlib import asynccontextmanager
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -24,10 +25,10 @@ def _run_member_sync() -> None:
             return
 
         logger.info("Scheduled member sync starting…")
-        token    = _get_token(settings.wa_api_key)
+        token = _get_token(settings.wa_api_key)
         contacts = _get_all_contacts(token, settings.wa_account_id)
         with Session(engine) as session:
-            _sync(session, contacts)
+            _sync(session, contacts, token, settings.wa_account_id)  # <-- fixed
         logger.info("Scheduled member sync complete.")
     except Exception:
         logger.exception("Scheduled member sync failed.")
@@ -35,31 +36,34 @@ def _run_member_sync() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    scheduler = BackgroundScheduler()
-    # Run immediately on startup, then every 6 hours
-    scheduler.add_job(_run_member_sync, "interval", hours=6, id="member_sync")
-    scheduler.start()
-    _run_member_sync()  # eager first run so the DB is populated right away
+    scheduler = None
+
+    # Default OFF for local dev unless explicitly enabled
+    run_sync = os.getenv("RUN_MEMBER_SYNC_ON_STARTUP", "false").lower() == "true"
+
+    if run_sync:
+        scheduler = BackgroundScheduler()
+        # Run every 6 hours
+        scheduler.add_job(_run_member_sync, "interval", hours=6, id="member_sync")
+        scheduler.start()
+        _run_member_sync()  # eager first run (only if enabled)
+        logger.info("Member sync scheduler enabled.")
+    else:
+        logger.info("Member sync scheduler disabled (RUN_MEMBER_SYNC_ON_STARTUP != true).")
+
     yield
-    scheduler.shutdown()
+
+    if scheduler is not None:
+        scheduler.shutdown()
 
 
 app = FastAPI(title="UBCSC Digital Checkout API", version="0.1.0", lifespan=lifespan)
 
-# ---------------------------------------------------------------------------
-# API v1 routers
-# ---------------------------------------------------------------------------
-
 API_PREFIX = "/api/v1"
-
-app.include_router(crafts.router,  prefix=API_PREFIX)
+app.include_router(crafts.router, prefix=API_PREFIX)
 app.include_router(members.router, prefix=API_PREFIX)
 app.include_router(sessions.router, prefix=API_PREFIX)
 
-
-# ---------------------------------------------------------------------------
-# Health / root
-# ---------------------------------------------------------------------------
 
 @app.get("/health")
 def health() -> dict[str, str]:

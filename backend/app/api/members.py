@@ -40,6 +40,8 @@ async def get_member_by_card(uid: str, db: Session = Depends(get_db)) -> MemberK
 
     result = get_member_by_card_uid(db, uid, certifications)
     if result is None:
+        import logging
+        logging.getLogger(__name__).warning("CARD NOT FOUND — raw: %r  normalized: %r", uid, normalized)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Card not recognised or member inactive",
