@@ -7,7 +7,7 @@ from fastapi import Depends, FastAPI
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.api import crafts, members, sessions
+from app.api import admin, crafts, members, sessions
 from app.db.deps import get_db
 
 logger = logging.getLogger(__name__)
@@ -63,6 +63,7 @@ API_PREFIX = "/api/v1"
 app.include_router(crafts.router, prefix=API_PREFIX)
 app.include_router(members.router, prefix=API_PREFIX)
 app.include_router(sessions.router, prefix=API_PREFIX)
+app.include_router(admin.router)  # /admin — no API prefix, browser-facing
 
 
 @app.get("/health")

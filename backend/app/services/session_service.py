@@ -6,9 +6,10 @@ from sqlalchemy.orm import Session
 from app.models.checkout_session import CheckoutSession
 from app.models.craft import Craft
 from app.models.crew import SessionCrewMember
-from app.models.member import MemberCard
-from app.schemas.session import CrewInput, SessionCreate, SessionResponse
+from app.models.member import Member, MemberCard
+from app.schemas.session import CheckinRequest, CrewInput, SessionCreate, SessionResponse
 from app.services.member_service import normalize_card_uid
+from app.services.sheets_service import post_damage_report
 
 
 def create_checkout(db: Session, req: SessionCreate) -> SessionResponse:
@@ -85,8 +86,8 @@ def create_checkout(db: Session, req: SessionCreate) -> SessionResponse:
     )
 
 
-def complete_checkin(db: Session, req_card_uid: str) -> SessionResponse:
-    uid = normalize_card_uid(req_card_uid)
+def complete_checkin(db: Session, req: CheckinRequest) -> SessionResponse:
+    uid = normalize_card_uid(req.card_uid)
 
     card = db.execute(
         select(MemberCard).where(
@@ -109,11 +110,24 @@ def complete_checkin(db: Session, req_card_uid: str) -> SessionResponse:
 
     craft = db.get(Craft, session.craft_id)
 
+    member = db.get(Member, card.member_id)
+
     now = datetime.now(tz=timezone.utc)
-    session.checkin_time  = now
-    session.status        = "completed"
-    session.checkin_method = "self_service"
+    session.checkin_time    = now
+    session.status          = "completed"
+    session.checkin_method  = "self_service"
+    session.notes_in        = req.notes_in or None
+    session.damage_reported = req.damage_reported
     db.commit()
+
+    # Fire-and-forget: post to Google Sheet if damage was reported
+    if req.damage_reported:
+        post_damage_report(
+            member_name = member.full_name if member else "Unknown",
+            craft_name  = craft.display_name if craft else "Unknown craft",
+            notes       = req.notes_in,
+            session_id  = session.id,
+        )
 
     return SessionResponse(
         session_id = session.id,

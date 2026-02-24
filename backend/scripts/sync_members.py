@@ -288,8 +288,9 @@ def _sync(
     total = len(contacts)
 
     for i, c in enumerate(contacts, start=1):
-        if i % 100 == 0 or i == total:
+        if i % 50 == 0 or i == total:
             print(f"  Sync progress: {i}/{total}")
+            session.commit()  # release write lock so checkouts can proceed
 
         wa_id = c.get("Id")
         if not wa_id:

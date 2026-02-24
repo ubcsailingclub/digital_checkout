@@ -52,5 +52,7 @@ data class SessionCreateDto(
 )
 
 data class CheckinRequestDto(
-    @SerializedName("card_uid") val cardUid: String
+    @SerializedName("card_uid")        val cardUid: String,
+    @SerializedName("notes_in")        val notesIn: String? = null,
+    @SerializedName("damage_reported") val damageReported: Boolean = false
 )

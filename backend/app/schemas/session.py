@@ -16,6 +16,8 @@ class SessionCreate(BaseModel):
 
 class CheckinRequest(BaseModel):
     card_uid: str
+    notes_in: str | None = None
+    damage_reported: bool = False
 
 
 class SessionResponse(BaseModel):

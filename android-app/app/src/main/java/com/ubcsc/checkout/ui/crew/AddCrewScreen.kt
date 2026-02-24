@@ -279,9 +279,9 @@ private fun AddCrewContent(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        "Solo sail — no crew required",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = TextMuted
+                                        "Add at least one crew member to continue",
+                                        style     = MaterialTheme.typography.bodyMedium,
+                                        color     = TextMuted
                                     )
                                 }
                             } else {
@@ -305,12 +305,14 @@ private fun AddCrewContent(
 
                             ElevatedButton(
                                 onClick   = onDone,
-                                enabled   = !isAwaitingNfc,
+                                enabled   = !isAwaitingNfc && crew.isNotEmpty(),
                                 modifier  = Modifier.fillMaxWidth().height(52.dp),
                                 shape     = RoundedCornerShape(12.dp),
                                 colors    = ButtonDefaults.elevatedButtonColors(
-                                    containerColor = TealMid,
-                                    contentColor   = Color.White
+                                    containerColor         = TealMid,
+                                    contentColor           = Color.White,
+                                    disabledContainerColor = TealMid.copy(alpha = 0.2f),
+                                    disabledContentColor   = TextMuted
                                 ),
                                 elevation = ButtonDefaults.elevatedButtonElevation(8.dp)
                             ) {
@@ -357,9 +359,9 @@ private fun AddCrewContent(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        "Solo sail — no crew required",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = TextMuted
+                                        "Add at least one crew member to continue",
+                                        style     = MaterialTheme.typography.bodyMedium,
+                                        color     = TextMuted
                                     )
                                 }
                             } else {
@@ -383,12 +385,14 @@ private fun AddCrewContent(
 
                             ElevatedButton(
                                 onClick   = onDone,
-                                enabled   = !isAwaitingNfc,
+                                enabled   = !isAwaitingNfc && crew.isNotEmpty(),
                                 modifier  = Modifier.fillMaxWidth().height(56.dp),
                                 shape     = RoundedCornerShape(12.dp),
                                 colors    = ButtonDefaults.elevatedButtonColors(
-                                    containerColor = TealMid,
-                                    contentColor   = Color.White
+                                    containerColor         = TealMid,
+                                    contentColor           = Color.White,
+                                    disabledContainerColor = TealMid.copy(alpha = 0.2f),
+                                    disabledContentColor   = TextMuted
                                 ),
                                 elevation = ButtonDefaults.elevatedButtonElevation(8.dp)
                             ) {

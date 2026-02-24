@@ -18,6 +18,13 @@ class Settings(BaseSettings):
     # Kiosk authentication — set a strong random value in .env
     kiosk_api_key: str = "change-me-in-dotenv"
 
+    # Google Apps Script webhook for damage reports (optional)
+    damage_report_webhook_url: str | None = None
+    damage_report_webhook_secret: str = "ubcsc-damage-webhook"
+
+    # Admin web interface key — set a strong value in .env
+    admin_api_key: str = "change-me-admin"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

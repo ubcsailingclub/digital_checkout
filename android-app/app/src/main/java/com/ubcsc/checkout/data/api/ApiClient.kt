@@ -11,7 +11,7 @@ object ApiClient {
 
     private val httpClient: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
-        .readTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(40, TimeUnit.SECONDS)   // must exceed backend DB lock timeout (30 s)
         // Attach kiosk API key to every request
         .addInterceptor { chain ->
             val request = chain.request().newBuilder()

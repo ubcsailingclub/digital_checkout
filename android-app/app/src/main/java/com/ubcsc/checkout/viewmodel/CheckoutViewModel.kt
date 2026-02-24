@@ -75,9 +75,18 @@ sealed class CheckoutUiState {
         val expectedReturnHours: Int? = null
     ) : CheckoutUiState()
     data class ConfirmCheckin(val member: Member, val checkout: ActiveCheckout) : CheckoutUiState()
+    data class DamageReport(val member: Member, val checkout: ActiveCheckout) : CheckoutUiState()
     data class Success(val message: String, val isCheckout: Boolean) : CheckoutUiState()
     data class Error(val message: String) : CheckoutUiState()
 }
+
+// Craft classes that are single-person — skip the crew screen entirely
+private val SOLO_CRAFT_CLASSES = setOf(
+    "Laser",
+    "Windsurfer L1", "Windsurfer L2", "Windsurfer L2.5", "Windsurfer L3",
+    "SUP",
+    "Kayak Single"
+)
 
 // ---------------------------------------------------------------------------
 // ViewModel
@@ -159,8 +168,8 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun onCraftSelected(member: Member, craft: Craft) {
-        // Laser is single-handed only — skip crew screen
-        if (craft.craftClass == "Laser") {
+        // Solo craft classes go straight to confirm — no crew needed
+        if (craft.craftClass in SOLO_CRAFT_CLASSES) {
             _uiState.value = CheckoutUiState.ConfirmCheckout(member, craft)
         } else {
             _uiState.value = CheckoutUiState.AddingCrew(member, craft)
@@ -247,10 +256,22 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun onConfirmCheckin(member: Member, checkout: ActiveCheckout) {
+        // Don't call the API yet — go to the damage report screen first
+        _uiState.value = CheckoutUiState.DamageReport(member, checkout)
+    }
+
+    fun onSubmitCheckin(member: Member, checkout: ActiveCheckout, notes: String?, hasDamage: Boolean) {
         viewModelScope.launch {
             _uiState.value = CheckoutUiState.Loading
             try {
-                api.checkin(checkout.sessionId, CheckinRequestDto(cardUid = member.cardUid))
+                api.checkin(
+                    checkout.sessionId,
+                    CheckinRequestDto(
+                        cardUid        = member.cardUid,
+                        notesIn        = notes?.takeIf { it.isNotBlank() },
+                        damageReported = hasDamage
+                    )
+                )
                 _uiState.value = CheckoutUiState.Success(
                     message    = "${checkout.craftName} returned",
                     isCheckout = false

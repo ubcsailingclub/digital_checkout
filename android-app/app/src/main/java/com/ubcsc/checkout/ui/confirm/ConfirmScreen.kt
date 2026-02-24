@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,8 +12,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,23 +23,28 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DirectionsBoat
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerDefaults
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -60,6 +64,7 @@ import com.ubcsc.checkout.ui.theme.CardBlue
 import com.ubcsc.checkout.ui.theme.DeepOcean
 import com.ubcsc.checkout.ui.theme.DigitalCheckoutTheme
 import com.ubcsc.checkout.ui.theme.DividerColor
+import com.ubcsc.checkout.ui.theme.OceanSurface
 import com.ubcsc.checkout.ui.theme.TealLight
 import com.ubcsc.checkout.ui.theme.TealMid
 import com.ubcsc.checkout.ui.theme.TextMuted
@@ -73,14 +78,24 @@ import com.ubcsc.checkout.viewmodel.Craft
 import com.ubcsc.checkout.viewmodel.CrewEntry
 import com.ubcsc.checkout.viewmodel.Member
 import kotlinx.coroutines.delay
+import java.time.Duration
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import kotlin.math.ceil
 
 private const val INACTIVITY_TIMEOUT_MS = 30_000L
 
 private fun enterTransition() = fadeIn(tween(300)) + slideInVertically(tween(300)) { it / 4 }
 
-// Null = no ETR set
-private val etrOptions: List<Int?> = listOf(null, 1, 2, 3, 4)
-private fun etrLabel(hours: Int?) = if (hours == null) "No ETR" else "+${hours}h"
+private val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
+
+/** Converts a wall-clock return time to a whole-hours offset from now (minimum 1). */
+private fun computeEtrHours(returnTime: LocalTime?): Int? {
+    returnTime ?: return null
+    var minutes = Duration.between(LocalTime.now(), returnTime).toMinutes()
+    if (minutes <= 0) minutes += 24 * 60   // treat as next-day selection
+    return if (minutes <= 0) null else ceil(minutes / 60.0).toInt().coerceAtLeast(1)
+}
 
 @Composable
 fun ConfirmScreen(uiState: CheckoutUiState, viewModel: CheckoutViewModel) {
@@ -110,16 +125,62 @@ fun ConfirmScreen(uiState: CheckoutUiState, viewModel: CheckoutViewModel) {
 // Checkout confirm (with ETR + crew)
 // ---------------------------------------------------------------------------
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CheckoutConfirmContent(
     state:     CheckoutUiState.ConfirmCheckout,
     onConfirm: (Int?) -> Unit,
     onCancel:  () -> Unit
 ) {
-    var selectedEtr by remember { mutableIntStateOf(2) }  // default +2h (index 2)
-    var visible     by remember { mutableStateOf(false) }
+    // Default return time: now rounded to the next whole hour + 2 h
+    val defaultReturnTime = remember {
+        LocalTime.now().plusHours(2).withMinute(0).withSecond(0).withNano(0)
+    }
+    var returnTime by remember { mutableStateOf<LocalTime?>(defaultReturnTime) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    val timePickerState = rememberTimePickerState(
+        initialHour   = defaultReturnTime.hour,
+        initialMinute = defaultReturnTime.minute,
+        is24Hour      = false
+    )
+
+    var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
+
+    // Time picker dialog
+    if (showTimePicker) {
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            title            = { Text("Set return time", color = Color.White) },
+            text             = {
+                TimePicker(
+                    state  = timePickerState,
+                    colors = TimePickerDefaults.colors(
+                        clockDialColor            = OceanSurface,
+                        selectorColor             = TealMid,
+                        containerColor            = CardBlue,
+                        periodSelectorBorderColor = TealMid,
+                        timeSelectorSelectedContainerColor   = TealMid.copy(alpha = 0.3f),
+                        timeSelectorUnselectedContainerColor = OceanSurface,
+                        timeSelectorSelectedContentColor     = TealLight,
+                        timeSelectorUnselectedContentColor   = TextSecondary,
+                    )
+                )
+            },
+            confirmButton    = {
+                TextButton(onClick = {
+                    returnTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
+                    showTimePicker = false
+                }) { Text("Set", color = TealLight) }
+            },
+            dismissButton    = {
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text("Cancel", color = TextSecondary)
+                }
+            },
+            containerColor   = CardBlue
+        )
+    }
 
     BoxWithConstraints(
         modifier = Modifier
@@ -151,7 +212,6 @@ private fun CheckoutConfirmContent(
                 ) {
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Compact boat image
                     Box(
                         modifier = Modifier
                             .size(100.dp)
@@ -175,7 +235,6 @@ private fun CheckoutConfirmContent(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Details + ETR card — full width
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -209,40 +268,17 @@ private fun CheckoutConfirmContent(
                             )
                         }
                         HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp), color = DividerColor)
-                        // ETR picker
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Filled.AccessTime, null, tint = TextSecondary, modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text("Return by", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
-                            Spacer(modifier = Modifier.width(12.dp))
-                            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                etrOptions.forEachIndexed { idx, hours ->
-                                    FilterChip(
-                                        selected = selectedEtr == idx,
-                                        onClick  = { selectedEtr = idx },
-                                        label    = { Text(etrLabel(hours), style = MaterialTheme.typography.labelMedium) },
-                                        colors   = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor = TealMid.copy(alpha = 0.25f),
-                                            selectedLabelColor     = TealLight,
-                                            labelColor             = TextMuted
-                                        ),
-                                        border = FilterChipDefaults.filterChipBorder(
-                                            enabled             = true,
-                                            selected            = selectedEtr == idx,
-                                            selectedBorderColor = TealMid,
-                                            borderColor         = DividerColor
-                                        )
-                                    )
-                                }
-                            }
-                        }
+                        EtrRow(
+                            returnTime  = returnTime,
+                            onPickTime  = { showTimePicker = true },
+                            onClearTime = { returnTime = null }
+                        )
                     }
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    // Large confirm button — full width
                     ElevatedButton(
-                        onClick   = { onConfirm(etrOptions[selectedEtr]) },
+                        onClick   = { onConfirm(computeEtrHours(returnTime)) },
                         modifier  = Modifier.fillMaxWidth().height(58.dp),
                         shape     = RoundedCornerShape(14.dp),
                         colors    = ButtonDefaults.elevatedButtonColors(
@@ -277,7 +313,6 @@ private fun CheckoutConfirmContent(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 60.dp)
                 ) {
-                    // Boat icon panel
                     Box(
                         modifier = Modifier
                             .size(180.dp)
@@ -299,7 +334,6 @@ private fun CheckoutConfirmContent(
                         )
                     }
 
-                    // Details card — weight(1f) instead of hardcoded width
                     Column(
                         modifier = Modifier
                             .weight(1f)
@@ -333,33 +367,11 @@ private fun CheckoutConfirmContent(
                             )
                         }
                         HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp), color = DividerColor)
-                        // ETR picker
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Filled.AccessTime, null, tint = TextSecondary, modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text("Return by", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
-                            Spacer(modifier = Modifier.width(12.dp))
-                            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                etrOptions.forEachIndexed { idx, hours ->
-                                    FilterChip(
-                                        selected = selectedEtr == idx,
-                                        onClick  = { selectedEtr = idx },
-                                        label    = { Text(etrLabel(hours), style = MaterialTheme.typography.labelMedium) },
-                                        colors   = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor = TealMid.copy(alpha = 0.25f),
-                                            selectedLabelColor     = TealLight,
-                                            labelColor             = TextMuted
-                                        ),
-                                        border = FilterChipDefaults.filterChipBorder(
-                                            enabled             = true,
-                                            selected            = selectedEtr == idx,
-                                            selectedBorderColor = TealMid,
-                                            borderColor         = DividerColor
-                                        )
-                                    )
-                                }
-                            }
-                        }
+                        EtrRow(
+                            returnTime  = returnTime,
+                            onPickTime  = { showTimePicker = true },
+                            onClearTime = { returnTime = null }
+                        )
                         Spacer(modifier = Modifier.height(20.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             OutlinedButton(
@@ -368,7 +380,7 @@ private fun CheckoutConfirmContent(
                                 shape    = RoundedCornerShape(12.dp)
                             ) { Text(stringResource(R.string.cancel_button), color = TextSecondary) }
                             ElevatedButton(
-                                onClick   = { onConfirm(etrOptions[selectedEtr]) },
+                                onClick   = { onConfirm(computeEtrHours(returnTime)) },
                                 modifier  = Modifier.height(52.dp).weight(1.5f),
                                 shape     = RoundedCornerShape(12.dp),
                                 colors    = ButtonDefaults.elevatedButtonColors(
@@ -416,9 +428,6 @@ private fun CheckinConfirmContent(
 
         AnimatedVisibility(visible = visible, enter = enterTransition()) {
             if (isPortrait) {
-                // -----------------------------------------------------------
-                // Portrait: vertical stacked layout
-                // -----------------------------------------------------------
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -507,9 +516,6 @@ private fun CheckinConfirmContent(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             } else {
-                // -----------------------------------------------------------
-                // Landscape: horizontal side-by-side layout
-                // -----------------------------------------------------------
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(40.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -536,7 +542,6 @@ private fun CheckinConfirmContent(
                         )
                     }
 
-                    // Details card — weight(1f) instead of hardcoded width
                     Column(
                         modifier = Modifier
                             .weight(1f)
@@ -588,6 +593,47 @@ private fun CheckinConfirmContent(
 }
 
 // ---------------------------------------------------------------------------
+// ETR row — clock button + optional clear
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun EtrRow(
+    returnTime:  LocalTime?,
+    onPickTime:  () -> Unit,
+    onClearTime: () -> Unit
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(Icons.Filled.AccessTime, null, tint = TextSecondary, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(10.dp))
+        Text("Return by", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+        Spacer(Modifier.width(12.dp))
+
+        OutlinedButton(
+            onClick = onPickTime,
+            shape   = RoundedCornerShape(8.dp),
+            border  = BorderStroke(1.dp, if (returnTime != null) TealMid else DividerColor),
+            colors  = ButtonDefaults.outlinedButtonColors(
+                contentColor = if (returnTime != null) TealLight else TextMuted
+            ),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+        ) {
+            Text(
+                text  = returnTime?.format(timeFormatter) ?: "Not set",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = if (returnTime != null) FontWeight.SemiBold else FontWeight.Normal
+            )
+        }
+
+        if (returnTime != null) {
+            Spacer(Modifier.width(2.dp))
+            IconButton(onClick = onClearTime, modifier = Modifier.size(32.dp)) {
+                Icon(Icons.Filled.Close, contentDescription = "Clear return time", tint = TextMuted, modifier = Modifier.size(16.dp))
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Shared helpers
 // ---------------------------------------------------------------------------
 
@@ -607,13 +653,37 @@ private fun DetailRow(icon: @Composable () -> Unit, text: String) {
 
 @Composable
 private fun LoadingOverlay() {
+    // Show a secondary hint if it's taking more than 5 seconds
+    var showSlowHint by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(5_000)
+        showSlowHint = true
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(DeepOcean),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(color = TealMid, modifier = Modifier.size(64.dp))
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            CircularProgressIndicator(color = TealMid, modifier = Modifier.size(64.dp))
+            Text(
+                text  = "Processing…",
+                style = MaterialTheme.typography.titleMedium,
+                color = TextSecondary
+            )
+            AnimatedVisibility(visible = showSlowHint) {
+                Text(
+                    text  = "Taking a little longer than usual — please wait",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextMuted
+                )
+            }
+        }
     }
 }
 

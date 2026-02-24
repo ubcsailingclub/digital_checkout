@@ -129,7 +129,7 @@
       ]
     },
     {
-      "class": "Kayak",
+      "class": "Kayak Single",
       "boats": [
         { "code": "KP01", "name": "Plastic Single #1" },
         { "code": "KP02", "name": "Plastic Single #2" },
@@ -142,7 +142,12 @@
         { "code": "KF03", "name": "Fibreglass Single M #3" },
         { "code": "KF04", "name": "Fibreglass Single M #4" },
         { "code": "KF05", "name": "Fibreglass Single S" },
-        { "code": "KF06", "name": "Fibreglass Single L" },
+        { "code": "KF06", "name": "Fibreglass Single L" }
+      ]
+    },
+    {
+      "class": "Kayak Double",
+      "boats": [
         { "code": "KD01", "name": "Double Kayak #1" },
         { "code": "KD02", "name": "Double Kayak #2" },
         { "code": "KD03", "name": "Double Kayak #3" }

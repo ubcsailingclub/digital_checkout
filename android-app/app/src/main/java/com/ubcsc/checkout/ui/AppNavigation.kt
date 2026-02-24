@@ -12,6 +12,7 @@ import com.ubcsc.checkout.ui.confirm.ConfirmScreen
 import com.ubcsc.checkout.ui.craft.BoatSelectScreen
 import com.ubcsc.checkout.ui.craft.CraftSelectScreen
 import com.ubcsc.checkout.ui.crew.AddCrewScreen
+import com.ubcsc.checkout.ui.damage.DamageReportScreen
 import com.ubcsc.checkout.ui.idle.IdleScreen
 import com.ubcsc.checkout.ui.member.MemberScreen
 import com.ubcsc.checkout.ui.result.ResultScreen
@@ -19,13 +20,14 @@ import com.ubcsc.checkout.viewmodel.CheckoutUiState
 import com.ubcsc.checkout.viewmodel.CheckoutViewModel
 
 object Routes {
-    const val IDLE = "idle"
-    const val MEMBER = "member"
-    const val CRAFT_SELECT = "craft_select"
-    const val BOAT_SELECT  = "boat_select"
-    const val CREW = "crew"
-    const val CONFIRM = "confirm"
-    const val RESULT = "result"
+    const val IDLE          = "idle"
+    const val MEMBER        = "member"
+    const val CRAFT_SELECT  = "craft_select"
+    const val BOAT_SELECT   = "boat_select"
+    const val CREW          = "crew"
+    const val CONFIRM       = "confirm"
+    const val DAMAGE_REPORT = "damage_report"
+    const val RESULT        = "result"
 }
 
 @Composable
@@ -58,6 +60,9 @@ fun AppNavigation(
             is CheckoutUiState.ConfirmCheckout,
             is CheckoutUiState.ConfirmCheckin -> navController.navigate(Routes.CONFIRM) {
                 popUpTo(Routes.MEMBER)
+            }
+            is CheckoutUiState.DamageReport -> navController.navigate(Routes.DAMAGE_REPORT) {
+                popUpTo(Routes.IDLE)
             }
             is CheckoutUiState.Success,
             is CheckoutUiState.Error -> navController.navigate(Routes.RESULT) {
@@ -105,6 +110,10 @@ fun AppNavigation(
 
         composable(Routes.CONFIRM) {
             ConfirmScreen(uiState = uiState, viewModel = viewModel)
+        }
+
+        composable(Routes.DAMAGE_REPORT) {
+            DamageReportScreen(uiState = uiState, viewModel = viewModel)
         }
 
         composable(Routes.RESULT) {
