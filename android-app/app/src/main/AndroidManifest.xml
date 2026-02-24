@@ -15,7 +15,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.DigitalCheckout"
-        android:screenOrientation="landscape">
+        android:screenOrientation="landscape"
+        android:usesCleartextTraffic="true">
 
         <activity
             android:name=".MainActivity"

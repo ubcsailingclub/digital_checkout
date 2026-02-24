@@ -1,5 +1,7 @@
 ﻿from __future__ import annotations
 
+import json
+
 from sqlalchemy import Boolean, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -20,6 +22,19 @@ class Member(TimestampMixin, Base):
 
     membership_status: Mapped[str] = mapped_column(String(50), default="unknown", nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+    # JSON-encoded list of certified craft classes, e.g. ["Laser", "RS Quest"]
+    # Populated during WA sync; "*" means all-access (exec/instructor).
+    certifications_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    @property
+    def certifications(self) -> list[str]:
+        if not self.certifications_json:
+            return []
+        try:
+            return json.loads(self.certifications_json)
+        except Exception:
+            return []
 
     cards: Mapped[list["MemberCard"]] = relationship(
         back_populates="member",

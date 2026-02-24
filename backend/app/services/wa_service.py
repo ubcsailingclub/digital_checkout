@@ -127,9 +127,10 @@ class WildApricotClient:
         if isinstance(level, dict) and level.get("Name"):
             groups.append(level["Name"])
 
-        # FieldValues — look for group-type fields
+        # FieldValues — certification groups (SystemCode='Groups',
+        # display name 'Equipment certification achieved')
         for field in contact.get("FieldValues", []):
-            if field.get("FieldName") == "Group participation":
+            if field.get("SystemCode") == "Groups" or field.get("FieldName") == "Equipment certification achieved":
                 value = field.get("Value")
                 if isinstance(value, list):
                     groups.extend(

@@ -10,7 +10,11 @@ Run from the backend/ directory:
 """
 
 import base64
+import json
 import sys
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import httpx
@@ -23,6 +27,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from app.core.config import settings
 from app.db.session import engine
 from app.models.member import Member, MemberCard
+from app.services.member_service import normalize_card_uid
+from app.services.wa_service import groups_to_certifications
 
 
 # ---------------------------------------------------------------------------
@@ -60,7 +66,7 @@ def _get_token(api_key: str) -> str:
 
 def _get_all_contacts(token: str, account_id: int) -> list[dict]:
     """
-    Page through contacts from WA (not just active — we set is_active from Status).
+    Page through contacts from WA (not just active -- we set is_active from Status).
 
     The paged payload is used for bulk member upsert (fast), but some membership custom
     fields may be missing there, so card extraction can fall back to full contact fetch.
@@ -82,7 +88,7 @@ def _get_all_contacts(token: str, account_id: int) -> list[dict]:
         batch = data.get("Contacts", [])
         contacts.extend(batch)
 
-        print(f"  Fetched {len(contacts)} so far…")
+        print(f"  Fetched {len(contacts)} so far...")
 
         if len(batch) < PAGE_SIZE:
             break
@@ -173,15 +179,104 @@ def _field_value_by_name_or_system_code(
     return _field_value_by_name(contact, field_name)
 
 
-def _normalize_card(uid: str) -> str:
-    return str(uid).strip().upper()
+def _extract_groups(contact: dict) -> list[str]:
+    """
+    Extract MembershipLevel name + certification group labels from a WA contact.
+
+    Certification groups live in the field with SystemCode='Groups'
+    (display name: 'Equipment certification achieved').
+    MembershipLevel is also included for Exec/Instructor catch-all mappings.
+    """
+    groups: list[str] = []
+    level = contact.get("MembershipLevel")
+    if isinstance(level, dict) and level.get("Name"):
+        groups.append(level["Name"])
+    for fv in contact.get("FieldValues", []):
+        if fv.get("SystemCode") == "Groups" or fv.get("FieldName") == "Equipment certification achieved":
+            val = fv.get("Value")
+            if isinstance(val, list):
+                groups.extend(item.get("Label", "") for item in val if item.get("Label"))
+    return groups
+
+
+# ---------------------------------------------------------------------------
+# Rate-limited parallel individual-contact hydration
+# ---------------------------------------------------------------------------
+
+# WA allows 120 requests/minute. We target 100/min (0.6s between requests)
+# to leave headroom. A global lock serialises the minimum-interval enforcement
+# across all worker threads.
+_rate_lock = threading.Lock()
+_last_request_ts: float = 0.0
+_MIN_INTERVAL = 0.6  # seconds -> ~100 req/min
+
+
+def _get_contact_detail_throttled(token: str, account_id: int, contact_id: int) -> dict:
+    global _last_request_ts
+    with _rate_lock:
+        elapsed = time.monotonic() - _last_request_ts
+        if elapsed < _MIN_INTERVAL:
+            time.sleep(_MIN_INTERVAL - elapsed)
+        _last_request_ts = time.monotonic()
+    return _get_contact_detail(token, account_id, contact_id)
+
+
+def _prefetch_active_contacts(
+    contacts: list[dict],
+    token: str,
+    account_id: int,
+    max_workers: int = 4,
+) -> dict[int, dict]:
+    """
+    Fetch full contact records from WA for all active members.
+
+    Uses a global rate limiter (~100 req/min) to stay within WA's 120/min cap.
+    With 4 workers and 0.6 s spacing the wall-clock time is roughly
+    (active_count x 0.6 s) -- about 5–6 min for 500 active members.
+    Returns a mapping of {wa_contact_id: full_contact_dict}.
+    """
+    active_ids = [
+        c["Id"]
+        for c in contacts
+        if c.get("Id") and (c.get("Status") or "").strip().lower() == "active"
+    ]
+    total = len(active_ids)
+    eta_min = round(total * _MIN_INTERVAL / 60, 1)
+    print(f"  Pre-fetching {total} active contacts (~{eta_min} min at {int(60/_MIN_INTERVAL)} req/min)...")
+
+    results: dict[int, dict] = {}
+    done = 0
+
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        futures = {
+            pool.submit(_get_contact_detail_throttled, token, account_id, wa_id): wa_id
+            for wa_id in active_ids
+        }
+        for future in as_completed(futures):
+            wa_id = futures[future]
+            done += 1
+            if done % 50 == 0 or done == total:
+                print(f"    ...fetched {done}/{total}")
+            try:
+                results[wa_id] = future.result()
+            except Exception as e:
+                print(f"  [WARN] Failed to fetch contact {wa_id}: {e}")
+
+    print(f"  Pre-fetch complete: {len(results)}/{total} succeeded.\n")
+    return results
 
 
 # ---------------------------------------------------------------------------
 # Sync logic
 # ---------------------------------------------------------------------------
 
-def _sync(session: Session, contacts: list[dict], token: str, account_id: int) -> None:
+def _sync(
+    session: Session,
+    contacts: list[dict],
+    token: str,
+    account_id: int,
+    full_contacts: dict[int, dict],
+) -> None:
     members_upserted = 0
     cards_added = 0
     cards_deactivated = 0
@@ -236,33 +331,30 @@ def _sync(session: Session, contacts: list[dict], token: str, account_id: int) -
 
         members_upserted += 1
 
-        # ---- card rotation — WA is the source of truth ----
-        # Fast path: paged payload. If missing and member is active, hydrate full contact.
+        # ---- card + certifications -- WA is the source of truth ----
+        # Use pre-fetched full contact for active members; fall back to paged data.
+        c_full = full_contacts.get(wa_id)  # None for inactive members
+        contact_rich = c_full if c_full is not None else c
+
         jericho_no = _field_value_by_name_or_system_code(
-            c,
+            contact_rich,
             field_name=JERICHO_CARD_FIELD,
             system_code=JERICHO_CARD_SYSTEM_CODE,
         )
 
-        if jericho_no is None and is_active:
-            try:
-                c_full = _get_contact_detail(token, account_id, wa_id)
-                jericho_no = _field_value_by_name_or_system_code(
-                    c_full,
-                    field_name=JERICHO_CARD_FIELD,
-                    system_code=JERICHO_CARD_SYSTEM_CODE,
-                )
-            except Exception as e:
-                print(f"  [WARN] Failed to fetch full contact {wa_id}: {e}")
+        # Update certifications from the richer contact record
+        groups = _extract_groups(contact_rich)
+        certs = groups_to_certifications(groups)
+        member.certifications_json = json.dumps(certs) if certs else None
 
-        wa_normalized = _normalize_card(jericho_no) if jericho_no else None
+        wa_normalized = normalize_card_uid(jericho_no) if jericho_no else None
 
         existing_cards = session.execute(
             select(MemberCard).where(MemberCard.member_id == member.id)
         ).scalars().all()
 
         if wa_normalized is None:
-            # WA has no card on file — deactivate all active cards for this member
+            # WA has no card on file -- deactivate all active cards for this member
             for card in existing_cards:
                 if card.is_active:
                     card.is_active = False
@@ -292,7 +384,7 @@ def _sync(session: Session, contacts: list[dict], token: str, account_id: int) -
             if target_card.member_id != member.id:
                 print(
                     f"  [WARN] Card {wa_normalized!r} reassigned from "
-                    f"member_id={target_card.member_id} → {member.id} ({full_name})"
+                    f"member_id={target_card.member_id} -> {member.id} ({full_name})"
                 )
             target_card.member_id = member.id
             target_card.is_active = True
@@ -330,17 +422,20 @@ def main() -> None:
         print("ERROR: WA_ACCOUNT_ID not set in backend/.env")
         sys.exit(1)
 
-    print("Authenticating with Wild Apricot…")
+    print("Authenticating with Wild Apricot...")
     token = _get_token(settings.wa_api_key)
     print("OK.\n")
 
-    print("Fetching contacts from WA…")
+    print("Fetching contacts from WA...")
     contacts = _get_all_contacts(token, settings.wa_account_id)
     print(f"Total contacts fetched: {len(contacts)}\n")
 
-    print("Syncing to local DB…")
+    print("Pre-fetching full records for active members...")
+    full_contacts = _prefetch_active_contacts(contacts, token, settings.wa_account_id)
+
+    print("Syncing to local DB...")
     with Session(engine) as session:
-        _sync(session, contacts, token, settings.wa_account_id)
+        _sync(session, contacts, token, settings.wa_account_id, full_contacts)
 
 
 if __name__ == "__main__":

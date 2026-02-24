@@ -195,6 +195,6 @@ private fun SuccessPreview() {
 @Composable
 private fun ErrorPreview() {
     DigitalCheckoutTheme {
-        ResultContent("Something went wrong", "Card not recognized. Please see dock staff.", false)
+        ResultContent("Something went wrong", "Card not recognized. Please contact an exec.", false)
     }
 }
