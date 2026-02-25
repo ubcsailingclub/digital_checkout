@@ -134,8 +134,8 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
                 _uiState.value = CheckoutUiState.MemberFound(member)
             } catch (e: HttpException) {
                 _uiState.value = when (e.code()) {
-                    404  -> CheckoutUiState.Error("Card not recognized. Please see the dock staff.")
-                    401  -> CheckoutUiState.Error("Kiosk configuration error. Please contact staff.")
+                    404  -> CheckoutUiState.Error("Card not recognized. Please see an exec.")
+                    401  -> CheckoutUiState.Error("Kiosk configuration error. Please contact an exec.")
                     else -> CheckoutUiState.Error("Server error (${e.code()}). Please try again.")
                 }
             } catch (e: Exception) {
