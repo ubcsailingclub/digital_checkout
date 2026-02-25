@@ -10,7 +10,7 @@ from app.models.crew import SessionCrewMember
 from app.models.member import Member, MemberCard
 from app.schemas.session import ActiveSessionInfo, CheckinRequest, CrewInput, SessionCreate, SessionResponse
 from app.services.member_service import normalize_card_uid
-from app.services.sheets_service import post_damage_report
+from app.services.sheets_service import post_checkout_event, post_damage_report
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +82,19 @@ def create_checkout(db: Session, req: SessionCreate) -> SessionResponse:
     db.commit()
     db.refresh(session)
 
+    # Fire-and-forget: log checkout to Google Sheet
+    member_obj = db.get(Member, card.member_id)
+    post_checkout_event(
+        event_type           = "checkout",
+        member_name          = member_obj.full_name if member_obj else "Unknown",
+        craft_name           = craft.display_name,
+        craft_code           = craft.craft_code,
+        session_id           = session.id,
+        party_size           = session.party_size,
+        expected_return_time = session.expected_return_time,
+        checkout_time        = session.checkout_time,
+    )
+
     return SessionResponse(
         session_id = session.id,
         status     = "active",
@@ -130,19 +143,37 @@ def complete_checkin(db: Session, req: CheckinRequest, session_id: int) -> Sessi
     session.damage_reported = req.damage_reported
     db.commit()
 
+    skipper_name = skipper.full_name if skipper else "Unknown"
+    craft_name   = craft.display_name if craft else "Unknown craft"
+    craft_code   = craft.craft_code if craft else ""
+
     # Fire-and-forget: post to Google Sheet if damage was reported
     if req.damage_reported:
         post_damage_report(
-            member_name = skipper.full_name if skipper else "Unknown",
-            craft_name  = craft.display_name if craft else "Unknown craft",
+            member_name = skipper_name,
+            craft_name  = craft_name,
             notes       = req.notes_in,
             session_id  = session.id,
         )
 
+    # Fire-and-forget: log check-in to the checkout log sheet
+    post_checkout_event(
+        event_type       = "checkin",
+        member_name      = skipper_name,
+        craft_name       = craft_name,
+        craft_code       = craft_code,
+        session_id       = session.id,
+        party_size       = session.party_size,
+        checkout_time    = session.checkout_time,
+        checkin_time     = session.checkin_time,
+        notes            = session.notes_in,
+        damage_reported  = session.damage_reported,
+    )
+
     return SessionResponse(
         session_id = session.id,
         status     = "completed",
-        message    = f"{craft.display_name if craft else 'Craft'} returned",
+        message    = f"{craft_name} returned",
     )
 
 
@@ -177,25 +208,41 @@ def auto_expire_overdue_sessions(db: Session, grace_hours: int = 2) -> int:
     """
     cutoff = datetime.now(tz=timezone.utc) - timedelta(hours=grace_hours)
 
-    overdue = db.execute(
-        select(CheckoutSession).where(
+    rows = db.execute(
+        select(CheckoutSession, Craft, Member)
+        .join(Craft,  CheckoutSession.craft_id  == Craft.id)
+        .join(Member, CheckoutSession.member_id == Member.id)
+        .where(
             CheckoutSession.status == "active",
             CheckoutSession.expected_return_time != None,
             CheckoutSession.expected_return_time < cutoff,
         )
-    ).scalars().all()
+    ).all()
 
     now = datetime.now(tz=timezone.utc)
-    for session in overdue:
+    for session, craft, member in rows:
         session.status         = "completed"
         session.checkin_time   = now
         session.checkin_method = "auto_expired"
         logger.info(
-            "Auto-expired session %d (craft_id=%d, ETR was %s)",
-            session.id, session.craft_id, session.expected_return_time,
+            "Auto-expired session %d (craft=%s, ETR was %s)",
+            session.id, craft.craft_code, session.expected_return_time,
         )
 
-    if overdue:
+    if rows:
         db.commit()
 
-    return len(overdue)
+    # Fire-and-forget: log each auto-expiry to the checkout log sheet
+    for session, craft, member in rows:
+        post_checkout_event(
+            event_type    = "auto_expired",
+            member_name   = member.full_name,
+            craft_name    = craft.display_name,
+            craft_code    = craft.craft_code,
+            session_id    = session.id,
+            party_size    = session.party_size,
+            checkout_time = session.checkout_time,
+            checkin_time  = session.checkin_time,
+        )
+
+    return len(rows)

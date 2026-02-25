@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     damage_report_webhook_url: str | None = None
     damage_report_webhook_secret: str = "ubcsc-damage-webhook"
 
+    # Google Apps Script webhook for the live checkout log sheet (optional)
+    checkout_log_webhook_url: str | None = None
+    checkout_log_webhook_secret: str = "ubcsc-checkout-log"
+
     # Admin web interface key — set a strong value in .env
     admin_api_key: str = "change-me-admin"
 
