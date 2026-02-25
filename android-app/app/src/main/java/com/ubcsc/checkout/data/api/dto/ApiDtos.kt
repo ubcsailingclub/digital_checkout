@@ -21,6 +21,16 @@ data class ActiveCheckoutDto(
     @SerializedName("craft_name") val craftName: String
 )
 
+data class ActiveSessionDto(
+    @SerializedName("session_id")           val sessionId: Int,
+    @SerializedName("craft_id")             val craftId: Int,
+    @SerializedName("craft_code")           val craftCode: String,
+    @SerializedName("craft_name")           val craftName: String,
+    @SerializedName("member_name")          val memberName: String,
+    @SerializedName("checkout_time")        val checkoutTime: String,
+    @SerializedName("expected_return_time") val expectedReturnTime: String? = null
+)
+
 data class MemberDto(
     @SerializedName("id")                   val id: Int,
     @SerializedName("display_name")         val displayName: String,

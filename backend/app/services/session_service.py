@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
@@ -7,9 +8,11 @@ from app.models.checkout_session import CheckoutSession
 from app.models.craft import Craft
 from app.models.crew import SessionCrewMember
 from app.models.member import Member, MemberCard
-from app.schemas.session import CheckinRequest, CrewInput, SessionCreate, SessionResponse
+from app.schemas.session import ActiveSessionInfo, CheckinRequest, CrewInput, SessionCreate, SessionResponse
 from app.services.member_service import normalize_card_uid
 from app.services.sheets_service import post_damage_report
+
+logger = logging.getLogger(__name__)
 
 
 def create_checkout(db: Session, req: SessionCreate) -> SessionResponse:
@@ -86,7 +89,12 @@ def create_checkout(db: Session, req: SessionCreate) -> SessionResponse:
     )
 
 
-def complete_checkin(db: Session, req: CheckinRequest) -> SessionResponse:
+def complete_checkin(db: Session, req: CheckinRequest, session_id: int) -> SessionResponse:
+    """Check in a session by its ID.
+
+    Any valid member card may check in any session — not just the original skipper's.
+    This allows crew members or volunteers to return a boat without the skipper present.
+    """
     uid = normalize_card_uid(req.card_uid)
 
     card = db.execute(
@@ -100,22 +108,24 @@ def complete_checkin(db: Session, req: CheckinRequest) -> SessionResponse:
 
     session = db.execute(
         select(CheckoutSession).where(
-            CheckoutSession.member_id == card.member_id,
+            CheckoutSession.id == session_id,
             CheckoutSession.status == "active",
         )
     ).scalar_one_or_none()
 
     if session is None:
-        raise ValueError("No active checkout found for this card")
+        raise ValueError("Session not found or already returned")
 
     craft = db.get(Craft, session.craft_id)
 
-    member = db.get(Member, card.member_id)
+    # Use the skipper's member record for the damage report name
+    skipper = db.get(Member, session.member_id)
 
     now = datetime.now(tz=timezone.utc)
     session.checkin_time    = now
     session.status          = "completed"
     session.checkin_method  = "self_service"
+    session.checkin_actor   = str(card.member_id)   # who performed the check-in
     session.notes_in        = req.notes_in or None
     session.damage_reported = req.damage_reported
     db.commit()
@@ -123,7 +133,7 @@ def complete_checkin(db: Session, req: CheckinRequest) -> SessionResponse:
     # Fire-and-forget: post to Google Sheet if damage was reported
     if req.damage_reported:
         post_damage_report(
-            member_name = member.full_name if member else "Unknown",
+            member_name = skipper.full_name if skipper else "Unknown",
             craft_name  = craft.display_name if craft else "Unknown craft",
             notes       = req.notes_in,
             session_id  = session.id,
@@ -134,3 +144,58 @@ def complete_checkin(db: Session, req: CheckinRequest) -> SessionResponse:
         status     = "completed",
         message    = f"{craft.display_name if craft else 'Craft'} returned",
     )
+
+
+def list_active_sessions(db: Session) -> list[ActiveSessionInfo]:
+    """Return all currently active checkout sessions with craft and member info."""
+    rows = db.execute(
+        select(CheckoutSession, Craft, Member)
+        .join(Craft, CheckoutSession.craft_id == Craft.id)
+        .join(Member, CheckoutSession.member_id == Member.id)
+        .where(CheckoutSession.status == "active")
+        .order_by(CheckoutSession.checkout_time)
+    ).all()
+
+    return [
+        ActiveSessionInfo(
+            session_id           = session.id,
+            craft_id             = session.craft_id,
+            craft_code           = craft.craft_code,
+            craft_name           = craft.display_name,
+            member_name          = member.full_name,
+            checkout_time        = session.checkout_time,
+            expected_return_time = session.expected_return_time,
+        )
+        for session, craft, member in rows
+    ]
+
+
+def auto_expire_overdue_sessions(db: Session, grace_hours: int = 2) -> int:
+    """Mark sessions as expired when they are past ETR by more than grace_hours.
+
+    Returns the number of sessions closed.
+    """
+    cutoff = datetime.now(tz=timezone.utc) - timedelta(hours=grace_hours)
+
+    overdue = db.execute(
+        select(CheckoutSession).where(
+            CheckoutSession.status == "active",
+            CheckoutSession.expected_return_time != None,
+            CheckoutSession.expected_return_time < cutoff,
+        )
+    ).scalars().all()
+
+    now = datetime.now(tz=timezone.utc)
+    for session in overdue:
+        session.status         = "completed"
+        session.checkin_time   = now
+        session.checkin_method = "auto_expired"
+        logger.info(
+            "Auto-expired session %d (craft_id=%d, ETR was %s)",
+            session.id, session.craft_id, session.expected_return_time,
+        )
+
+    if overdue:
+        db.commit()
+
+    return len(overdue)

@@ -28,33 +28,55 @@ def _run_member_sync() -> None:
         token = _get_token(settings.wa_api_key)
         contacts = _get_all_contacts(token, settings.wa_account_id)
         with Session(engine) as session:
-            _sync(session, contacts, token, settings.wa_account_id)  # <-- fixed
+            _sync(session, contacts, token, settings.wa_account_id)
         logger.info("Scheduled member sync complete.")
     except Exception:
         logger.exception("Scheduled member sync failed.")
 
 
+def _run_auto_expire() -> None:
+    """Close sessions that have passed their ETR + grace period."""
+    try:
+        from app.core.config import settings
+        from app.db.session import engine
+        from app.services.session_service import auto_expire_overdue_sessions
+
+        grace = settings.auto_expire_grace_hours
+        if grace <= 0:
+            return  # disabled (set AUTO_EXPIRE_GRACE_HOURS=0 in .env to turn off)
+
+        with Session(engine) as db:
+            closed = auto_expire_overdue_sessions(db, grace_hours=grace)
+        if closed:
+            logger.info("Auto-expired %d overdue session(s).", closed)
+    except Exception:
+        logger.exception("Auto-expire job failed.")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    scheduler = None
-
     # Default OFF for local dev unless explicitly enabled
     run_sync = os.getenv("RUN_MEMBER_SYNC_ON_STARTUP", "false").lower() == "true"
 
+    # Auto-expire always runs (independently of member sync)
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(_run_auto_expire, "interval", minutes=15, id="auto_expire")
+
     if run_sync:
-        scheduler = BackgroundScheduler()
         # Run every 6 hours
         scheduler.add_job(_run_member_sync, "interval", hours=6, id="member_sync")
-        scheduler.start()
-        _run_member_sync()  # eager first run (only if enabled)
         logger.info("Member sync scheduler enabled.")
     else:
         logger.info("Member sync scheduler disabled (RUN_MEMBER_SYNC_ON_STARTUP != true).")
 
+    scheduler.start()
+
+    if run_sync:
+        _run_member_sync()  # eager first run only when sync is enabled
+
     yield
 
-    if scheduler is not None:
-        scheduler.shutdown()
+    scheduler.shutdown()
 
 
 app = FastAPI(title="UBCSC Digital Checkout API", version="0.1.0", lifespan=lifespan)

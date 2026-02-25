@@ -1,5 +1,6 @@
 package com.ubcsc.checkout.data.api
 
+import com.ubcsc.checkout.data.api.dto.ActiveSessionDto
 import com.ubcsc.checkout.data.api.dto.CraftDto
 import com.ubcsc.checkout.data.api.dto.CheckinRequestDto
 import com.ubcsc.checkout.data.api.dto.MemberDto
@@ -18,6 +19,9 @@ interface CheckoutApi {
 
     @GET("members/card/{uid}")
     suspend fun getMemberByCard(@Path("uid") uid: String): MemberDto
+
+    @GET("sessions/active")
+    suspend fun getActiveSessions(): List<ActiveSessionDto>
 
     @POST("sessions")
     suspend fun checkout(@Body req: SessionCreateDto): SessionResponseDto

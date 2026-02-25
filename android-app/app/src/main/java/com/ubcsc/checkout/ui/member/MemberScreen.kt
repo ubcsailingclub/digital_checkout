@@ -73,19 +73,21 @@ fun MemberScreen(member: Member, viewModel: CheckoutViewModel) {
         viewModel.resetToIdle()
     }
     MemberContent(
-        member = member,
-        onCheckout = { viewModel.onCheckoutSelected(member) },
-        onCheckin  = { viewModel.onCheckinSelected(member) },
-        onCancel   = { viewModel.onCancel() }
+        member           = member,
+        onCheckout       = { viewModel.onCheckoutSelected(member) },
+        onCheckin        = { viewModel.onCheckinSelected(member) },
+        onCheckinForOther = { viewModel.onCheckinForOther(member) },
+        onCancel         = { viewModel.onCancel() }
     )
 }
 
 @Composable
 private fun MemberContent(
-    member: Member,
-    onCheckout: () -> Unit,
-    onCheckin:  () -> Unit,
-    onCancel:   () -> Unit
+    member:           Member,
+    onCheckout:       () -> Unit,
+    onCheckin:        () -> Unit,
+    onCheckinForOther: () -> Unit,
+    onCancel:         () -> Unit
 ) {
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
@@ -200,9 +202,12 @@ private fun MemberContent(
                 Spacer(modifier = Modifier.height(40.dp))
 
                 // Action buttons
-                Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    if (member.activeCheckout == null) {
-                        // Checkout button — primary
+                if (member.activeCheckout == null) {
+                    // No own checkout: primary = Check Out, secondary = Check In for Someone
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
                         ElevatedButton(
                             onClick = onCheckout,
                             modifier = Modifier
@@ -223,28 +228,48 @@ private fun MemberContent(
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
-                    } else {
-                        // Check-in button — accent red
-                        ElevatedButton(
-                            onClick = onCheckin,
+
+                        FilledTonalButton(
+                            onClick = onCheckinForOther,
                             modifier = Modifier
-                                .height(72.dp)
+                                .height(52.dp)
                                 .width(260.dp),
                             shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.elevatedButtonColors(
-                                containerColor = UnavailableRed,
-                                contentColor   = Color.White
-                            ),
-                            elevation = ButtonDefaults.elevatedButtonElevation(8.dp)
+                            colors = ButtonDefaults.filledTonalButtonColors(
+                                containerColor = CardBlue,
+                                contentColor   = TextSecondary
+                            )
                         ) {
-                            Icon(Icons.Filled.DirectionsBoat, null, Modifier.size(22.dp))
-                            Spacer(modifier = Modifier.width(10.dp))
+                            Icon(Icons.Filled.DirectionsBoat, null, Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                stringResource(R.string.member_checkin_action),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
+                                "Check In a Boat",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium
                             )
                         }
+                    }
+                } else {
+                    // Has own active checkout: primary = Check In
+                    ElevatedButton(
+                        onClick = onCheckin,
+                        modifier = Modifier
+                            .height(72.dp)
+                            .width(260.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.elevatedButtonColors(
+                            containerColor = UnavailableRed,
+                            contentColor   = Color.White
+                        ),
+                        elevation = ButtonDefaults.elevatedButtonElevation(8.dp)
+                    ) {
+                        Icon(Icons.Filled.DirectionsBoat, null, Modifier.size(22.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            stringResource(R.string.member_checkin_action),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
             }
@@ -256,7 +281,7 @@ private fun MemberContent(
 @Composable
 private fun MemberPreviewNoCheckout() {
     DigitalCheckoutTheme {
-        MemberContent(Member("1", "Alex Sailor", ""), {}, {}, {})
+        MemberContent(Member("1", "Alex Sailor", ""), {}, {}, {}, {})
     }
 }
 
@@ -266,7 +291,7 @@ private fun MemberPreviewWithCheckout() {
     DigitalCheckoutTheme {
         MemberContent(
             Member("1", "Alex Sailor", "", ActiveCheckout(1, "LZ01", "Laser #1")),
-            {}, {}, {}
+            {}, {}, {}, {}
         )
     }
 }

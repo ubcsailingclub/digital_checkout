@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -24,3 +26,14 @@ class SessionResponse(BaseModel):
     session_id: int
     status: str
     message: str
+
+
+class ActiveSessionInfo(BaseModel):
+    """Summary of a currently active checkout, returned by GET /sessions/active."""
+    session_id: int
+    craft_id: int
+    craft_code: str
+    craft_name: str
+    member_name: str
+    checkout_time: datetime
+    expected_return_time: datetime | None = None

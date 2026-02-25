@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.ubcsc.checkout.data.api.ApiClient
+import com.ubcsc.checkout.data.api.dto.ActiveSessionDto
 import com.ubcsc.checkout.data.api.dto.CheckinRequestDto
 import com.ubcsc.checkout.data.api.dto.CraftDto
 import com.ubcsc.checkout.data.api.dto.CrewInputDto
@@ -49,6 +50,18 @@ data class CrewEntry(
     val cardUid: String? = null
 )
 
+/** A currently active checkout session someone else checked out — used for "check in for someone" flow. */
+data class ActiveSession(
+    val sessionId: Int,
+    val craftCode: String,
+    val craftName: String,
+    val memberName: String,
+    /** How long the boat has been out, formatted for display (e.g. "2h 15m") */
+    val timeOut: String,
+    val expectedReturnTime: java.time.LocalTime? = null,
+    val isOverdue: Boolean = false
+)
+
 // ---------------------------------------------------------------------------
 // UI state
 // ---------------------------------------------------------------------------
@@ -75,6 +88,7 @@ sealed class CheckoutUiState {
         val crew: List<CrewEntry> = emptyList(),
         val expectedReturnHours: Int? = null
     ) : CheckoutUiState()
+    data class SelectingCheckin(val member: Member, val sessions: List<ActiveSession>) : CheckoutUiState()
     data class ConfirmCheckin(val member: Member, val checkout: ActiveCheckout) : CheckoutUiState()
     data class DamageReport(val member: Member, val checkout: ActiveCheckout) : CheckoutUiState()
     data class Success(val message: String, val isCheckout: Boolean) : CheckoutUiState()
@@ -157,6 +171,35 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
     fun onCheckinSelected(member: Member) {
         val checkout = member.activeCheckout ?: return
         _uiState.value = CheckoutUiState.ConfirmCheckin(member, checkout)
+    }
+
+    /** Fetch all active sessions so this member can check in someone else's boat. */
+    fun onCheckinForOther(member: Member) {
+        viewModelScope.launch {
+            _uiState.value = CheckoutUiState.Loading
+            try {
+                val sessions = api.getActiveSessions().map { it.toDomain() }
+                if (sessions.isEmpty()) {
+                    _uiState.value = CheckoutUiState.Error("No boats are currently out.")
+                } else {
+                    _uiState.value = CheckoutUiState.SelectingCheckin(member, sessions)
+                }
+            } catch (e: Exception) {
+                _uiState.value = CheckoutUiState.Error("Could not load active sessions.")
+            }
+        }
+    }
+
+    /** Member has picked a session from the list — proceed to the damage report step. */
+    fun onSelectSessionForCheckin(member: Member, session: ActiveSession) {
+        _uiState.value = CheckoutUiState.DamageReport(
+            member   = member,
+            checkout = ActiveCheckout(
+                sessionId = session.sessionId,
+                craftCode = session.craftCode,
+                craftName = session.craftName
+            )
+        )
     }
 
     // -----------------------------------------------------------------------
@@ -356,3 +399,32 @@ private fun CrewEntry.toDto() = CrewInputDto(
     isGuest = isGuest,
     cardUid = cardUid
 )
+
+private fun ActiveSessionDto.toDomain(): ActiveSession {
+    val checkoutUtc = runCatching {
+        java.time.LocalDateTime.parse(checkoutTime)
+            .atOffset(java.time.ZoneOffset.UTC)
+            .toInstant()
+    }.getOrNull() ?: java.time.Instant.now()
+
+    val minutesOut = java.time.Duration.between(checkoutUtc, java.time.Instant.now()).toMinutes()
+        .coerceAtLeast(0)
+    val timeOut = when {
+        minutesOut < 60 -> "${minutesOut}m"
+        minutesOut % 60 == 0L -> "${minutesOut / 60}h"
+        else -> "${minutesOut / 60}h ${minutesOut % 60}m"
+    }
+
+    val etr = expectedReturnTime?.let { parseEtrTime(it) }
+    val overdue = etr != null && java.time.LocalTime.now().isAfter(etr)
+
+    return ActiveSession(
+        sessionId          = sessionId,
+        craftCode          = craftCode,
+        craftName          = craftName,
+        memberName         = memberName,
+        timeOut            = timeOut,
+        expectedReturnTime = etr,
+        isOverdue          = overdue,
+    )
+}

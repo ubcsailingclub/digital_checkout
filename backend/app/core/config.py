@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     # Admin web interface key — set a strong value in .env
     admin_api_key: str = "change-me-admin"
 
+    # Auto-expire: close sessions that are this many hours past their ETR (0 = disabled)
+    auto_expire_grace_hours: int = 2
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

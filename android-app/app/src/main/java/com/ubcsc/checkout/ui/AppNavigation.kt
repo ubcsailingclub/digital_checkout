@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.ubcsc.checkout.ui.checkin.CheckinSelectScreen
 import com.ubcsc.checkout.ui.confirm.ConfirmScreen
 import com.ubcsc.checkout.ui.craft.BoatSelectScreen
 import com.ubcsc.checkout.ui.craft.CraftSelectScreen
@@ -20,14 +21,15 @@ import com.ubcsc.checkout.viewmodel.CheckoutUiState
 import com.ubcsc.checkout.viewmodel.CheckoutViewModel
 
 object Routes {
-    const val IDLE          = "idle"
-    const val MEMBER        = "member"
-    const val CRAFT_SELECT  = "craft_select"
-    const val BOAT_SELECT   = "boat_select"
-    const val CREW          = "crew"
-    const val CONFIRM       = "confirm"
-    const val DAMAGE_REPORT = "damage_report"
-    const val RESULT        = "result"
+    const val IDLE            = "idle"
+    const val MEMBER          = "member"
+    const val CRAFT_SELECT    = "craft_select"
+    const val BOAT_SELECT     = "boat_select"
+    const val CREW            = "crew"
+    const val CONFIRM         = "confirm"
+    const val CHECKIN_SELECT  = "checkin_select"
+    const val DAMAGE_REPORT   = "damage_report"
+    const val RESULT          = "result"
 }
 
 @Composable
@@ -56,6 +58,9 @@ fun AppNavigation(
             is CheckoutUiState.AddingCrew,
             is CheckoutUiState.AwaitingCrewCard -> navController.navigate(Routes.CREW) {
                 popUpTo(Routes.BOAT_SELECT)
+            }
+            is CheckoutUiState.SelectingCheckin -> navController.navigate(Routes.CHECKIN_SELECT) {
+                popUpTo(Routes.MEMBER)
             }
             is CheckoutUiState.ConfirmCheckout,
             is CheckoutUiState.ConfirmCheckin -> navController.navigate(Routes.CONFIRM) {
@@ -110,6 +115,15 @@ fun AppNavigation(
 
         composable(Routes.CONFIRM) {
             ConfirmScreen(uiState = uiState, viewModel = viewModel)
+        }
+
+        composable(Routes.CHECKIN_SELECT) {
+            val state = uiState as? CheckoutUiState.SelectingCheckin ?: return@composable
+            CheckinSelectScreen(
+                member    = state.member,
+                sessions  = state.sessions,
+                viewModel = viewModel
+            )
         }
 
         composable(Routes.DAMAGE_REPORT) {
