@@ -34,7 +34,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -61,7 +60,7 @@ private val ETR_FORMAT = DateTimeFormatter.ofPattern("h:mm a")
 
 @Composable
 fun CheckinSelectScreen(
-    member:    Member,
+    member:    Member?,   // null when started from the idle screen (no card scanned yet)
     sessions:  List<ActiveSession>,
     viewModel: CheckoutViewModel
 ) {
@@ -70,16 +69,19 @@ fun CheckinSelectScreen(
         viewModel.resetToIdle()
     }
     CheckinSelectContent(
-        memberName   = member.name,
-        sessions     = sessions,
-        onSelect     = { session -> viewModel.onSelectSessionForCheckin(member, session) },
-        onCancel     = { viewModel.onCancel() }
+        memberName = member?.name,
+        sessions   = sessions,
+        onSelect   = { session ->
+            if (member != null) viewModel.onSelectSessionForCheckin(member, session)
+            else                viewModel.onSelectSessionIdle(session)
+        },
+        onCancel   = { viewModel.goBack() }
     )
 }
 
 @Composable
 private fun CheckinSelectContent(
-    memberName: String,
+    memberName: String?,
     sessions:   List<ActiveSession>,
     onSelect:   (ActiveSession) -> Unit,
     onCancel:   () -> Unit
@@ -117,7 +119,7 @@ private fun CheckinSelectContent(
                         fontWeight = FontWeight.Bold,
                         color      = Color.White
                     )
-                    Text(
+                    if (memberName != null) Text(
                         text          = memberName,
                         style         = MaterialTheme.typography.bodyMedium,
                         color         = TealLight,
@@ -126,7 +128,7 @@ private fun CheckinSelectContent(
                 }
                 TextButton(onClick = onCancel) {
                     Text(
-                        stringResource(R.string.cancel_button),
+                        "← Back",
                         color = TextMuted,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -312,6 +314,23 @@ private fun CheckinSelectPreview() {
                     null, isOverdue = false),
                 ActiveSession(4, "WS03", "Windsurfer L2", "Taylor Ng",   "2h",
                     java.time.LocalTime.of(16, 0), isOverdue = false),
+            ),
+            onSelect = {}, onCancel = {}
+        )
+    }
+}
+
+@Preview(widthDp = 960, heightDp = 600, showBackground = true, backgroundColor = 0xFF0D1B2A)
+@Composable
+private fun CheckinSelectIdlePreview() {
+    DigitalCheckoutTheme {
+        CheckinSelectContent(
+            memberName = null,
+            sessions = listOf(
+                ActiveSession(1, "LZ01", "Laser #1", "Jordan Kim", "1h 20m",
+                    java.time.LocalTime.of(15, 30), isOverdue = false),
+                ActiveSession(2, "QT02", "Quest #2", "Sam Chen",  "3h 05m",
+                    java.time.LocalTime.of(13, 0), isOverdue = true),
             ),
             onSelect = {}, onCancel = {}
         )

@@ -2,6 +2,7 @@ package com.ubcsc.checkout.data.api
 
 import com.ubcsc.checkout.data.api.dto.ActiveSessionDto
 import com.ubcsc.checkout.data.api.dto.CraftDto
+import com.ubcsc.checkout.data.api.dto.RecentSessionDto
 import com.ubcsc.checkout.data.api.dto.CheckinRequestDto
 import com.ubcsc.checkout.data.api.dto.MemberDto
 import com.ubcsc.checkout.data.api.dto.SessionCreateDto
@@ -22,6 +23,9 @@ interface CheckoutApi {
 
     @GET("sessions/active")
     suspend fun getActiveSessions(): List<ActiveSessionDto>
+
+    @GET("sessions/recent")
+    suspend fun getRecentSessions(): List<RecentSessionDto>
 
     @POST("sessions")
     suspend fun checkout(@Body req: SessionCreateDto): SessionResponseDto

@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.ubcsc.checkout.ui.checkin.AwaitingCheckinCardScreen
 import com.ubcsc.checkout.ui.checkin.CheckinSelectScreen
 import com.ubcsc.checkout.ui.confirm.ConfirmScreen
 import com.ubcsc.checkout.ui.craft.BoatSelectScreen
@@ -27,7 +28,8 @@ object Routes {
     const val BOAT_SELECT     = "boat_select"
     const val CREW            = "crew"
     const val CONFIRM         = "confirm"
-    const val CHECKIN_SELECT  = "checkin_select"
+    const val CHECKIN_SELECT        = "checkin_select"
+    const val AWAITING_CHECKIN_CARD = "awaiting_checkin_card"
     const val DAMAGE_REPORT   = "damage_report"
     const val RESULT          = "result"
 }
@@ -61,6 +63,12 @@ fun AppNavigation(
             }
             is CheckoutUiState.SelectingCheckin -> navController.navigate(Routes.CHECKIN_SELECT) {
                 popUpTo(Routes.MEMBER)
+            }
+            is CheckoutUiState.SelectingCheckinIdle -> navController.navigate(Routes.CHECKIN_SELECT) {
+                popUpTo(Routes.IDLE)
+            }
+            is CheckoutUiState.AwaitingCheckinCard -> navController.navigate(Routes.AWAITING_CHECKIN_CARD) {
+                popUpTo(Routes.CHECKIN_SELECT)
             }
             is CheckoutUiState.ConfirmCheckout,
             is CheckoutUiState.ConfirmCheckin -> navController.navigate(Routes.CONFIRM) {
@@ -118,12 +126,18 @@ fun AppNavigation(
         }
 
         composable(Routes.CHECKIN_SELECT) {
-            val state = uiState as? CheckoutUiState.SelectingCheckin ?: return@composable
-            CheckinSelectScreen(
-                member    = state.member,
-                sessions  = state.sessions,
-                viewModel = viewModel
-            )
+            when (val s = uiState) {
+                is CheckoutUiState.SelectingCheckin ->
+                    CheckinSelectScreen(member = s.member, sessions = s.sessions, viewModel = viewModel)
+                is CheckoutUiState.SelectingCheckinIdle ->
+                    CheckinSelectScreen(member = null, sessions = s.sessions, viewModel = viewModel)
+                else -> return@composable
+            }
+        }
+
+        composable(Routes.AWAITING_CHECKIN_CARD) {
+            val state = uiState as? CheckoutUiState.AwaitingCheckinCard ?: return@composable
+            AwaitingCheckinCardScreen(session = state.session, viewModel = viewModel)
         }
 
         composable(Routes.DAMAGE_REPORT) {

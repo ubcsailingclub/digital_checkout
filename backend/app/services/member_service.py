@@ -17,15 +17,17 @@ def normalize_card_uid(uid: str) -> str:
     - Hex (from Android NFC hardware UID): "04:A3:B2:C1" or "04A3B2C1" → "04A3B2C1"
     - Decimal (from Wild Apricot "Jericho Card Number"): "61699" → "F103"
 
-    A string is treated as decimal if it contains only digits 0-9 AND any digit
-    is > 9 when read as hex — i.e. it looks like a plain integer, not a hex string
-    that happens to use only 0-9 digits.  The safe heuristic: strip colons/spaces
-    first, then if the result is all decimal digits, convert int → hex.
+    Some readers prepend extra facility-code digits to the decimal card number
+    (e.g. "0906100061699" for a card stored in WA as "61699"). We always keep
+    only the last 5 decimal digits before converting, which covers all valid
+    Jericho card numbers (max 99999).
     """
     cleaned = re.sub(r"[\s:]", "", uid).upper()
     if re.fullmatch(r"[0-9]+", cleaned):
-        # Pure decimal string (e.g. WA "Jericho Card Number" field) — convert to hex
-        return format(int(cleaned), "X")
+        # Pure decimal string — take the last 5 digits to strip any prepended
+        # facility-code bytes, then convert to hex.
+        card_digits = cleaned[-5:]
+        return format(int(card_digits), "X")
     # Hex string — strip leading zeros so "0000F103" == "F103" == decimal 61699
     return cleaned.lstrip("0") or "0"
 

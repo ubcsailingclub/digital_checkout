@@ -37,3 +37,16 @@ class ActiveSessionInfo(BaseModel):
     member_name: str
     checkout_time: datetime
     expected_return_time: datetime | None = None
+
+
+class RecentSessionInfo(BaseModel):
+    """A recent (active or completed) session for the idle-screen logbook."""
+    session_id: int
+    skipper_name: str
+    crew_names: list[str]
+    craft_name: str
+    craft_code: str
+    checkout_time: datetime
+    expected_return_time: datetime | None = None
+    checkin_time: datetime | None = None
+    status: str  # "active" | "completed" | "auto_expired"

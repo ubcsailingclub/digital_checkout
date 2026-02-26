@@ -6,10 +6,13 @@ import androidx.lifecycle.viewModelScope
 import com.ubcsc.checkout.data.api.ApiClient
 import com.ubcsc.checkout.data.api.dto.ActiveSessionDto
 import com.ubcsc.checkout.data.api.dto.CheckinRequestDto
+import com.ubcsc.checkout.data.api.dto.RecentSessionDto
 import com.ubcsc.checkout.data.api.dto.CraftDto
 import com.ubcsc.checkout.data.api.dto.CrewInputDto
 import com.ubcsc.checkout.data.api.dto.MemberDto
 import com.ubcsc.checkout.data.api.dto.SessionCreateDto
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -48,6 +51,18 @@ data class CrewEntry(
     val name: String,
     val isGuest: Boolean,
     val cardUid: String? = null
+)
+
+/** A recent session row shown in the idle-screen logbook. */
+data class RecentSession(
+    val skipperName: String,
+    val crewNames: List<String>,
+    val craft: String,                              // display name, e.g. "Venture Keelboat 1"
+    val timeOut: String,                            // 24h local time, e.g. "14:30"
+    val eta: String,                                // 24h local time, e.g. "16:30", or "—"
+    val timeIn: String,                             // 24h local time, e.g. "16:45", or "—"
+    val isActive: Boolean,
+    val checkoutLocalDate: java.time.LocalDate      // for date-group separators
 )
 
 /** A currently active checkout session someone else checked out — used for "check in for someone" flow. */
@@ -89,6 +104,10 @@ sealed class CheckoutUiState {
         val expectedReturnHours: Int? = null
     ) : CheckoutUiState()
     data class SelectingCheckin(val member: Member, val sessions: List<ActiveSession>) : CheckoutUiState()
+    /** Checkin flow started from the idle screen — no member card scanned yet. */
+    data class SelectingCheckinIdle(val sessions: List<ActiveSession>) : CheckoutUiState()
+    /** Session chosen from idle screen; waiting for any valid member card to authorize. */
+    data class AwaitingCheckinCard(val session: ActiveSession) : CheckoutUiState()
     data class ConfirmCheckin(val member: Member, val checkout: ActiveCheckout) : CheckoutUiState()
     data class DamageReport(val member: Member, val checkout: ActiveCheckout) : CheckoutUiState()
     data class Success(val message: String, val isCheckout: Boolean) : CheckoutUiState()
@@ -114,6 +133,54 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
 
     private val api = ApiClient.api
     private var cachedCrafts: List<Craft> = emptyList()
+    private var cachedIdleSessions: List<ActiveSession> = emptyList()
+
+    // -----------------------------------------------------------------------
+    // Idle timeout + recent sessions refresh
+    // -----------------------------------------------------------------------
+
+    private companion object {
+        const val IDLE_TIMEOUT_MS      = 60_000L
+        const val RECENT_REFRESH_MS    = 30_000L
+    }
+    private var idleTimerJob:      Job? = null
+    private var recentSessionsJob: Job? = null
+
+    private val _recentSessions = MutableStateFlow<List<RecentSession>>(emptyList())
+    val recentSessions: StateFlow<List<RecentSession>> = _recentSessions.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            uiState.collect { state ->
+                // Idle timeout: restart countdown on every non-idle/non-loading state change
+                idleTimerJob?.cancel()
+                if (state !is CheckoutUiState.Idle && state !is CheckoutUiState.Loading) {
+                    idleTimerJob = viewModelScope.launch {
+                        delay(IDLE_TIMEOUT_MS)
+                        resetToIdle()
+                    }
+                }
+                // Recent sessions: poll while on the idle screen, stop otherwise
+                recentSessionsJob?.cancel()
+                if (state is CheckoutUiState.Idle) {
+                    recentSessionsJob = viewModelScope.launch {
+                        while (true) {
+                            fetchRecentSessions()
+                            delay(RECENT_REFRESH_MS)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun fetchRecentSessions() {
+        try {
+            _recentSessions.value = api.getRecentSessions().map { it.toDomain() }
+        } catch (_: Exception) {
+            // Silently ignore — stale data is fine on the idle screen
+        }
+    }
 
     // -----------------------------------------------------------------------
     // NFC card scan entry point
@@ -124,6 +191,11 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
         // If waiting for a crew card, route to crew handler
         if (currentState is CheckoutUiState.AwaitingCrewCard) {
             onCrewCardScanned(currentState, uid)
+            return
+        }
+        // If waiting for the authorizing card in the idle-initiated checkin flow
+        if (currentState is CheckoutUiState.AwaitingCheckinCard) {
+            onCheckinAuthCardScanned(currentState, uid)
             return
         }
         if (currentState !is CheckoutUiState.Idle) return  // ignore scans mid-flow
@@ -190,6 +262,29 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    /** Start the direct-checkin flow from the idle screen (no member card required upfront). */
+    fun onCheckinFromIdle() {
+        viewModelScope.launch {
+            _uiState.value = CheckoutUiState.Loading
+            try {
+                val sessions = api.getActiveSessions().map { it.toDomain() }
+                if (sessions.isEmpty()) {
+                    _uiState.value = CheckoutUiState.Error("No boats are currently out.")
+                } else {
+                    cachedIdleSessions = sessions
+                    _uiState.value = CheckoutUiState.SelectingCheckinIdle(sessions)
+                }
+            } catch (e: Exception) {
+                _uiState.value = CheckoutUiState.Error("Could not load active sessions.")
+            }
+        }
+    }
+
+    /** Session chosen from the idle checkin list — now wait for an authorizing card. */
+    fun onSelectSessionIdle(session: ActiveSession) {
+        _uiState.value = CheckoutUiState.AwaitingCheckinCard(session)
+    }
+
     /** Member has picked a session from the list — proceed to the damage report step. */
     fun onSelectSessionForCheckin(member: Member, session: ActiveSession) {
         _uiState.value = CheckoutUiState.DamageReport(
@@ -253,6 +348,30 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
             crew                = state.crew,
             expectedReturnHours = expectedReturnHours
         )
+    }
+
+    private fun onCheckinAuthCardScanned(state: CheckoutUiState.AwaitingCheckinCard, uid: String) {
+        viewModelScope.launch {
+            _uiState.value = CheckoutUiState.Loading
+            try {
+                val member = api.getMemberByCard(uid).toDomain(uid)
+                _uiState.value = CheckoutUiState.DamageReport(
+                    member   = member,
+                    checkout = ActiveCheckout(
+                        sessionId = state.session.sessionId,
+                        craftCode = state.session.craftCode,
+                        craftName = state.session.craftName
+                    )
+                )
+            } catch (e: HttpException) {
+                _uiState.value = when (e.code()) {
+                    404  -> CheckoutUiState.Error("Card not recognized. Please see an exec.")
+                    else -> CheckoutUiState.Error("Server error (${e.code()}). Please try again.")
+                }
+            } catch (e: Exception) {
+                _uiState.value = CheckoutUiState.Error("Network error. Is the server running?")
+            }
+        }
     }
 
     private fun onCrewCardScanned(state: CheckoutUiState.AwaitingCrewCard, uid: String) {
@@ -335,6 +454,37 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
 
     fun onCancel() = resetToIdle()
 
+    /**
+     * Navigate one step back in the checkout flow instead of resetting to Idle.
+     * Each state knows what its logical predecessor is.
+     */
+    fun goBack() {
+        when (val state = _uiState.value) {
+            is CheckoutUiState.MemberFound     -> resetToIdle()
+            is CheckoutUiState.SelectingCraft  -> _uiState.value = CheckoutUiState.MemberFound(state.member)
+            is CheckoutUiState.SelectingBoat   -> _uiState.value = CheckoutUiState.SelectingCraft(state.member, cachedCrafts)
+            is CheckoutUiState.AddingCrew      -> {
+                val fleetCrafts = cachedCrafts.filter { it.craftClass == state.craft.craftClass }
+                _uiState.value = CheckoutUiState.SelectingBoat(state.member, state.craft.craftClass, fleetCrafts)
+            }
+            is CheckoutUiState.AwaitingCrewCard -> onCancelCrewScan()
+            is CheckoutUiState.ConfirmCheckout -> {
+                if (state.craft.craftClass in SOLO_CRAFT_CLASSES) {
+                    val fleetCrafts = cachedCrafts.filter { it.craftClass == state.craft.craftClass }
+                    _uiState.value = CheckoutUiState.SelectingBoat(state.member, state.craft.craftClass, fleetCrafts)
+                } else {
+                    _uiState.value = CheckoutUiState.AddingCrew(state.member, state.craft, state.crew)
+                }
+            }
+            is CheckoutUiState.ConfirmCheckin       -> _uiState.value = CheckoutUiState.MemberFound(state.member)
+            is CheckoutUiState.SelectingCheckin     -> _uiState.value = CheckoutUiState.MemberFound(state.member)
+            is CheckoutUiState.DamageReport         -> _uiState.value = CheckoutUiState.MemberFound(state.member)
+            is CheckoutUiState.SelectingCheckinIdle -> resetToIdle()
+            is CheckoutUiState.AwaitingCheckinCard  -> _uiState.value = CheckoutUiState.SelectingCheckinIdle(cachedIdleSessions)
+            else -> resetToIdle()
+        }
+    }
+
     fun resetToIdle() {
         _uiState.value = CheckoutUiState.Idle
     }
@@ -399,6 +549,29 @@ private fun CrewEntry.toDto() = CrewInputDto(
     isGuest = isGuest,
     cardUid = cardUid
 )
+
+private fun RecentSessionDto.toDomain(): RecentSession {
+    val fmt = java.time.format.DateTimeFormatter.ofPattern("HH:mm")
+    fun fmtTime(iso: String?) = iso?.let { parseEtrTime(it)?.format(fmt) } ?: "—"
+
+    val localDate = runCatching {
+        java.time.LocalDateTime.parse(checkoutTime)
+            .atOffset(java.time.ZoneOffset.UTC)
+            .atZoneSameInstant(java.time.ZoneId.systemDefault())
+            .toLocalDate()
+    }.getOrElse { java.time.LocalDate.now() }
+
+    return RecentSession(
+        skipperName       = skipperName,
+        crewNames         = crewNames,
+        craft             = craftName,   // display name, not the short code
+        timeOut           = fmtTime(checkoutTime),
+        eta               = fmtTime(expectedReturnTime),
+        timeIn            = fmtTime(checkinTime),
+        isActive          = status == "active",
+        checkoutLocalDate = localDate
+    )
+}
 
 private fun ActiveSessionDto.toDomain(): ActiveSession {
     val checkoutUtc = runCatching {

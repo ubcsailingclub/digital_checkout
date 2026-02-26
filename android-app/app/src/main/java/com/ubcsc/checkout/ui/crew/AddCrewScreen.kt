@@ -101,7 +101,7 @@ fun AddCrewScreen(uiState: CheckoutUiState, viewModel: CheckoutViewModel) {
                 onScanCard    = { viewModel.onScanForCrew(uiState) },
                 onRemove      = { idx -> viewModel.onRemoveCrew(uiState, idx) },
                 onDone        = { viewModel.onCrewDone(uiState, null) },
-                onCancel      = { viewModel.onCancel() }
+                onCancel      = { viewModel.goBack() }
             )
         is CheckoutUiState.AwaitingCrewCard ->
             AddCrewContent(
@@ -175,7 +175,7 @@ private fun AddCrewContent(
                 }
                 TextButton(onClick = onCancel) {
                     Text(
-                        if (isAwaitingNfc) "Cancel Scan" else "Cancel",
+                        if (isAwaitingNfc) "Cancel Scan" else "← Back",
                         color = TextMuted,
                         style = MaterialTheme.typography.bodyMedium
                     )

@@ -8,7 +8,7 @@ from app.models.checkout_session import CheckoutSession
 from app.models.craft import Craft
 from app.models.crew import SessionCrewMember
 from app.models.member import Member, MemberCard
-from app.schemas.session import ActiveSessionInfo, CheckinRequest, CrewInput, SessionCreate, SessionResponse
+from app.schemas.session import ActiveSessionInfo, CheckinRequest, CrewInput, RecentSessionInfo, SessionCreate, SessionResponse
 from app.services.member_service import normalize_card_uid
 from app.services.sheets_service import post_checkout_event, post_damage_report
 
@@ -196,6 +196,46 @@ def list_active_sessions(db: Session) -> list[ActiveSessionInfo]:
             member_name          = member.full_name,
             checkout_time        = session.checkout_time,
             expected_return_time = session.expected_return_time,
+        )
+        for session, craft, member in rows
+    ]
+
+
+def list_recent_sessions(db: Session, limit: int = 7) -> list[RecentSessionInfo]:
+    """Return the most recent sessions (any status) for the idle-screen logbook."""
+    rows = db.execute(
+        select(CheckoutSession, Craft, Member)
+        .join(Craft, CheckoutSession.craft_id == Craft.id)
+        .join(Member, CheckoutSession.member_id == Member.id)
+        .order_by(CheckoutSession.checkout_time.desc())
+        .limit(limit)
+    ).all()
+
+    if not rows:
+        return []
+
+    session_ids = [session.id for session, _, _ in rows]
+
+    crew_rows = db.execute(
+        select(SessionCrewMember)
+        .where(SessionCrewMember.session_id.in_(session_ids))
+    ).scalars().all()
+
+    crew_by_session: dict[int, list[str]] = {}
+    for crew in crew_rows:
+        crew_by_session.setdefault(crew.session_id, []).append(crew.display_name)
+
+    return [
+        RecentSessionInfo(
+            session_id           = session.id,
+            skipper_name         = member.full_name,
+            crew_names           = crew_by_session.get(session.id, []),
+            craft_name           = craft.display_name,
+            craft_code           = craft.craft_code,
+            checkout_time        = session.checkout_time,
+            expected_return_time = session.expected_return_time,
+            checkin_time         = session.checkin_time,
+            status               = session.status,
         )
         for session, craft, member in rows
     ]

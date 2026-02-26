@@ -74,7 +74,7 @@ fun BoatSelectScreen(
         fleetClass   = fleetClass,
         crafts       = crafts,
         onBoatSelect = { craft -> viewModel.onCraftSelected(member, craft) },
-        onCancel     = { viewModel.onCancel() }
+        onCancel     = { viewModel.goBack() }
     )
 }
 
@@ -128,7 +128,7 @@ private fun BoatSelectContent(
                 }
                 TextButton(onClick = onCancel) {
                     Text(
-                        stringResource(R.string.cancel_button),
+                        "← Back",
                         color = TextMuted,
                         style = MaterialTheme.typography.bodyMedium
                     )

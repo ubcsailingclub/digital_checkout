@@ -1,10 +1,12 @@
 """Google Apps Script webhooks — append rows to Google Sheets.
 
-Both functions are fire-and-forget: errors are logged but never raised so a
-webhook failure cannot block or roll back any checkout/check-in operation.
+Both functions are truly fire-and-forget: the HTTP call runs in a daemon
+thread so it never blocks or slows down an API response. Errors are logged
+but never raised, so a webhook failure cannot affect any checkout/check-in.
 """
 
 import logging
+import threading
 from datetime import datetime, timezone
 
 import httpx
@@ -38,17 +40,20 @@ def post_damage_report(
         "notes":       notes or "",
     }
 
-    try:
-        resp = httpx.post(url, json=payload, timeout=10.0, follow_redirects=True)
-        if resp.status_code == 200:
-            logger.info("Damage report posted to sheet (session %s)", session_id)
-        else:
-            logger.warning(
-                "Damage webhook returned %s for session %s: %s",
-                resp.status_code, session_id, resp.text,
-            )
-    except Exception as exc:
-        logger.warning("Damage webhook failed for session %s: %s", session_id, exc)
+    def _send() -> None:
+        try:
+            resp = httpx.post(url, json=payload, timeout=30.0, follow_redirects=True)
+            if resp.status_code == 200:
+                logger.info("Damage report posted to sheet (session %s)", session_id)
+            else:
+                logger.warning(
+                    "Damage webhook returned %s for session %s: %s",
+                    resp.status_code, session_id, resp.text,
+                )
+        except Exception as exc:
+            logger.warning("Damage webhook failed for session %s: %s", session_id, exc)
+
+    threading.Thread(target=_send, daemon=True).start()
 
 
 def post_checkout_event(
@@ -102,14 +107,17 @@ def post_checkout_event(
         "damage_reported":      "Yes" if damage_reported else "No",
     }
 
-    try:
-        resp = httpx.post(url, json=payload, timeout=10.0, follow_redirects=True)
-        if resp.status_code == 200:
-            logger.info("Checkout log posted to sheet (session %s, type=%s)", session_id, event_type)
-        else:
-            logger.warning(
-                "Checkout log webhook returned %s for session %s: %s",
-                resp.status_code, session_id, resp.text,
-            )
-    except Exception as exc:
-        logger.warning("Checkout log webhook failed for session %s: %s", session_id, exc)
+    def _send() -> None:
+        try:
+            resp = httpx.post(url, json=payload, timeout=30.0, follow_redirects=True)
+            if resp.status_code == 200:
+                logger.info("Checkout log posted to sheet (session %s, type=%s)", session_id, event_type)
+            else:
+                logger.warning(
+                    "Checkout log webhook returned %s for session %s: %s",
+                    resp.status_code, session_id, resp.text,
+                )
+        except Exception as exc:
+            logger.warning("Checkout log webhook failed for session %s: %s", session_id, exc)
+
+    threading.Thread(target=_send, daemon=True).start()

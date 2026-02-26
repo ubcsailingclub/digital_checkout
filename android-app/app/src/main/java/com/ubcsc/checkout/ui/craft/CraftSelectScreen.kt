@@ -88,7 +88,7 @@ fun CraftSelectScreen(member: Member, crafts: List<Craft>, viewModel: CheckoutVi
         memberName    = member.name,
         crafts        = crafts,
         onFleetSelect = { fleetClass -> viewModel.onFleetSelected(member, fleetClass) },
-        onCancel      = { viewModel.onCancel() }
+        onCancel      = { viewModel.goBack() }
     )
 }
 
@@ -160,7 +160,7 @@ private fun CraftSelectContent(
                 }
                 TextButton(onClick = onCancel) {
                     Text(
-                        stringResource(R.string.cancel_button),
+                        "← Back",
                         color = TextMuted,
                         style = MaterialTheme.typography.bodyMedium
                     )

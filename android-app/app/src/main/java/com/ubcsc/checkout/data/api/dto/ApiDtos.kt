@@ -31,6 +31,18 @@ data class ActiveSessionDto(
     @SerializedName("expected_return_time") val expectedReturnTime: String? = null
 )
 
+data class RecentSessionDto(
+    @SerializedName("session_id")           val sessionId: Int,
+    @SerializedName("skipper_name")         val skipperName: String,
+    @SerializedName("crew_names")           val crewNames: List<String> = emptyList(),
+    @SerializedName("craft_name")           val craftName: String,
+    @SerializedName("craft_code")           val craftCode: String,
+    @SerializedName("checkout_time")        val checkoutTime: String,
+    @SerializedName("expected_return_time") val expectedReturnTime: String? = null,
+    @SerializedName("checkin_time")         val checkinTime: String? = null,
+    @SerializedName("status")               val status: String
+)
+
 data class MemberDto(
     @SerializedName("id")                   val id: Int,
     @SerializedName("display_name")         val displayName: String,

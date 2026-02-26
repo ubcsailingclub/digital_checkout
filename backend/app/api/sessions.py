@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import verify_kiosk_key
 from app.db.deps import get_db
-from app.schemas.session import ActiveSessionInfo, CheckinRequest, SessionCreate, SessionResponse
-from app.services.session_service import complete_checkin, create_checkout, list_active_sessions
+from app.schemas.session import ActiveSessionInfo, CheckinRequest, RecentSessionInfo, SessionCreate, SessionResponse
+from app.services.session_service import complete_checkin, create_checkout, list_active_sessions, list_recent_sessions
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 
@@ -31,6 +31,16 @@ def checkout(req: SessionCreate, db: Session = Depends(get_db)) -> SessionRespon
 def get_active_sessions(db: Session = Depends(get_db)) -> list[ActiveSessionInfo]:
     """Return all currently active checkout sessions (for the 'check in for someone' flow)."""
     return list_active_sessions(db)
+
+
+@router.get(
+    "/recent",
+    response_model=list[RecentSessionInfo],
+    dependencies=[Depends(verify_kiosk_key)],
+)
+def get_recent_sessions(db: Session = Depends(get_db)) -> list[RecentSessionInfo]:
+    """Return the most recent sessions for the idle-screen logbook display."""
+    return list_recent_sessions(db)
 
 
 @router.patch(

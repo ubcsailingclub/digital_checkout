@@ -108,13 +108,13 @@ fun ConfirmScreen(uiState: CheckoutUiState, viewModel: CheckoutViewModel) {
             CheckoutConfirmContent(
                 state     = uiState,
                 onConfirm = { etr -> viewModel.onConfirmCheckout(uiState.member, uiState.craft, uiState.crew, etr) },
-                onCancel  = { viewModel.onCancel() }
+                onCancel  = { viewModel.goBack() }
             )
         is CheckoutUiState.ConfirmCheckin ->
             CheckinConfirmContent(
                 state     = uiState,
                 onConfirm = { viewModel.onConfirmCheckin(uiState.member, uiState.checkout) },
-                onCancel  = { viewModel.onCancel() }
+                onCancel  = { viewModel.goBack() }
             )
         is CheckoutUiState.Loading -> LoadingOverlay()
         else -> Unit
@@ -300,7 +300,7 @@ private fun CheckoutConfirmContent(
                         onClick  = onCancel,
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape    = RoundedCornerShape(14.dp)
-                    ) { Text(stringResource(R.string.cancel_button), color = TextSecondary) }
+                    ) { Text("← Back", color = TextSecondary) }
 
                     Spacer(modifier = Modifier.height(8.dp))
                 }
@@ -378,7 +378,7 @@ private fun CheckoutConfirmContent(
                                 onClick  = onCancel,
                                 modifier = Modifier.height(52.dp).weight(1f),
                                 shape    = RoundedCornerShape(12.dp)
-                            ) { Text(stringResource(R.string.cancel_button), color = TextSecondary) }
+                            ) { Text("← Back", color = TextSecondary) }
                             ElevatedButton(
                                 onClick   = { onConfirm(computeEtrHours(returnTime)) },
                                 modifier  = Modifier.height(52.dp).weight(1.5f),
@@ -511,7 +511,7 @@ private fun CheckinConfirmContent(
                         onClick  = onCancel,
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape    = RoundedCornerShape(14.dp)
-                    ) { Text(stringResource(R.string.cancel_button), color = TextSecondary) }
+                    ) { Text("← Back", color = TextSecondary) }
 
                     Spacer(modifier = Modifier.height(8.dp))
                 }
@@ -573,7 +573,7 @@ private fun CheckinConfirmContent(
                                 onClick  = onCancel,
                                 modifier = Modifier.height(52.dp).weight(1f),
                                 shape    = RoundedCornerShape(12.dp)
-                            ) { Text(stringResource(R.string.cancel_button), color = TextSecondary) }
+                            ) { Text("← Back", color = TextSecondary) }
                             ElevatedButton(
                                 onClick   = onConfirm,
                                 modifier  = Modifier.height(52.dp).weight(1.5f),
