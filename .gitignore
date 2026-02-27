@@ -113,3 +113,4 @@ pnpm-debug.log*
 *.tmp
 *.temp
 ~$*
+.claude
