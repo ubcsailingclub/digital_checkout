@@ -1,6 +1,14 @@
 from pydantic import BaseModel
 
 
+class MemberListItem(BaseModel):
+    """Minimal member record used to populate the name-search dropdown on the kiosk."""
+    id: int
+    display_name: str   # full name for searchability, e.g. "Alice Smith"
+
+    model_config = {"from_attributes": True}
+
+
 class ActiveCheckoutInfo(BaseModel):
     session_id: int
     craft_code: str

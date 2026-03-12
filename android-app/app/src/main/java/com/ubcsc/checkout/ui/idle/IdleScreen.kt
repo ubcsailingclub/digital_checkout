@@ -25,7 +25,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Nfc
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -51,6 +54,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ubcsc.checkout.BuildConfig
@@ -60,7 +64,9 @@ import com.ubcsc.checkout.ui.theme.OceanSurface
 import com.ubcsc.checkout.ui.theme.TealLight
 import com.ubcsc.checkout.ui.theme.TealMid
 import com.ubcsc.checkout.ui.theme.TextSecondary
+import com.ubcsc.checkout.ui.util.forceShowSoftKeyboard
 import com.ubcsc.checkout.viewmodel.CheckoutViewModel
+import com.ubcsc.checkout.viewmodel.MemberSummary
 import com.ubcsc.checkout.viewmodel.RecentSession
 import kotlinx.coroutines.delay
 import java.time.LocalDate
@@ -113,6 +119,7 @@ private fun groupByDate(sessions: List<RecentSession>): List<LogEntry> {
 @Composable
 fun IdleScreen(viewModel: CheckoutViewModel) {
     val recentSessions by viewModel.recentSessions.collectAsState()
+    val memberList     by viewModel.memberList.collectAsState()
     val context = LocalContext.current
     val nfcAdapter = NfcAdapter.getDefaultAdapter(context)
     // Only warn when NFC is physically present but turned off.
@@ -120,10 +127,12 @@ fun IdleScreen(viewModel: CheckoutViewModel) {
     val nfcWarning = if (nfcAdapter != null && !nfcAdapter.isEnabled) "NFC is disabled" else null
 
     IdleContent(
-        recentSessions    = recentSessions,
-        nfcWarning        = nfcWarning,
-        onDebugScan       = if (BuildConfig.DEBUG) viewModel::onCardScanned else null,
-        onCheckinFromIdle = viewModel::onCheckinFromIdle
+        recentSessions          = recentSessions,
+        nfcWarning              = nfcWarning,
+        memberList              = memberList,
+        onMemberSelectedByName  = viewModel::onMemberSelectedByName,
+        onDebugScan             = if (BuildConfig.DEBUG) viewModel::onCardScanned else null,
+        onCheckinFromIdle       = viewModel::onCheckinFromIdle
     )
 }
 
@@ -133,10 +142,12 @@ fun IdleScreen(viewModel: CheckoutViewModel) {
 
 @Composable
 private fun IdleContent(
-    recentSessions:    List<RecentSession>,
-    nfcWarning:        String?,
-    onDebugScan:       ((String) -> Unit)? = null,
-    onCheckinFromIdle: (() -> Unit)?       = null
+    recentSessions:         List<RecentSession>,
+    nfcWarning:             String?,
+    memberList:             List<MemberSummary>   = emptyList(),
+    onMemberSelectedByName: ((Int) -> Unit)?      = null,
+    onDebugScan:            ((String) -> Unit)?   = null,
+    onCheckinFromIdle:      (() -> Unit)?          = null
 ) {
     var timeText by remember { mutableStateOf(currentTime()) }
     LaunchedEffect(Unit) {
@@ -150,10 +161,12 @@ private fun IdleContent(
             modifier          = Modifier.weight(0.65f).fillMaxHeight()
         )
         NfcPromptPanel(
-            timeText    = timeText,
-            nfcWarning  = nfcWarning,
-            onDebugScan = onDebugScan,
-            modifier    = Modifier.weight(0.35f).fillMaxHeight()
+            timeText               = timeText,
+            nfcWarning             = nfcWarning,
+            memberList             = memberList,
+            onMemberSelectedByName = onMemberSelectedByName,
+            onDebugScan            = onDebugScan,
+            modifier               = Modifier.weight(0.35f).fillMaxHeight()
         )
     }
 }
@@ -402,10 +415,12 @@ private fun ColumnDivider() {
 
 @Composable
 private fun NfcPromptPanel(
-    timeText:    String,
-    nfcWarning:  String?,
-    onDebugScan: ((String) -> Unit)?,
-    modifier:    Modifier = Modifier
+    timeText:               String,
+    nfcWarning:             String?,
+    memberList:             List<MemberSummary>  = emptyList(),
+    onMemberSelectedByName: ((Int) -> Unit)?     = null,
+    onDebugScan:            ((String) -> Unit)?  = null,
+    modifier:               Modifier             = Modifier
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "ripple")
     val rippleDuration = 2400
@@ -479,6 +494,15 @@ private fun NfcPromptPanel(
                     modifier  = Modifier.padding(horizontal = 20.dp)
                 )
             }
+
+            // Name search — only shown when the member list has loaded
+            if (onMemberSelectedByName != null && memberList.isNotEmpty()) {
+                Spacer(Modifier.height(20.dp))
+                NameSearchField(
+                    memberList             = memberList,
+                    onMemberSelectedByName = onMemberSelectedByName
+                )
+            }
         }
 
         Text(
@@ -517,6 +541,59 @@ private fun NfcPromptPanel(
                     onClick = { onDebugScan(debugUid.trim()); debugUid = "" },
                     enabled = debugUid.isNotBlank()
                 ) { Text("Scan") }
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Name search field (shown in NFC panel when member list is loaded)
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun NameSearchField(
+    memberList:             List<MemberSummary>,
+    onMemberSelectedByName: (Int) -> Unit
+) {
+    var searchText by remember { mutableStateOf("") }
+    val filtered = remember(searchText, memberList) {
+        if (searchText.length < 2) emptyList()
+        else memberList.filter { it.name.contains(searchText, ignoreCase = true) }.take(6)
+    }
+
+    Box(Modifier.width(230.dp)) {
+        OutlinedTextField(
+            value         = searchText,
+            onValueChange = { searchText = it },
+            placeholder   = { Text("Search by name…", color = Color.White.copy(alpha = 0.4f)) },
+            leadingIcon   = { Icon(Icons.Filled.Search, null, tint = Color.White.copy(alpha = 0.5f)) },
+            singleLine    = true,
+            modifier      = Modifier.fillMaxWidth().forceShowSoftKeyboard(),
+            shape         = RoundedCornerShape(12.dp),
+            colors        = OutlinedTextFieldDefaults.colors(
+                focusedTextColor        = Color.White,
+                unfocusedTextColor      = Color.White.copy(alpha = 0.8f),
+                focusedBorderColor      = TealLight,
+                unfocusedBorderColor    = Color.White.copy(alpha = 0.25f),
+                focusedLabelColor       = TealLight,
+                cursorColor             = TealLight,
+                focusedContainerColor   = Color.White.copy(alpha = 0.06f),
+                unfocusedContainerColor = Color.White.copy(alpha = 0.04f),
+            )
+        )
+        DropdownMenu(
+            expanded         = filtered.isNotEmpty(),
+            onDismissRequest = { searchText = "" },
+            modifier         = Modifier.width(230.dp)
+        ) {
+            filtered.forEach { member ->
+                DropdownMenuItem(
+                    text    = { Text(member.name, style = MaterialTheme.typography.bodyMedium) },
+                    onClick = {
+                        onMemberSelectedByName(member.id)
+                        searchText = ""
+                    }
+                )
             }
         }
     }

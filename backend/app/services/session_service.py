@@ -15,17 +15,26 @@ from app.services.sheets_service import post_checkout_event, post_damage_report
 logger = logging.getLogger(__name__)
 
 
-def create_checkout(db: Session, req: SessionCreate) -> SessionResponse:
-    uid = normalize_card_uid(req.card_uid)
-
+def _resolve_member_id(db: Session, card_uid: str, member_id: int | None) -> int:
+    """Return the DB member_id from either a direct member_id or a card UID lookup."""
+    if member_id is not None:
+        member = db.get(Member, member_id)
+        if member is None or not member.is_active:
+            raise ValueError("Member not found")
+        return member_id
+    uid = normalize_card_uid(card_uid)
     card = db.execute(
         select(MemberCard).where(
             MemberCard.card_uid_normalized == uid, MemberCard.is_active == True
         )
     ).scalar_one_or_none()
-
     if card is None:
         raise ValueError("Card not recognised")
+    return card.member_id
+
+
+def create_checkout(db: Session, req: SessionCreate) -> SessionResponse:
+    resolved_member_id = _resolve_member_id(db, req.card_uid, req.member_id)
 
     craft = db.get(Craft, req.craft_id)
     if craft is None or not craft.is_active:
@@ -49,7 +58,7 @@ def create_checkout(db: Session, req: SessionCreate) -> SessionResponse:
     )
 
     session = CheckoutSession(
-        member_id            = card.member_id,
+        member_id            = resolved_member_id,
         craft_id             = req.craft_id,
         checkout_time        = now,
         status               = "active",
@@ -83,7 +92,7 @@ def create_checkout(db: Session, req: SessionCreate) -> SessionResponse:
     db.refresh(session)
 
     # Fire-and-forget: log checkout to Google Sheet
-    member_obj = db.get(Member, card.member_id)
+    member_obj = db.get(Member, resolved_member_id)
     post_checkout_event(
         event_type           = "checkout",
         member_name          = member_obj.full_name if member_obj else "Unknown",
@@ -108,16 +117,7 @@ def complete_checkin(db: Session, req: CheckinRequest, session_id: int) -> Sessi
     Any valid member card may check in any session — not just the original skipper's.
     This allows crew members or volunteers to return a boat without the skipper present.
     """
-    uid = normalize_card_uid(req.card_uid)
-
-    card = db.execute(
-        select(MemberCard).where(
-            MemberCard.card_uid_normalized == uid, MemberCard.is_active == True
-        )
-    ).scalar_one_or_none()
-
-    if card is None:
-        raise ValueError("Card not recognised")
+    resolved_member_id = _resolve_member_id(db, req.card_uid, req.member_id)
 
     session = db.execute(
         select(CheckoutSession).where(
@@ -138,7 +138,7 @@ def complete_checkin(db: Session, req: CheckinRequest, session_id: int) -> Sessi
     session.checkin_time    = now
     session.status          = "completed"
     session.checkin_method  = "self_service"
-    session.checkin_actor   = str(card.member_id)   # who performed the check-in
+    session.checkin_actor   = str(resolved_member_id)   # who performed the check-in
     session.notes_in        = req.notes_in or None
     session.damage_reported = req.damage_reported
     db.commit()

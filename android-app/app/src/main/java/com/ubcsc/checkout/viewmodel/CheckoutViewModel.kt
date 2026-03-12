@@ -65,6 +65,9 @@ data class RecentSession(
     val checkoutLocalDate: java.time.LocalDate      // for date-group separators
 )
 
+/** Lightweight member record for the name-search dropdown on the idle screen. */
+data class MemberSummary(val id: Int, val name: String)
+
 /** A currently active checkout session someone else checked out — used for "check in for someone" flow. */
 data class ActiveSession(
     val sessionId: Int,
@@ -135,6 +138,9 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
     private var cachedCrafts: List<Craft> = emptyList()
     private var cachedIdleSessions: List<ActiveSession> = emptyList()
 
+    private val _memberList = MutableStateFlow<List<MemberSummary>>(emptyList())
+    val memberList: StateFlow<List<MemberSummary>> = _memberList.asStateFlow()
+
     // -----------------------------------------------------------------------
     // Idle timeout + recent sessions refresh
     // -----------------------------------------------------------------------
@@ -150,6 +156,13 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
     val recentSessions: StateFlow<List<RecentSession>> = _recentSessions.asStateFlow()
 
     init {
+        // Pre-load member list for name-search dropdown (background, non-critical)
+        viewModelScope.launch {
+            try {
+                _memberList.value = api.getMemberList().map { MemberSummary(it.id, it.displayName) }
+            } catch (_: Exception) { /* silently ignore — name search is optional */ }
+        }
+
         viewModelScope.launch {
             uiState.collect { state ->
                 // Idle timeout: restart countdown on every non-idle/non-loading state change
@@ -258,6 +271,21 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
                 }
             } catch (e: Exception) {
                 _uiState.value = CheckoutUiState.Error("Could not load active sessions.")
+            }
+        }
+    }
+
+    /** Member selected from the name dropdown — look them up by ID and begin the flow. */
+    fun onMemberSelectedByName(memberId: Int) {
+        viewModelScope.launch {
+            _uiState.value = CheckoutUiState.Loading
+            try {
+                val member = api.getMemberById(memberId).toDomain("")
+                _uiState.value = CheckoutUiState.MemberFound(member)
+            } catch (e: HttpException) {
+                _uiState.value = CheckoutUiState.Error("Member not found (${e.code()}).")
+            } catch (e: Exception) {
+                _uiState.value = CheckoutUiState.Error("Network error. Is the server running?")
             }
         }
     }
@@ -400,6 +428,7 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
                 api.checkout(
                     SessionCreateDto(
                         cardUid             = member.cardUid,
+                        memberId            = if (member.cardUid.isBlank()) member.id.toIntOrNull() else null,
                         craftId             = craft.id.toInt(),
                         crew                = crew.map { it.toDto() },
                         expectedReturnHours = expectedReturnHours
@@ -431,6 +460,7 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
                     checkout.sessionId,
                     CheckinRequestDto(
                         cardUid        = member.cardUid,
+                        memberId       = if (member.cardUid.isBlank()) member.id.toIntOrNull() else null,
                         notesIn        = notes?.takeIf { it.isNotBlank() },
                         damageReported = hasDamage
                     )

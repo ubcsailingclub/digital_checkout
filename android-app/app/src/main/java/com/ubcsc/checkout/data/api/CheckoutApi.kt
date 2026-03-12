@@ -5,6 +5,7 @@ import com.ubcsc.checkout.data.api.dto.CraftDto
 import com.ubcsc.checkout.data.api.dto.RecentSessionDto
 import com.ubcsc.checkout.data.api.dto.CheckinRequestDto
 import com.ubcsc.checkout.data.api.dto.MemberDto
+import com.ubcsc.checkout.data.api.dto.MemberSummaryDto
 import com.ubcsc.checkout.data.api.dto.SessionCreateDto
 import com.ubcsc.checkout.data.api.dto.SessionResponseDto
 import retrofit2.http.Body
@@ -17,6 +18,12 @@ interface CheckoutApi {
 
     @GET("crafts")
     suspend fun getCrafts(): List<CraftDto>
+
+    @GET("members/list")
+    suspend fun getMemberList(): List<MemberSummaryDto>
+
+    @GET("members/by-id/{memberId}")
+    suspend fun getMemberById(@Path("memberId") memberId: Int): MemberDto
 
     @GET("members/card/{uid}")
     suspend fun getMemberByCard(@Path("uid") uid: String): MemberDto

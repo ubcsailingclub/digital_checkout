@@ -51,6 +51,11 @@ data class MemberDto(
     @SerializedName("certifications")       val certifications: List<String>
 )
 
+data class MemberSummaryDto(
+    @SerializedName("id")           val id: Int,
+    @SerializedName("display_name") val displayName: String
+)
+
 data class SessionResponseDto(
     @SerializedName("session_id") val sessionId: Int,
     @SerializedName("status")     val status: String,
@@ -68,14 +73,16 @@ data class CrewInputDto(
 )
 
 data class SessionCreateDto(
-    @SerializedName("card_uid")               val cardUid: String,
-    @SerializedName("craft_id")               val craftId: Int,
-    @SerializedName("crew")                   val crew: List<CrewInputDto> = emptyList(),
-    @SerializedName("expected_return_hours")  val expectedReturnHours: Int? = null
+    @SerializedName("card_uid")              val cardUid: String = "",
+    @SerializedName("member_id")             val memberId: Int? = null,
+    @SerializedName("craft_id")              val craftId: Int,
+    @SerializedName("crew")                  val crew: List<CrewInputDto> = emptyList(),
+    @SerializedName("expected_return_hours") val expectedReturnHours: Int? = null
 )
 
 data class CheckinRequestDto(
-    @SerializedName("card_uid")        val cardUid: String,
+    @SerializedName("card_uid")        val cardUid: String = "",
+    @SerializedName("member_id")       val memberId: Int? = null,
     @SerializedName("notes_in")        val notesIn: String? = null,
     @SerializedName("damage_reported") val damageReported: Boolean = false
 )

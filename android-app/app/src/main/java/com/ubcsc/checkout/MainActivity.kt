@@ -32,6 +32,13 @@ class MainActivity : ComponentActivity() {
     private val usbCardBuffer = StringBuilder()
     private var lastKeyTime = 0L
 
+    companion object {
+        // FOB readers type at machine speed. Keystrokes this close together are treated
+        // as FOB input (not passed to focused text fields, Enter fires card scan).
+        private const val FOB_MAX_INTERVAL_MS = 80L
+        private const val BUFFER_STALE_MS     = 2_000L
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -95,17 +102,22 @@ class MainActivity : ComponentActivity() {
         viewModel.onCardScanned(uid)
     }
 
-    // Intercept keystrokes from a USB HID keyboard-emulating RFID reader.
-    // The reader "types" the card number followed by Enter. We buffer the
-    // digits and fire onCardScanned when Enter is received.
+    // Intercept keystrokes from a USB HID keyboard-emulating RFID/FOB reader.
+    // The reader "types" the card number (e.g. "6157233") followed by Enter.
+    //
+    // FOB readers type at machine speed (< FOB_MAX_INTERVAL_MS between keystrokes).
+    // Human typing is much slower. We use this timing to:
+    //   1. Only consume Enter and fire onCardScanned when the sequence was machine-speed.
+    //   2. Suppress rapid digits from leaking into focused text fields.
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action != KeyEvent.ACTION_DOWN) return super.dispatchKeyEvent(event)
 
-        val now = event.eventTime
+        val now      = event.eventTime
+        val interval = now - lastKeyTime
 
-        // Discard stale buffer if more than 2 seconds have passed since the last keypress
-        if (now - lastKeyTime > 2000L && usbCardBuffer.isNotEmpty()) {
-            Log.d("NFC", "USB buffer cleared (stale)")
+        // Discard stale buffer if idle for too long
+        if (interval > BUFFER_STALE_MS && usbCardBuffer.isNotEmpty()) {
+            Log.d("FOB", "Buffer cleared (stale)")
             usbCardBuffer.clear()
         }
 
@@ -113,10 +125,11 @@ class MainActivity : ComponentActivity() {
             KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER -> {
                 val uid = usbCardBuffer.toString().trim()
                 usbCardBuffer.clear()
-                if (uid.length >= 4) {
-                    Log.d("NFC", "Card scanned via USB HID reader: $uid")
+                // Only treat as a FOB scan if the last digit arrived at machine speed
+                if (uid.length >= 4 && interval <= FOB_MAX_INTERVAL_MS) {
+                    Log.d("FOB", "Card scanned via USB HID reader: $uid")
                     viewModel.onCardScanned(uid)
-                    true  // consume the Enter so it doesn't activate focused buttons
+                    true  // consume Enter so it doesn't activate focused buttons
                 } else {
                     super.dispatchKeyEvent(event)
                 }
@@ -124,10 +137,20 @@ class MainActivity : ComponentActivity() {
             else -> {
                 val char = event.unicodeChar.toChar()
                 if (char.isLetterOrDigit()) {
+                    val isMachineSpeed = usbCardBuffer.isNotEmpty() && interval < FOB_MAX_INTERVAL_MS
                     usbCardBuffer.append(char)
                     lastKeyTime = now
+                    if (isMachineSpeed) {
+                        // Rapid succession — FOB mode. Don't pass to focused text fields.
+                        true
+                    } else {
+                        // First digit of a possible FOB sequence, or slow human typing.
+                        // Pass through so text fields work normally.
+                        super.dispatchKeyEvent(event)
+                    }
+                } else {
+                    super.dispatchKeyEvent(event)
                 }
-                super.dispatchKeyEvent(event)
             }
         }
     }
