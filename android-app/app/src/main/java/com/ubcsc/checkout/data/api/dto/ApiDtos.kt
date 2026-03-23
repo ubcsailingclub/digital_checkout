@@ -67,9 +67,10 @@ data class SessionResponseDto(
 // ---------------------------------------------------------------------------
 
 data class CrewInputDto(
-    @SerializedName("name")     val name: String,
-    @SerializedName("is_guest") val isGuest: Boolean,
-    @SerializedName("card_uid") val cardUid: String? = null
+    @SerializedName("name")      val name: String,
+    @SerializedName("is_guest")  val isGuest: Boolean,
+    @SerializedName("card_uid")  val cardUid: String? = null,
+    @SerializedName("member_id") val memberId: Int? = null
 )
 
 data class SessionCreateDto(

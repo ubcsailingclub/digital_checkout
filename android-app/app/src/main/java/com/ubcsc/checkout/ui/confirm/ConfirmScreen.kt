@@ -279,7 +279,7 @@ private fun CheckoutConfirmContent(
 
                     ElevatedButton(
                         onClick   = { onConfirm(computeEtrHours(returnTime)) },
-                        modifier  = Modifier.fillMaxWidth().height(58.dp),
+                        modifier  = Modifier.fillMaxWidth().height(72.dp),
                         shape     = RoundedCornerShape(14.dp),
                         colors    = ButtonDefaults.elevatedButtonColors(
                             containerColor = TealMid,
@@ -298,7 +298,7 @@ private fun CheckoutConfirmContent(
 
                     OutlinedButton(
                         onClick  = onCancel,
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        modifier = Modifier.fillMaxWidth().height(60.dp),
                         shape    = RoundedCornerShape(14.dp)
                     ) { Text("← Back", color = TextSecondary) }
 
@@ -376,12 +376,12 @@ private fun CheckoutConfirmContent(
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             OutlinedButton(
                                 onClick  = onCancel,
-                                modifier = Modifier.height(52.dp).weight(1f),
+                                modifier = Modifier.height(60.dp).weight(1f),
                                 shape    = RoundedCornerShape(12.dp)
                             ) { Text("← Back", color = TextSecondary) }
                             ElevatedButton(
                                 onClick   = { onConfirm(computeEtrHours(returnTime)) },
-                                modifier  = Modifier.height(52.dp).weight(1.5f),
+                                modifier  = Modifier.height(60.dp).weight(1.5f),
                                 shape     = RoundedCornerShape(12.dp),
                                 colors    = ButtonDefaults.elevatedButtonColors(
                                     containerColor = TealMid,
@@ -490,7 +490,7 @@ private fun CheckinConfirmContent(
 
                     ElevatedButton(
                         onClick   = onConfirm,
-                        modifier  = Modifier.fillMaxWidth().height(58.dp),
+                        modifier  = Modifier.fillMaxWidth().height(72.dp),
                         shape     = RoundedCornerShape(14.dp),
                         colors    = ButtonDefaults.elevatedButtonColors(
                             containerColor = UnavailableRed,
@@ -509,7 +509,7 @@ private fun CheckinConfirmContent(
 
                     OutlinedButton(
                         onClick  = onCancel,
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        modifier = Modifier.fillMaxWidth().height(60.dp),
                         shape    = RoundedCornerShape(14.dp)
                     ) { Text("← Back", color = TextSecondary) }
 
@@ -571,12 +571,12 @@ private fun CheckinConfirmContent(
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             OutlinedButton(
                                 onClick  = onCancel,
-                                modifier = Modifier.height(52.dp).weight(1f),
+                                modifier = Modifier.height(60.dp).weight(1f),
                                 shape    = RoundedCornerShape(12.dp)
                             ) { Text("← Back", color = TextSecondary) }
                             ElevatedButton(
                                 onClick   = onConfirm,
-                                modifier  = Modifier.height(52.dp).weight(1.5f),
+                                modifier  = Modifier.height(60.dp).weight(1.5f),
                                 shape     = RoundedCornerShape(12.dp),
                                 colors    = ButtonDefaults.elevatedButtonColors(
                                     containerColor = UnavailableRed,

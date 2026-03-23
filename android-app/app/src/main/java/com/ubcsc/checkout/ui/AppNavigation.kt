@@ -37,7 +37,8 @@ object Routes {
 @Composable
 fun AppNavigation(
     navController: NavHostController,
-    viewModel: CheckoutViewModel = viewModel()
+    viewModel: CheckoutViewModel = viewModel(),
+    onAdminExit: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -87,7 +88,7 @@ fun AppNavigation(
     NavHost(navController = navController, startDestination = Routes.IDLE) {
 
         composable(Routes.IDLE) {
-            IdleScreen(viewModel = viewModel)
+            IdleScreen(viewModel = viewModel, onAdminExit = onAdminExit)
         }
 
         composable(Routes.MEMBER) {

@@ -7,6 +7,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -127,7 +128,9 @@ private fun MemberContent(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(48.dp)
+                modifier = Modifier
+                    .padding(48.dp)
+                    .offset(y = (-48).dp)
             ) {
                 // Avatar
                 Box(
@@ -201,7 +204,7 @@ private fun MemberContent(
 
                 Spacer(modifier = Modifier.height(40.dp))
 
-                // Action buttons
+                // Action buttons — shifted up ~1 cm so they sit above centre on portrait tablet
                 if (member.activeCheckout == null) {
                     // No own checkout: primary = Check Out, secondary = Check In for Someone
                     Column(

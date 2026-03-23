@@ -2,6 +2,10 @@ package com.ubcsc.checkout.ui.idle
 
 import android.nfc.NfcAdapter
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.material3.AlertDialog
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -19,16 +23,19 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.zIndex
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Nfc
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -117,7 +124,7 @@ private fun groupByDate(sessions: List<RecentSession>): List<LogEntry> {
 // ---------------------------------------------------------------------------
 
 @Composable
-fun IdleScreen(viewModel: CheckoutViewModel) {
+fun IdleScreen(viewModel: CheckoutViewModel, onAdminExit: () -> Unit = {}) {
     val recentSessions by viewModel.recentSessions.collectAsState()
     val memberList     by viewModel.memberList.collectAsState()
     val context = LocalContext.current
@@ -132,7 +139,8 @@ fun IdleScreen(viewModel: CheckoutViewModel) {
         memberList              = memberList,
         onMemberSelectedByName  = viewModel::onMemberSelectedByName,
         onDebugScan             = if (BuildConfig.DEBUG) viewModel::onCardScanned else null,
-        onCheckinFromIdle       = viewModel::onCheckinFromIdle
+        onCheckinFromIdle       = viewModel::onCheckinFromIdle,
+        onAdminExit             = onAdminExit
     )
 }
 
@@ -147,27 +155,53 @@ private fun IdleContent(
     memberList:             List<MemberSummary>   = emptyList(),
     onMemberSelectedByName: ((Int) -> Unit)?      = null,
     onDebugScan:            ((String) -> Unit)?   = null,
-    onCheckinFromIdle:      (() -> Unit)?          = null
+    onCheckinFromIdle:      (() -> Unit)?          = null,
+    onAdminExit:            () -> Unit            = {}
 ) {
     var timeText by remember { mutableStateOf(currentTime()) }
     LaunchedEffect(Unit) {
         while (true) { delay(1_000L); timeText = currentTime() }
     }
 
-    Row(Modifier.fillMaxSize()) {
-        NotebookPanel(
-            recentSessions    = recentSessions,
-            onCheckinFromIdle = onCheckinFromIdle,
-            modifier          = Modifier.weight(0.65f).fillMaxHeight()
-        )
-        NfcPromptPanel(
-            timeText               = timeText,
-            nfcWarning             = nfcWarning,
-            memberList             = memberList,
-            onMemberSelectedByName = onMemberSelectedByName,
-            onDebugScan            = onDebugScan,
-            modifier               = Modifier.weight(0.35f).fillMaxHeight()
-        )
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val isPortrait = maxHeight > maxWidth
+        if (isPortrait) {
+            // Portrait: NFC panel on top, logbook below
+            Column(Modifier.fillMaxSize()) {
+                NfcPromptPanel(
+                    timeText               = timeText,
+                    nfcWarning             = nfcWarning,
+                    memberList             = memberList,
+                    onMemberSelectedByName = onMemberSelectedByName,
+                    onDebugScan            = onDebugScan,
+                    modifier               = Modifier.fillMaxWidth().weight(0.42f)
+                )
+                NotebookPanel(
+                    recentSessions    = recentSessions,
+                    onCheckinFromIdle = onCheckinFromIdle,
+                    onAdminExit       = onAdminExit,
+                    modifier          = Modifier.fillMaxWidth().weight(0.58f)
+                )
+            }
+        } else {
+            // Landscape: side-by-side
+            Row(Modifier.fillMaxSize()) {
+                NotebookPanel(
+                    recentSessions    = recentSessions,
+                    onCheckinFromIdle = onCheckinFromIdle,
+                    onAdminExit       = onAdminExit,
+                    modifier          = Modifier.weight(0.65f).fillMaxHeight()
+                )
+                NfcPromptPanel(
+                    timeText               = timeText,
+                    nfcWarning             = nfcWarning,
+                    memberList             = memberList,
+                    onMemberSelectedByName = onMemberSelectedByName,
+                    onDebugScan            = onDebugScan,
+                    modifier               = Modifier.weight(0.35f).fillMaxHeight()
+                )
+            }
+        }
     }
 }
 
@@ -179,11 +213,20 @@ private fun IdleContent(
 private fun NotebookPanel(
     recentSessions:    List<RecentSession>,
     onCheckinFromIdle: (() -> Unit)? = null,
+    onAdminExit:       () -> Unit    = {},
     modifier:          Modifier      = Modifier
 ) {
     val today   = LocalDate.now()
     val entries = groupByDate(recentSessions)
     val emptyCount = (TOTAL_ROWS - entries.size).coerceAtLeast(0)
+
+    var showAdminDialog by remember { mutableStateOf(false) }
+    if (showAdminDialog) {
+        AdminCodeDialog(
+            onDismiss = { showAdminDialog = false },
+            onSuccess = { showAdminDialog = false; onAdminExit() }
+        )
+    }
 
     Box(modifier.background(PaperBg)) {
 
@@ -213,7 +256,10 @@ private fun NotebookPanel(
                     color         = InkDark,
                     fontWeight    = FontWeight.Bold,
                     fontSize      = 15.sp,
-                    letterSpacing = 0.4.sp
+                    letterSpacing = 0.4.sp,
+                    modifier      = Modifier.pointerInput(Unit) {
+                        detectTapGestures(onLongPress = { showAdminDialog = true })
+                    }
                 )
                 Text(
                     text      = today.format(DateTimeFormatter.ofPattern("MMMM d, yyyy")),
@@ -556,12 +602,23 @@ private fun NameSearchField(
     onMemberSelectedByName: (Int) -> Unit
 ) {
     var searchText by remember { mutableStateOf("") }
+
+    // Sort by relevance: first-name-starts-with > any-word-starts-with > contains
     val filtered = remember(searchText, memberList) {
-        if (searchText.length < 2) emptyList()
-        else memberList.filter { it.name.contains(searchText, ignoreCase = true) }.take(6)
+        val q = searchText.trim()
+        if (q.length < 2) emptyList()
+        else memberList
+            .filter { it.name.contains(q, ignoreCase = true) }
+            .sortedWith(compareBy(
+                { !it.name.startsWith(q, ignoreCase = true) },
+                { !it.name.split(" ").any { w -> w.startsWith(q, ignoreCase = true) } },
+                { it.name.lowercase() }
+            ))
+            .take(6)
     }
 
-    Box(Modifier.width(230.dp)) {
+    // Use a Box so the results Card floats over content below without pushing layout
+    Box(Modifier.width(230.dp).zIndex(10f)) {
         OutlinedTextField(
             value         = searchText,
             onValueChange = { searchText = it },
@@ -575,28 +632,93 @@ private fun NameSearchField(
                 unfocusedTextColor      = Color.White.copy(alpha = 0.8f),
                 focusedBorderColor      = TealLight,
                 unfocusedBorderColor    = Color.White.copy(alpha = 0.25f),
-                focusedLabelColor       = TealLight,
                 cursorColor             = TealLight,
                 focusedContainerColor   = Color.White.copy(alpha = 0.06f),
                 unfocusedContainerColor = Color.White.copy(alpha = 0.04f),
             )
         )
-        DropdownMenu(
-            expanded         = filtered.isNotEmpty(),
-            onDismissRequest = { searchText = "" },
-            modifier         = Modifier.width(230.dp)
-        ) {
-            filtered.forEach { member ->
-                DropdownMenuItem(
-                    text    = { Text(member.name, style = MaterialTheme.typography.bodyMedium) },
-                    onClick = {
-                        onMemberSelectedByName(member.id)
-                        searchText = ""
-                    }
-                )
+
+        if (filtered.isNotEmpty()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 56.dp),   // sit just below the text field
+                shape     = RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp),
+                elevation = CardDefaults.cardElevation(8.dp),
+                colors    = CardDefaults.cardColors(containerColor = Color(0xFF1A2E42))
+            ) {
+                filtered.forEach { member ->
+                    Text(
+                        text     = member.name,
+                        style    = MaterialTheme.typography.bodyMedium,
+                        color    = Color.White,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                onMemberSelectedByName(member.id)
+                                searchText = ""
+                            }
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                    )
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                }
             }
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// Admin code dialog
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun AdminCodeDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
+    var code     by remember { mutableStateOf("") }
+    var hasError by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Admin Access", color = Color.White) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value               = code,
+                    onValueChange       = { code = it; hasError = false },
+                    label               = { Text("Enter admin code") },
+                    singleLine          = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    isError             = hasError,
+                    modifier            = Modifier.fillMaxWidth(),
+                    colors              = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor   = TealMid,
+                        unfocusedBorderColor = TextSecondary.copy(alpha = 0.4f),
+                        focusedTextColor     = Color.White,
+                        unfocusedTextColor   = Color.White,
+                        cursorColor          = TealLight,
+                        errorBorderColor     = Color(0xFFCF6679),
+                        errorLabelColor      = Color(0xFFCF6679)
+                    )
+                )
+                if (hasError) {
+                    Text(
+                        "Incorrect code",
+                        color = Color(0xFFCF6679),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                if (code == BuildConfig.ADMIN_CODE) onSuccess()
+                else { hasError = true; code = "" }
+            }) { Text("Unlock", color = TealLight) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel", color = TextSecondary) }
+        },
+        containerColor = Color(0xFF1A2E42)
+    )
 }
 
 // ---------------------------------------------------------------------------

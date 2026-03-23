@@ -6,7 +6,8 @@ from pydantic import BaseModel
 class CrewInput(BaseModel):
     name: str
     is_guest: bool = False
-    card_uid: str | None = None  # set when crew member scanned their card
+    card_uid: str | None = None   # set when crew member scanned their card
+    member_id: int | None = None  # set when crew member selected from name search
 
 
 class SessionCreate(BaseModel):

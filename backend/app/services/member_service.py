@@ -113,6 +113,13 @@ def get_all_active_members(db: Session) -> list[MemberListItem]:
         .order_by(Member.last_name, Member.first_name, Member.full_name)
     ).scalars().all()
     return [
-        MemberListItem(id=m.id, display_name=m.full_name)
+        MemberListItem(
+            id           = m.id,
+            display_name = (
+                f"{m.first_name} {m.last_name}".strip()
+                if m.first_name or m.last_name
+                else m.full_name
+            )
+        )
         for m in members
     ]

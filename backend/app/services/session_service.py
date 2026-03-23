@@ -70,9 +70,9 @@ def create_checkout(db: Session, req: SessionCreate) -> SessionResponse:
     db.flush()  # get session.id before adding crew
 
     for entry in req.crew:
-        crew_uid = normalize_card_uid(entry.card_uid) if entry.card_uid else None
-        crew_member_id: int | None = None
-        if crew_uid:
+        crew_member_id: int | None = entry.member_id
+        if crew_member_id is None and entry.card_uid:
+            crew_uid = normalize_card_uid(entry.card_uid)
             crew_card = db.execute(
                 select(MemberCard).where(MemberCard.card_uid_normalized == crew_uid)
             ).scalar_one_or_none()

@@ -13,6 +13,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.ui.zIndex
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -48,6 +52,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,8 +60,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import com.ubcsc.checkout.ui.util.forceShowSoftKeyboard
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -80,12 +83,14 @@ import com.ubcsc.checkout.viewmodel.CheckoutViewModel
 import com.ubcsc.checkout.viewmodel.Craft
 import com.ubcsc.checkout.viewmodel.CrewEntry
 import com.ubcsc.checkout.viewmodel.Member
+import com.ubcsc.checkout.viewmodel.MemberSummary
 import kotlinx.coroutines.delay
 
 private const val CREW_INACTIVITY_TIMEOUT_MS = 60_000L
 
 @Composable
 fun AddCrewScreen(uiState: CheckoutUiState, viewModel: CheckoutViewModel) {
+    val memberList by viewModel.memberList.collectAsState()
     LaunchedEffect(Unit) {
         delay(CREW_INACTIVITY_TIMEOUT_MS)
         viewModel.resetToIdle()
@@ -93,29 +98,33 @@ fun AddCrewScreen(uiState: CheckoutUiState, viewModel: CheckoutViewModel) {
     when (uiState) {
         is CheckoutUiState.AddingCrew ->
             AddCrewContent(
-                memberName    = uiState.member.name,
-                craftName     = uiState.craft.displayName,
-                crew          = uiState.crew,
-                isAwaitingNfc = false,
-                onAddByName   = { name -> viewModel.onAddCrewByName(uiState, name) },
-                onAddGuest    = { viewModel.onAddCrewAsGuest(uiState) },
-                onScanCard    = { viewModel.onScanForCrew(uiState) },
-                onRemove      = { idx -> viewModel.onRemoveCrew(uiState, idx) },
-                onDone        = { viewModel.onCrewDone(uiState, null) },
-                onCancel      = { viewModel.goBack() }
+                memberName     = uiState.member.name,
+                craftName      = uiState.craft.displayName,
+                crew           = uiState.crew,
+                memberList     = memberList,
+                isAwaitingNfc  = false,
+                onAddByName    = { name -> viewModel.onAddCrewByName(uiState, name) },
+                onAddByMember  = { id, name -> viewModel.onAddCrewByMember(uiState, id, name) },
+                onAddGuest     = { viewModel.onAddCrewAsGuest(uiState) },
+                onScanCard     = { viewModel.onScanForCrew(uiState) },
+                onRemove       = { idx -> viewModel.onRemoveCrew(uiState, idx) },
+                onDone         = { viewModel.onCrewDone(uiState, null) },
+                onCancel       = { viewModel.goBack() }
             )
         is CheckoutUiState.AwaitingCrewCard ->
             AddCrewContent(
-                memberName    = uiState.member.name,
-                craftName     = uiState.craft.displayName,
-                crew          = uiState.crew,
-                isAwaitingNfc = true,
-                onAddByName   = {},
-                onAddGuest    = {},
-                onScanCard    = {},
-                onRemove      = {},
-                onDone        = {},
-                onCancel      = { viewModel.onCancelCrewScan() }
+                memberName     = uiState.member.name,
+                craftName      = uiState.craft.displayName,
+                crew           = uiState.crew,
+                memberList     = memberList,
+                isAwaitingNfc  = true,
+                onAddByName    = {},
+                onAddByMember  = { _, _ -> },
+                onAddGuest     = {},
+                onScanCard     = {},
+                onRemove       = {},
+                onDone         = {},
+                onCancel       = { viewModel.onCancelCrewScan() }
             )
         else -> Unit
     }
@@ -126,8 +135,10 @@ private fun AddCrewContent(
     memberName:    String,
     craftName:     String,
     crew:          List<CrewEntry>,
+    memberList:    List<MemberSummary> = emptyList(),
     isAwaitingNfc: Boolean,
     onAddByName:   (String) -> Unit,
+    onAddByMember: (Int, String) -> Unit,
     onAddGuest:    () -> Unit,
     onScanCard:    () -> Unit,
     onRemove:      (Int) -> Unit,
@@ -221,7 +232,11 @@ private fun AddCrewContent(
                             exit    = fadeOut(tween(200))
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                NameInputField(onSubmit = onAddByName)
+                                MemberSearchField(
+                                    memberList    = memberList,
+                                    onAddByMember = onAddByMember,
+                                    onAddByName   = onAddByName
+                                )
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     FilledTonalButton(
                                         onClick  = onScanCard,
@@ -307,7 +322,7 @@ private fun AddCrewContent(
                             ElevatedButton(
                                 onClick   = onDone,
                                 enabled   = !isAwaitingNfc && crew.isNotEmpty(),
-                                modifier  = Modifier.fillMaxWidth().height(52.dp),
+                                modifier  = Modifier.fillMaxWidth().height(72.dp),
                                 shape     = RoundedCornerShape(12.dp),
                                 colors    = ButtonDefaults.elevatedButtonColors(
                                     containerColor         = TealMid,
@@ -387,7 +402,7 @@ private fun AddCrewContent(
                             ElevatedButton(
                                 onClick   = onDone,
                                 enabled   = !isAwaitingNfc && crew.isNotEmpty(),
-                                modifier  = Modifier.fillMaxWidth().height(56.dp),
+                                modifier  = Modifier.fillMaxWidth().height(72.dp),
                                 shape     = RoundedCornerShape(12.dp),
                                 colors    = ButtonDefaults.elevatedButtonColors(
                                     containerColor         = TealMid,
@@ -424,7 +439,11 @@ private fun AddCrewContent(
                                 exit    = fadeOut(tween(200))
                             ) {
                                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                    NameInputField(onSubmit = onAddByName)
+                                    MemberSearchField(
+                                        memberList    = memberList,
+                                        onAddByMember = onAddByMember,
+                                        onAddByName   = onAddByName
+                                    )
 
                                     FilledTonalButton(
                                         onClick  = onScanCard,
@@ -512,49 +531,90 @@ private fun CrewRow(entry: CrewEntry, onRemove: () -> Unit) {
 }
 
 @Composable
-private fun NameInputField(onSubmit: (String) -> Unit) {
+private fun MemberSearchField(
+    memberList:    List<MemberSummary>,
+    onAddByMember: (Int, String) -> Unit,
+    onAddByName:   (String) -> Unit
+) {
     var text by remember { mutableStateOf("") }
-    val focusRequester = remember { FocusRequester() }
 
-    fun submit() {
-        val trimmed = text.trim()
-        if (trimmed.isNotEmpty()) { onSubmit(trimmed); text = "" }
+    val filtered = remember(text, memberList) {
+        val q = text.trim()
+        if (q.length < 2) emptyList()
+        else memberList
+            .filter { it.name.contains(q, ignoreCase = true) }
+            .sortedWith(compareBy(
+                { !it.name.startsWith(q, ignoreCase = true) },
+                { !it.name.split(" ").any { w -> w.startsWith(q, ignoreCase = true) } },
+                { it.name.lowercase() }
+            ))
+            .take(6)
     }
 
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedTextField(
-            value         = text,
-            onValueChange = { text = it },
-            placeholder   = { Text("Crew member name…", color = TextMuted) },
-            leadingIcon   = { Icon(Icons.Filled.Person, null, tint = TextMuted, modifier = Modifier.size(20.dp)) },
-            singleLine    = true,
-            keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.Words,
-                imeAction      = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(onDone = { submit() }),
-            modifier = Modifier.fillMaxWidth().focusRequester(focusRequester).forceShowSoftKeyboard(),
-            shape  = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor   = TealMid,
-                unfocusedBorderColor = DividerColor,
-                focusedTextColor     = Color.White,
-                unfocusedTextColor   = Color.White,
-                cursorColor          = TealLight
+    fun submitFreeText() {
+        val trimmed = text.trim()
+        if (trimmed.isNotEmpty()) { onAddByName(trimmed); text = "" }
+    }
+
+    Box(Modifier.fillMaxWidth().zIndex(10f)) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(
+                value         = text,
+                onValueChange = { text = it },
+                placeholder   = { Text("Search or type crew name…", color = TextMuted) },
+                leadingIcon   = { Icon(Icons.Filled.Person, null, tint = TextMuted, modifier = Modifier.size(20.dp)) },
+                singleLine    = true,
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction      = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(onDone = { submitFreeText() }),
+                modifier = Modifier.fillMaxWidth().forceShowSoftKeyboard(),
+                shape  = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor   = TealMid,
+                    unfocusedBorderColor = DividerColor,
+                    focusedTextColor     = Color.White,
+                    unfocusedTextColor   = Color.White,
+                    cursorColor          = TealLight
+                )
             )
-        )
-        ElevatedButton(
-            onClick  = { submit() },
-            enabled  = text.trim().isNotEmpty(),
-            modifier = Modifier.fillMaxWidth().height(48.dp),
-            shape    = RoundedCornerShape(12.dp),
-            colors   = ButtonDefaults.elevatedButtonColors(
-                containerColor         = TealMid.copy(alpha = 0.9f),
-                contentColor           = Color.White,
-                disabledContainerColor = TealMid.copy(alpha = 0.2f),
-                disabledContentColor   = TextMuted
-            )
-        ) { Text("Add Name", fontWeight = FontWeight.Medium) }
+            ElevatedButton(
+                onClick  = { submitFreeText() },
+                enabled  = text.trim().isNotEmpty() && filtered.isEmpty(),
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape    = RoundedCornerShape(12.dp),
+                colors   = ButtonDefaults.elevatedButtonColors(
+                    containerColor         = TealMid.copy(alpha = 0.9f),
+                    contentColor           = Color.White,
+                    disabledContainerColor = TealMid.copy(alpha = 0.2f),
+                    disabledContentColor   = TextMuted
+                )
+            ) { Text("Add as Non-Member", fontWeight = FontWeight.Medium) }
+        }
+
+        // Member suggestions float above content below
+        if (filtered.isNotEmpty()) {
+            Card(
+                modifier  = Modifier.fillMaxWidth().padding(top = 60.dp),
+                shape     = RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp),
+                elevation = CardDefaults.cardElevation(8.dp),
+                colors    = CardDefaults.cardColors(containerColor = Color(0xFF1A2E42))
+            ) {
+                filtered.forEach { member ->
+                    Text(
+                        text     = member.name,
+                        style    = MaterialTheme.typography.bodyMedium,
+                        color    = Color.White,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onAddByMember(member.id, member.name); text = "" }
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                    )
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+                }
+            }
+        }
     }
 }
 
@@ -601,7 +661,7 @@ private fun AddCrewPreviewLandscape() {
             memberName = "Alex Sailor", craftName = "Vanguard #1",
             crew = listOf(CrewEntry("Jordan Lee", false), CrewEntry("Guest", true)),
             isAwaitingNfc = false,
-            onAddByName = {}, onAddGuest = {}, onScanCard = {},
+            onAddByName = {}, onAddByMember = { _, _ -> }, onAddGuest = {}, onScanCard = {},
             onRemove = {}, onDone = {}, onCancel = {}
         )
     }
@@ -615,7 +675,7 @@ private fun AddCrewPreviewPortrait() {
             memberName = "Alex Sailor", craftName = "Vanguard #1",
             crew = listOf(CrewEntry("Jordan Lee", false), CrewEntry("Guest", true)),
             isAwaitingNfc = false,
-            onAddByName = {}, onAddGuest = {}, onScanCard = {},
+            onAddByName = {}, onAddByMember = { _, _ -> }, onAddGuest = {}, onScanCard = {},
             onRemove = {}, onDone = {}, onCancel = {}
         )
     }

@@ -44,6 +44,9 @@ PAGE_SIZE = 100
 JERICHO_CARD_FIELD = "Jericho Card Number"
 JERICHO_CARD_SYSTEM_CODE = "custom-11866950"
 
+# Only members with these WA membership-level names are treated as active kiosk users.
+ALLOWED_MEMBERSHIP_LEVELS = {"UBC Student", "General Member"}
+
 
 # ---------------------------------------------------------------------------
 # WA API helpers
@@ -79,6 +82,7 @@ def _get_all_contacts(token: str, account_id: int) -> list[dict]:
         url = (
             f"{WA_API_BASE}/{WA_API_VERSION}/accounts/{account_id}/contacts"
             f"?$top={PAGE_SIZE}&$skip={skip}&$async=false"
+            f"&$filter='Status' eq 'Active'"
             f"&$select=Id,FirstName,LastName,Email,Status,MembershipLevel,FieldValues"
         )
         resp = httpx.get(url, headers=headers, timeout=30)
@@ -238,7 +242,9 @@ def _prefetch_active_contacts(
     active_ids = [
         c["Id"]
         for c in contacts
-        if c.get("Id") and (c.get("Status") or "").strip().lower() == "active"
+        if c.get("Id")
+        and (c.get("Status") or "").strip().lower() == "active"
+        and (c.get("MembershipLevel") or {}).get("Name", "").strip() in ALLOWED_MEMBERSHIP_LEVELS
     ]
     total = len(active_ids)
     eta_min = round(total * _MIN_INTERVAL / 60, 1)
@@ -301,7 +307,8 @@ def _sync(
         full_name = f"{first} {last}".strip() or f"WA#{wa_id}"
         email = (c.get("Email") or "").strip() or None
         status = (c.get("Status") or "").strip()
-        is_active = status.lower() == "active"
+        membership_level = (c.get("MembershipLevel") or {}).get("Name", "").strip()
+        is_active = status.lower() == "active" and membership_level in ALLOWED_MEMBERSHIP_LEVELS
 
         # ---- upsert Member ----
         member = session.execute(
@@ -404,10 +411,25 @@ def _sync(
             next_card_id += 1
             cards_added += 1
 
+    # Deactivate any DB members not present in this sync — they've left or lapsed in WA.
+    synced_wa_ids = {c["Id"] for c in contacts if c.get("Id")}
+    stale = session.execute(
+        select(Member).where(
+            Member.wa_contact_id.notin_(synced_wa_ids),
+            Member.is_active == True,
+        )
+    ).scalars().all()
+    members_deactivated = 0
+    for m in stale:
+        m.is_active = False
+        members_deactivated += 1
+        print(f"  [DEACTIVATED] {m.full_name}")
+
     session.commit()
     print(
         f"\nDone. Members upserted: {members_upserted} | "
-        f"Cards added: {cards_added} | Cards deactivated: {cards_deactivated}"
+        f"Cards added: {cards_added} | Cards deactivated: {cards_deactivated} | "
+        f"Members deactivated: {members_deactivated}"
     )
 
 

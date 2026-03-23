@@ -189,7 +189,7 @@ private fun DamageReportContent(
                     onClick   = onAllGood,
                     modifier  = Modifier
                         .weight(1f)
-                        .height(56.dp),
+                        .height(72.dp),
                     colors    = ButtonDefaults.elevatedButtonColors(
                         containerColor = AvailableGreen,
                         contentColor   = Color.White
@@ -207,7 +207,7 @@ private fun DamageReportContent(
                     enabled   = notes.isNotBlank(),
                     modifier  = Modifier
                         .weight(1f)
-                        .height(56.dp),
+                        .height(72.dp),
                     colors    = ButtonDefaults.elevatedButtonColors(
                         containerColor         = ActiveAmber,
                         contentColor           = Color(0xFF1A1200),

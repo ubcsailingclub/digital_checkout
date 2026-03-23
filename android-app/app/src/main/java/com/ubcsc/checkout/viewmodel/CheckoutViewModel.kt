@@ -50,7 +50,8 @@ data class Craft(
 data class CrewEntry(
     val name: String,
     val isGuest: Boolean,
-    val cardUid: String? = null
+    val cardUid: String? = null,
+    val memberId: Int? = null
 )
 
 /** A recent session row shown in the idle-screen logbook. */
@@ -156,11 +157,14 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
     val recentSessions: StateFlow<List<RecentSession>> = _recentSessions.asStateFlow()
 
     init {
-        // Pre-load member list for name-search dropdown (background, non-critical)
+        // Refresh member list every hour so the app picks up sync changes without restarting
         viewModelScope.launch {
-            try {
-                _memberList.value = api.getMemberList().map { MemberSummary(it.id, it.displayName) }
-            } catch (_: Exception) { /* silently ignore — name search is optional */ }
+            while (true) {
+                try {
+                    _memberList.value = api.getMemberList().map { MemberSummary(it.id, it.displayName) }
+                } catch (_: Exception) { /* silently ignore — name search is optional */ }
+                delay(60 * 60 * 1_000L) // 1 hour
+            }
         }
 
         viewModelScope.launch {
@@ -350,6 +354,10 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
     fun onAddCrewByName(state: CheckoutUiState.AddingCrew, name: String) {
         if (name.isBlank()) return
         _uiState.value = state.copy(crew = state.crew + CrewEntry(name.trim(), isGuest = false))
+    }
+
+    fun onAddCrewByMember(state: CheckoutUiState.AddingCrew, memberId: Int, name: String) {
+        _uiState.value = state.copy(crew = state.crew + CrewEntry(name, isGuest = false, memberId = memberId))
     }
 
     fun onAddCrewAsGuest(state: CheckoutUiState.AddingCrew) {
@@ -575,9 +583,10 @@ private fun parseEtrTime(iso: String): java.time.LocalTime? =
     }.getOrNull()
 
 private fun CrewEntry.toDto() = CrewInputDto(
-    name    = name,
-    isGuest = isGuest,
-    cardUid = cardUid
+    name     = name,
+    isGuest  = isGuest,
+    cardUid  = cardUid,
+    memberId = memberId
 )
 
 private fun RecentSessionDto.toDomain(): RecentSession {
