@@ -156,32 +156,10 @@ private fun DamageReportContent(
 
             Spacer(Modifier.height(24.dp))
 
-            // ── Notes input ────────────────────────────────────────────────
-            OutlinedTextField(
-                value         = notes,
-                onValueChange = { notes = it },
-                modifier      = Modifier
-                    .fillMaxWidth()
-                    .height(130.dp),
-                placeholder   = { Text("Describe any damage, broken equipment, or other issues…", color = TextMuted) },
-                colors        = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor   = TealMid,
-                    unfocusedBorderColor = DividerColor,
-                    focusedTextColor     = Color.White,
-                    unfocusedTextColor   = Color.White,
-                    cursorColor          = TealMid,
-                    focusedContainerColor   = CardBlue,
-                    unfocusedContainerColor = CardBlue,
-                ),
-                shape         = RoundedCornerShape(12.dp),
-                maxLines      = 5
-            )
-
-            Spacer(Modifier.weight(1f))
-
             // ── Action buttons ─────────────────────────────────────────────
+            // Placed ABOVE the notes field so the keyboard never obscures them
             Row(
-                modifier            = Modifier.fillMaxWidth(),
+                modifier              = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // All Good
@@ -221,6 +199,31 @@ private fun DamageReportContent(
                     Text("Report Issue", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                 }
             }
+
+            Spacer(Modifier.height(16.dp))
+
+            // ── Notes input ────────────────────────────────────────────────
+            OutlinedTextField(
+                value         = notes,
+                onValueChange = { notes = it },
+                modifier      = Modifier
+                    .fillMaxWidth()
+                    .height(130.dp),
+                placeholder   = { Text("Describe any damage, broken equipment, or other issues…", color = TextMuted) },
+                colors        = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor   = TealMid,
+                    unfocusedBorderColor = DividerColor,
+                    focusedTextColor     = Color.White,
+                    unfocusedTextColor   = Color.White,
+                    cursorColor          = TealMid,
+                    focusedContainerColor   = CardBlue,
+                    unfocusedContainerColor = CardBlue,
+                ),
+                shape         = RoundedCornerShape(12.dp),
+                maxLines      = 5
+            )
+
+            Spacer(Modifier.weight(1f))
 
             Spacer(Modifier.height(16.dp))
 

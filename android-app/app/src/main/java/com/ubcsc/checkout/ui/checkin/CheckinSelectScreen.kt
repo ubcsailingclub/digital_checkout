@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DirectionsBoat
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -34,11 +33,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.ubcsc.checkout.ui.util.CraftImageMapper
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ubcsc.checkout.R
 import com.ubcsc.checkout.ui.theme.ActiveAmber
 import com.ubcsc.checkout.ui.theme.CardBlue
 import com.ubcsc.checkout.ui.theme.DeepOcean
@@ -199,11 +202,13 @@ private fun SessionCard(session: ActiveSession, onSelect: () -> Unit) {
                             .background(DeepOcean.copy(alpha = 0.6f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector        = Icons.Filled.DirectionsBoat,
+                        Image(
+                            painter            = painterResource(CraftImageMapper.getDrawableRes(session.craftClass)),
                             contentDescription = null,
-                            tint               = accentColor,
-                            modifier           = Modifier.size(22.dp)
+                            modifier           = Modifier.size(28.dp),
+                            contentScale       = ContentScale.Fit,
+                            colorFilter        = if (session.isOverdue) CraftImageMapper.filterUnavailable
+                                                 else CraftImageMapper.filterAvailable,
                         )
                     }
                     Spacer(modifier = Modifier.width(10.dp))
@@ -306,14 +311,10 @@ private fun CheckinSelectPreview() {
         CheckinSelectContent(
             memberName = "Alex Sailor",
             sessions = listOf(
-                ActiveSession(1, "LZ01", "Laser #1",    "Jordan Kim",    "1h 20m",
-                    java.time.LocalTime.of(15, 30), isOverdue = false),
-                ActiveSession(2, "QT02", "Quest #2",    "Sam Chen",      "3h 05m",
-                    java.time.LocalTime.of(13, 0), isOverdue = true),
-                ActiveSession(3, "KD01", "Double Kayak #1", "Riley Park", "45m",
-                    null, isOverdue = false),
-                ActiveSession(4, "WS03", "Windsurfer L2", "Taylor Ng",   "2h",
-                    java.time.LocalTime.of(16, 0), isOverdue = false),
+                ActiveSession(1, "LZ01", "Laser #1",        "Laser",       "Jordan Kim",  "1h 20m", java.time.LocalTime.of(15, 30), isOverdue = false),
+                ActiveSession(2, "QT02", "Quest #2",        "RS Quest",    "Sam Chen",    "3h 05m", java.time.LocalTime.of(13, 0),  isOverdue = true),
+                ActiveSession(3, "KD01", "Double Kayak #1", "Kayak",       "Riley Park",  "45m",    null,                           isOverdue = false),
+                ActiveSession(4, "WS03", "Windsurfer L2",   "Windsurfer",  "Taylor Ng",   "2h",     java.time.LocalTime.of(16, 0),  isOverdue = false),
             ),
             onSelect = {}, onCancel = {}
         )
@@ -327,10 +328,8 @@ private fun CheckinSelectIdlePreview() {
         CheckinSelectContent(
             memberName = null,
             sessions = listOf(
-                ActiveSession(1, "LZ01", "Laser #1", "Jordan Kim", "1h 20m",
-                    java.time.LocalTime.of(15, 30), isOverdue = false),
-                ActiveSession(2, "QT02", "Quest #2", "Sam Chen",  "3h 05m",
-                    java.time.LocalTime.of(13, 0), isOverdue = true),
+                ActiveSession(1, "LZ01", "Laser #1", "Laser",    "Jordan Kim", "1h 20m", java.time.LocalTime.of(15, 30), isOverdue = false),
+                ActiveSession(2, "QT02", "Quest #2", "RS Quest", "Sam Chen",   "3h 05m", java.time.LocalTime.of(13, 0),  isOverdue = true),
             ),
             onSelect = {}, onCancel = {}
         )

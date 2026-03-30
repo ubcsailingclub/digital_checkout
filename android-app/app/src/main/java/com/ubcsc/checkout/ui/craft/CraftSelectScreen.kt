@@ -217,9 +217,8 @@ private fun CategoryHeader(title: String) {
 @Composable
 private fun FleetCard(fleet: FleetGroup, onSelect: () -> Unit) {
     val hasAvailable = fleet.availableCount > 0
-    val accentColor  = if (hasAvailable) TealMid   else UnavailableRed
-    val iconTint     = if (hasAvailable) TealLight  else TextMuted
-    val cardAlpha    = if (hasAvailable) 1f         else 0.45f
+    val accentColor  = if (hasAvailable) TealMid  else UnavailableRed
+    val cardAlpha    = if (hasAvailable) 1f        else 0.45f
 
     Surface(
         onClick        = onSelect,
@@ -260,9 +259,10 @@ private fun FleetCard(fleet: FleetGroup, onSelect: () -> Unit) {
                     Image(
                         painter        = painterResource(CraftImageMapper.getDrawableRes(fleet.craftClass)),
                         contentDescription = fleet.craftClass,
-                        modifier       = Modifier.size(60.dp),
+                        modifier       = Modifier.size(62.dp),
                         contentScale   = ContentScale.Fit,
-                        colorFilter    = ColorFilter.tint(iconTint)
+                        colorFilter    = if (hasAvailable) CraftImageMapper.filterAvailable
+                                         else CraftImageMapper.filterUnavailable
                     )
                 }
 

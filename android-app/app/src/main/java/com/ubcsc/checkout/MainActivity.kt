@@ -80,6 +80,16 @@ class MainActivity : ComponentActivity() {
 
         hideSystemBars()
 
+        // Pre-load credentials from build config on first install (if not already set)
+        com.ubcsc.checkout.data.KioskPreferences(this).apply {
+            if (waApiKey.isBlank()    && BuildConfig.WA_API_KEY.isNotBlank())    waApiKey    = BuildConfig.WA_API_KEY
+            if (waAccountId.isBlank() && BuildConfig.WA_ACCOUNT_ID.isNotBlank()) waAccountId = BuildConfig.WA_ACCOUNT_ID
+            if (piSyncUrl.isBlank()   && BuildConfig.PI_SYNC_URL.isNotBlank())   piSyncUrl   = BuildConfig.PI_SYNC_URL
+        }
+
+        // Schedule hourly member + fleet sync
+        com.ubcsc.checkout.sync.SyncWorker.schedule(this)
+
         // Handle cold-start NFC intent
         intent?.let { handleNfcIntent(it) }
 

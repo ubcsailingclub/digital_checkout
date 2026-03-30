@@ -305,7 +305,6 @@ def _sync(
         first = (c.get("FirstName") or "").strip()
         last = (c.get("LastName") or "").strip()
         full_name = f"{first} {last}".strip() or f"WA#{wa_id}"
-        email = (c.get("Email") or "").strip() or None
         status = (c.get("Status") or "").strip()
         membership_level = (c.get("MembershipLevel") or {}).get("Name", "").strip()
         is_active = status.lower() == "active" and membership_level in ALLOWED_MEMBERSHIP_LEVELS
@@ -322,7 +321,6 @@ def _sync(
                 full_name=full_name,
                 first_name=first or None,
                 last_name=last or None,
-                email=email,
                 membership_status=status,
                 is_active=is_active,
             )
@@ -333,7 +331,6 @@ def _sync(
             member.full_name = full_name
             member.first_name = first or None
             member.last_name = last or None
-            member.email = email
             member.membership_status = status
             member.is_active = is_active
 

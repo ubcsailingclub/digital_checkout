@@ -168,9 +168,8 @@ private fun BoatSelectContent(
 @Composable
 private fun BoatCard(craft: Craft, onSelect: () -> Unit) {
     val available   = craft.isAvailable
-    val accentColor = if (available) TealMid   else UnavailableRed
-    val iconTint    = if (available) TealLight  else TextMuted
-    val cardAlpha   = if (available) 1f         else 0.45f
+    val accentColor = if (available) TealMid  else UnavailableRed
+    val cardAlpha   = if (available) 1f        else 0.45f
 
     Surface(
         onClick        = onSelect,
@@ -211,9 +210,10 @@ private fun BoatCard(craft: Craft, onSelect: () -> Unit) {
                     Image(
                         painter            = painterResource(CraftImageMapper.getDrawableRes(craft.craftClass)),
                         contentDescription = craft.craftClass,
-                        modifier           = Modifier.size(60.dp),
+                        modifier           = Modifier.size(62.dp),
                         contentScale       = ContentScale.Fit,
-                        colorFilter        = ColorFilter.tint(iconTint)
+                        colorFilter        = if (available) CraftImageMapper.filterAvailable
+                                             else CraftImageMapper.filterUnavailable
                     )
                 }
 

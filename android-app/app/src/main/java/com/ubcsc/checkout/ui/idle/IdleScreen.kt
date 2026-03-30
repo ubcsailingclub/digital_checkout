@@ -1,7 +1,5 @@
 package com.ubcsc.checkout.ui.idle
 
-import android.nfc.NfcAdapter
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.input.pointer.pointerInput
@@ -11,7 +9,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -30,7 +27,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Nfc
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.Button
@@ -44,18 +40,21 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -64,7 +63,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.work.WorkManager
 import com.ubcsc.checkout.BuildConfig
+import com.ubcsc.checkout.data.KioskPreferences
+import com.ubcsc.checkout.sync.SyncWorker
+import com.ubcsc.checkout.ui.admin.DbViewerDialog
 import com.ubcsc.checkout.ui.theme.DeepOcean
 import com.ubcsc.checkout.ui.theme.DigitalCheckoutTheme
 import com.ubcsc.checkout.ui.theme.OceanSurface
@@ -127,34 +133,32 @@ private fun groupByDate(sessions: List<RecentSession>): List<LogEntry> {
 fun IdleScreen(viewModel: CheckoutViewModel, onAdminExit: () -> Unit = {}) {
     val recentSessions by viewModel.recentSessions.collectAsState()
     val memberList     by viewModel.memberList.collectAsState()
-    val context = LocalContext.current
-    val nfcAdapter = NfcAdapter.getDefaultAdapter(context)
-    // Only warn when NFC is physically present but turned off.
-    // Absence of NFC is not a warning — the USB reader may be in use.
-    val nfcWarning = if (nfcAdapter != null && !nfcAdapter.isEnabled) "NFC is disabled" else null
+
+    // Keep screen on while idle — this is a kiosk, it should never sleep
+    val view = LocalView.current
+    DisposableEffect(Unit) {
+        view.keepScreenOn = true
+        onDispose { view.keepScreenOn = false }
+    }
 
     IdleContent(
         recentSessions          = recentSessions,
-        nfcWarning              = nfcWarning,
         memberList              = memberList,
         onMemberSelectedByName  = viewModel::onMemberSelectedByName,
-        onDebugScan             = if (BuildConfig.DEBUG) viewModel::onCardScanned else null,
         onCheckinFromIdle       = viewModel::onCheckinFromIdle,
         onAdminExit             = onAdminExit
     )
 }
 
 // ---------------------------------------------------------------------------
-// Root layout: notebook left | NFC prompt right
+// Root layout: notebook left | search prompt right
 // ---------------------------------------------------------------------------
 
 @Composable
 private fun IdleContent(
     recentSessions:         List<RecentSession>,
-    nfcWarning:             String?,
     memberList:             List<MemberSummary>   = emptyList(),
     onMemberSelectedByName: ((Int) -> Unit)?      = null,
-    onDebugScan:            ((String) -> Unit)?   = null,
     onCheckinFromIdle:      (() -> Unit)?          = null,
     onAdminExit:            () -> Unit            = {}
 ) {
@@ -166,39 +170,33 @@ private fun IdleContent(
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val isPortrait = maxHeight > maxWidth
         if (isPortrait) {
-            // Portrait: NFC panel on top, logbook below
             Column(Modifier.fillMaxSize()) {
-                NfcPromptPanel(
+                SearchPromptPanel(
                     timeText               = timeText,
-                    nfcWarning             = nfcWarning,
                     memberList             = memberList,
                     onMemberSelectedByName = onMemberSelectedByName,
-                    onDebugScan            = onDebugScan,
-                    modifier               = Modifier.fillMaxWidth().weight(0.42f)
+                    modifier               = Modifier.fillMaxWidth().weight(0.48f)
                 )
                 NotebookPanel(
                     recentSessions    = recentSessions,
                     onCheckinFromIdle = onCheckinFromIdle,
                     onAdminExit       = onAdminExit,
-                    modifier          = Modifier.fillMaxWidth().weight(0.58f)
+                    modifier          = Modifier.fillMaxWidth().weight(0.52f)
                 )
             }
         } else {
-            // Landscape: side-by-side
             Row(Modifier.fillMaxSize()) {
                 NotebookPanel(
                     recentSessions    = recentSessions,
                     onCheckinFromIdle = onCheckinFromIdle,
                     onAdminExit       = onAdminExit,
-                    modifier          = Modifier.weight(0.65f).fillMaxHeight()
+                    modifier          = Modifier.weight(0.58f).fillMaxHeight()
                 )
-                NfcPromptPanel(
+                SearchPromptPanel(
                     timeText               = timeText,
-                    nfcWarning             = nfcWarning,
                     memberList             = memberList,
                     onMemberSelectedByName = onMemberSelectedByName,
-                    onDebugScan            = onDebugScan,
-                    modifier               = Modifier.weight(0.35f).fillMaxHeight()
+                    modifier               = Modifier.weight(0.42f).fillMaxHeight()
                 )
             }
         }
@@ -220,12 +218,30 @@ private fun NotebookPanel(
     val entries = groupByDate(recentSessions)
     val emptyCount = (TOTAL_ROWS - entries.size).coerceAtLeast(0)
 
-    var showAdminDialog by remember { mutableStateOf(false) }
+    var showAdminDialog  by remember { mutableStateOf(false) }
+    var showAdminMenu    by remember { mutableStateOf(false) }
+    var showSyncSettings by remember { mutableStateOf(false) }
+    var showDbViewer     by remember { mutableStateOf(false) }
+
     if (showAdminDialog) {
         AdminCodeDialog(
             onDismiss = { showAdminDialog = false },
-            onSuccess = { showAdminDialog = false; onAdminExit() }
+            onSuccess = { showAdminDialog = false; showAdminMenu = true }
         )
+    }
+    if (showAdminMenu) {
+        AdminMenuDialog(
+            onDismiss      = { showAdminMenu = false },
+            onExit         = { showAdminMenu = false; onAdminExit() },
+            onSyncSettings = { showAdminMenu = false; showSyncSettings = true },
+            onDbViewer     = { showAdminMenu = false; showDbViewer = true }
+        )
+    }
+    if (showDbViewer) {
+        DbViewerDialog(onDismiss = { showDbViewer = false })
+    }
+    if (showSyncSettings) {
+        SyncSettingsDialog(onDismiss = { showSyncSettings = false })
     }
 
     Box(modifier.background(PaperBg)) {
@@ -255,7 +271,7 @@ private fun NotebookPanel(
                     text          = "UBC Sailing Club  ·  Checkout Log",
                     color         = InkDark,
                     fontWeight    = FontWeight.Bold,
-                    fontSize      = 15.sp,
+                    fontSize      = 18.sp,
                     letterSpacing = 0.4.sp,
                     modifier      = Modifier.pointerInput(Unit) {
                         detectTapGestures(onLongPress = { showAdminDialog = true })
@@ -264,7 +280,7 @@ private fun NotebookPanel(
                 Text(
                     text      = today.format(DateTimeFormatter.ofPattern("MMMM d, yyyy")),
                     color     = InkMid,
-                    fontSize  = 12.sp,
+                    fontSize  = 15.sp,
                     fontStyle = FontStyle.Italic
                 )
             }
@@ -332,7 +348,7 @@ private fun NotebookPanel(
                 Text(
                     text      = "▶  Tap your Jericho card or card reader to begin",
                     color     = InkMid,
-                    fontSize  = 13.sp,
+                    fontSize  = 15.sp,
                     fontStyle = FontStyle.Italic
                 )
             }
@@ -347,8 +363,8 @@ private fun NotebookPanel(
                 ) {
                     Text(
                         text      = "↩  Check in a boat directly",
-                        color     = InkMid.copy(alpha = 0.4f),
-                        fontSize  = 11.sp,
+                        color     = InkMid.copy(alpha = 0.75f),
+                        fontSize  = 15.sp,
                         fontStyle = FontStyle.Italic
                     )
                 }
@@ -378,7 +394,7 @@ private fun DateSeparatorRow(date: LocalDate, today: LocalDate) {
         Text(
             text      = "── $label ──",
             color     = InkMid,
-            fontSize  = 11.sp,
+            fontSize  = 13.sp,
             fontStyle = FontStyle.Italic,
             fontWeight = FontWeight.Medium
         )
@@ -401,12 +417,12 @@ private fun LogRow(
 ) {
     val color  = if (isHeader) InkDark  else InkMid
     val weight = if (isHeader) FontWeight.SemiBold else FontWeight.Normal
-    val size   = 13.sp
+    val size   = 16.sp
 
     Row(
         Modifier
             .fillMaxWidth()
-            .height(38.dp)
+            .height(44.dp)
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -456,40 +472,21 @@ private fun ColumnDivider() {
 }
 
 // ---------------------------------------------------------------------------
-// Right: NFC prompt panel (retains the ocean theme)
+// Right: Search prompt panel
 // ---------------------------------------------------------------------------
 
 @Composable
-private fun NfcPromptPanel(
+private fun SearchPromptPanel(
     timeText:               String,
-    nfcWarning:             String?,
     memberList:             List<MemberSummary>  = emptyList(),
     onMemberSelectedByName: ((Int) -> Unit)?     = null,
-    onDebugScan:            ((String) -> Unit)?  = null,
     modifier:               Modifier             = Modifier
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "ripple")
-    val rippleDuration = 2400
-
-    val ring1 by infiniteTransition.animateFloat(
-        initialValue = 0f, targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(rippleDuration, easing = LinearEasing)),
-        label = "ring1"
-    )
-    val ring2 by infiniteTransition.animateFloat(
-        initialValue = 0f, targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(rippleDuration, 800, easing = LinearEasing)),
-        label = "ring2"
-    )
-    val ring3 by infiniteTransition.animateFloat(
-        initialValue = 0f, targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(rippleDuration, 1600, easing = LinearEasing)),
-        label = "ring3"
-    )
-    val iconPulse by infiniteTransition.animateFloat(
-        initialValue = 0.85f, targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Reverse),
-        label = "icon_pulse"
+    val iconPulse by rememberInfiniteTransition(label = "pulse").animateFloat(
+        initialValue  = 0.92f,
+        targetValue   = 1f,
+        animationSpec = infiniteRepeatable(tween(1200), RepeatMode.Reverse),
+        label         = "icon_pulse"
     )
 
     Box(
@@ -498,21 +495,10 @@ private fun NfcPromptPanel(
         ),
         contentAlignment = Alignment.Center
     ) {
-        Canvas(Modifier.fillMaxSize()) {
-            val center    = Offset(size.width / 2f, size.height / 2f)
-            val maxRadius = size.minDimension * 0.44f
-            fun ring(p: Float) = drawCircle(
-                color  = TealMid.copy(alpha = (1f - p) * 0.35f),
-                radius = maxRadius * p,
-                center = center,
-                style  = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.dp.toPx())
-            )
-            ring(ring1); ring(ring2); ring(ring3)
-        }
-
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
+            modifier            = Modifier.padding(horizontal = 24.dp)
         ) {
             Text(
                 text          = "UBC SAILING CLUB",
@@ -525,23 +511,18 @@ private fun NfcPromptPanel(
             )
             Spacer(Modifier.height(18.dp))
             Icon(
-                imageVector        = Icons.Filled.Nfc,
-                contentDescription = "Card reader",
+                imageVector        = Icons.Filled.Search,
+                contentDescription = null,
                 tint               = Color.White,
-                modifier           = Modifier.size((68 * iconPulse).dp)
+                modifier           = Modifier.size((60 * iconPulse).dp)
             )
-            Spacer(Modifier.height(14.dp))
-            if (nfcWarning != null) {
-                Text(
-                    text      = nfcWarning,
-                    style     = MaterialTheme.typography.bodyMedium,
-                    color     = Color(0xFFFFB300),
-                    textAlign = TextAlign.Center,
-                    modifier  = Modifier.padding(horizontal = 20.dp)
-                )
-            }
-
-            // Name search — only shown when the member list has loaded
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text      = "Search your name to check out",
+                style     = MaterialTheme.typography.bodyMedium,
+                color     = Color.White.copy(alpha = 0.85f),
+                textAlign = TextAlign.Center
+            )
             if (onMemberSelectedByName != null && memberList.isNotEmpty()) {
                 Spacer(Modifier.height(20.dp))
                 NameSearchField(
@@ -557,38 +538,6 @@ private fun NfcPromptPanel(
             color    = TextSecondary.copy(alpha = 0.6f),
             modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
         )
-
-        if (onDebugScan != null) {
-            var debugUid by remember { mutableStateOf("") }
-            Row(
-                Modifier.align(Alignment.BottomStart).padding(10.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment     = Alignment.CenterVertically
-            ) {
-                Text("DEV", style = MaterialTheme.typography.labelSmall, color = Color(0xFFFFB300))
-                OutlinedTextField(
-                    value         = debugUid,
-                    onValueChange = { debugUid = it },
-                    label         = { Text("UID") },
-                    singleLine    = true,
-                    modifier      = Modifier.width(130.dp),
-                    colors        = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor        = Color.White,
-                        unfocusedTextColor      = Color.White.copy(alpha = 0.7f),
-                        focusedBorderColor      = TealLight,
-                        unfocusedBorderColor    = Color.White.copy(alpha = 0.3f),
-                        focusedLabelColor       = TealLight,
-                        unfocusedLabelColor     = Color.White.copy(alpha = 0.5f),
-                        focusedContainerColor   = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                    )
-                )
-                Button(
-                    onClick = { onDebugScan(debugUid.trim()); debugUid = "" },
-                    enabled = debugUid.isNotBlank()
-                ) { Text("Scan") }
-            }
-        }
     }
 }
 
@@ -722,6 +671,143 @@ private fun AdminCodeDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
 }
 
 // ---------------------------------------------------------------------------
+// Admin menu dialog
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun AdminMenuDialog(
+    onDismiss:      () -> Unit,
+    onExit:         () -> Unit,
+    onSyncSettings: () -> Unit,
+    onDbViewer:     () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Admin Menu", color = Color.White) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick  = onSyncSettings,
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Sync Settings") }
+                Button(
+                    onClick  = onDbViewer,
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Database") }
+                Button(
+                    onClick  = onExit,
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Exit App") }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel", color = TextSecondary) }
+        },
+        containerColor = Color(0xFF1A2E42)
+    )
+}
+
+// ---------------------------------------------------------------------------
+// Sync settings dialog
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun SyncSettingsDialog(onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val prefs   = remember { KioskPreferences(context) }
+
+    var waApiKey         by remember { mutableStateOf(prefs.waApiKey) }
+    var waAccountId      by remember { mutableStateOf(prefs.waAccountId) }
+    var piSyncUrl        by remember { mutableStateOf(prefs.piSyncUrl) }
+    var sheetsScriptUrl  by remember { mutableStateOf(prefs.sheetsScriptUrl) }
+
+    // "idle" | "queued"
+    var syncStatus  by remember { mutableStateOf("idle") }
+
+    val fieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor   = TealMid,
+        unfocusedBorderColor = TextSecondary.copy(alpha = 0.4f),
+        focusedTextColor     = Color.White,
+        unfocusedTextColor   = Color.White,
+        cursorColor          = TealLight
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Sync Settings", color = Color.White) },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text("Wild Apricot", color = TealLight, style = MaterialTheme.typography.labelMedium)
+                OutlinedTextField(
+                    value         = waApiKey,
+                    onValueChange = { waApiKey = it },
+                    label         = { Text("API Key") },
+                    singleLine    = true,
+                    modifier      = Modifier.fillMaxWidth(),
+                    colors        = fieldColors
+                )
+                OutlinedTextField(
+                    value         = waAccountId,
+                    onValueChange = { waAccountId = it },
+                    label         = { Text("Account ID") },
+                    singleLine    = true,
+                    modifier      = Modifier.fillMaxWidth(),
+                    colors        = fieldColors
+                )
+                Text("Pi (Tailscale)", color = TealLight, style = MaterialTheme.typography.labelMedium)
+                OutlinedTextField(
+                    value         = piSyncUrl,
+                    onValueChange = { piSyncUrl = it },
+                    label         = { Text("Pi URL  e.g. https://100.x.x.x") },
+                    singleLine    = true,
+                    modifier      = Modifier.fillMaxWidth(),
+                    colors        = fieldColors
+                )
+                Text("Google Sheets", color = TealLight, style = MaterialTheme.typography.labelMedium)
+                OutlinedTextField(
+                    value         = sheetsScriptUrl,
+                    onValueChange = { sheetsScriptUrl = it },
+                    label         = { Text("Apps Script URL") },
+                    singleLine    = true,
+                    modifier      = Modifier.fillMaxWidth(),
+                    colors        = fieldColors
+                )
+
+                if (syncStatus == "queued") {
+                    Text(
+                        "Sync queued — running in background, safe to close.",
+                        color = TealLight,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                Button(
+                    onClick = {
+                        prefs.waApiKey        = waApiKey.trim()
+                        prefs.waAccountId     = waAccountId.trim()
+                        prefs.piSyncUrl       = piSyncUrl.trim()
+                        prefs.sheetsScriptUrl = sheetsScriptUrl.trim()
+                        SyncWorker.syncNow(context)
+                        syncStatus = "queued"
+                    },
+                    enabled  = syncStatus != "queued",
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text(if (syncStatus == "queued") "Sync queued — safe to close" else "Save & Sync Now") }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Close", color = TextSecondary) }
+        },
+        containerColor = Color(0xFF1A2E42)
+    )
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -747,7 +833,7 @@ private val previewSessions = listOf(
 @Composable
 private fun IdlePreview() {
     DigitalCheckoutTheme {
-        IdleContent(recentSessions = previewSessions, nfcWarning = null)
+        IdleContent(recentSessions = previewSessions)
     }
 }
 
@@ -755,6 +841,6 @@ private fun IdlePreview() {
 @Composable
 private fun IdleEmptyPreview() {
     DigitalCheckoutTheme {
-        IdleContent(recentSessions = emptyList(), nfcWarning = null)
+        IdleContent(recentSessions = emptyList())
     }
 }

@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
 
 // Load local.properties for API config
@@ -29,6 +30,14 @@ android {
             "\"${localProps["api.kioskKey"] ?: ""}\"")
         buildConfigField("String", "ADMIN_CODE",
             "\"${localProps["admin.code"] ?: "1234"}\"")
+        buildConfigField("String", "WA_API_KEY",
+            "\"${localProps["wa.apiKey"] ?: ""}\"")
+        buildConfigField("String", "WA_ACCOUNT_ID",
+            "\"${localProps["wa.accountId"] ?: ""}\"")
+        buildConfigField("String", "PI_SYNC_URL",
+            "\"${localProps["fleet.piUrl"] ?: ""}\"")
+        buildConfigField("String", "SHEETS_SCRIPT_URL",
+            "\"${localProps["sheets.scriptUrl"] ?: ""}\"")
     }
 
     buildTypes {
@@ -73,6 +82,12 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
     implementation(libs.gson)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.security.crypto)
+    implementation(libs.androidx.runtime.livedata)
 
     debugImplementation(libs.androidx.ui.tooling)
 }

@@ -26,7 +26,7 @@ def _find_members(session: Session, query: str) -> list[Member]:
     q = f"%{query.lower()}%"
     return session.execute(
         select(Member).where(
-            (func.lower(Member.full_name).like(q)) | (func.lower(Member.email).like(q))
+            func.lower(Member.full_name).like(q)
         ).order_by(Member.full_name).limit(10)
     ).scalars().all()
 
@@ -34,7 +34,7 @@ def _find_members(session: Session, query: str) -> list[Member]:
 def main() -> None:
     print("=== Card Registration ===\n")
 
-    search = input("Search member by name or email: ").strip()
+    search = input("Search member by name: ").strip()
     if not search:
         print("No search term provided. Exiting.")
         sys.exit(1)
@@ -48,7 +48,7 @@ def main() -> None:
         print(f"\nFound {len(members)} member(s):")
         for i, m in enumerate(members):
             status = "ACTIVE" if m.is_active else "inactive"
-            print(f"  [{i}] {m.full_name}  ({m.email or 'no email'})  [{status}]")
+            print(f"  [{i}] {m.full_name}  [{status}]")
 
         idx_str = input("\nEnter number to select member: ").strip()
         try:
