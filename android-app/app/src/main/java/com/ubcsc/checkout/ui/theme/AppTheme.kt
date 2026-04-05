@@ -115,6 +115,14 @@ val SolarFlareColors = KioskColors(
     textWarm   = Color(0xFFFFAB91),
 )
 
+val NeonLimeColors = KioskColors(
+    label      = "Neon Lime",
+    accent     = Color(0xFFCCFF00),   // electric lime
+    accentMid  = Color(0xFF76B900),   // darker green
+    accentDark = Color(0xFF3A5A00),   // deep forest
+    textWarm   = Color(0xFFE8FF99),   // pale lime
+)
+
 val BrassNavyColors = KioskColors(
     label      = "Brass & Navy",
     accent     = Color(0xFFF5C842),   // polished brass
@@ -140,7 +148,8 @@ enum class AppTheme(val colors: KioskColors) {
     ROSE_GOLD(RoseGoldColors),
     SAGE_FOG(SageFogColors),
     SOLAR_FLARE(SolarFlareColors),
-    BRASS_NAVY(BrassNavyColors);
+    BRASS_NAVY(BrassNavyColors),
+    NEON_LIME(NeonLimeColors);
 
     val label: String get() = colors.label
 
