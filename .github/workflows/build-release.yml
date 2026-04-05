@@ -37,14 +37,21 @@ jobs:
 
       - name: Sign APK
         id: sign
-        uses: r0adkll/sign-android-release@v1
-        with:
-          releaseDirectory: android-app/app/build/outputs/apk/release
-          signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
-          alias: ${{ secrets.KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
-          buildToolsVersion: '34.0.0'
+        run: |
+          BUILD_TOOLS=$ANDROID_SDK_ROOT/build-tools/34.0.0
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > /tmp/keystore.jks
+          APK=$(find android-app/app/build/outputs/apk/release -name "*.apk" ! -name "*-signed*" | head -1)
+          ALIGNED="${APK%.apk}-aligned.apk"
+          SIGNED="${APK%.apk}-signed.apk"
+          $BUILD_TOOLS/zipalign -v 4 "$APK" "$ALIGNED"
+          $BUILD_TOOLS/apksigner sign \
+            --ks /tmp/keystore.jks \
+            --ks-key-alias "${{ secrets.KEY_ALIAS }}" \
+            --ks-pass "pass:${{ secrets.KEYSTORE_PASSWORD }}" \
+            --key-pass "pass:${{ secrets.KEY_PASSWORD }}" \
+            --out "$SIGNED" \
+            "$ALIGNED"
+          echo "signedReleaseFile=$SIGNED" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
