@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Theme Swatches</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #1a1a1a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 32px; }
+  h1 { color: #fff; font-size: 14px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 32px; opacity: 0.5; }
+  .themes { display: flex; flex-direction: column; gap: 32px; }
+  .theme { }
+  .theme-name { color: #fff; font-size: 13px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .theme-desc { color: #888; font-size: 12px; margin-bottom: 12px; }
+  .swatches { display: flex; gap: 0; border-radius: 12px; overflow: hidden; height: 80px; }
+  .swatch { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 6px 8px; position: relative; transition: flex 0.2s; cursor: default; }
+  .swatch:hover { flex: 2; }
+  .swatch-label { font-size: 9px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; opacity: 0; transition: opacity 0.15s; white-space: nowrap; }
+  .swatch:hover .swatch-label { opacity: 1; }
+  .swatch-hex { font-size: 9px; font-family: monospace; opacity: 0; transition: opacity 0.15s; }
+  .swatch:hover .swatch-hex { opacity: 0.8; }
+
+  /* Mock UI preview */
+  .mock { border-radius: 12px; overflow: hidden; height: 120px; display: flex; margin-top: 10px; position: relative; }
+  .mock-bg { flex: 1; display: flex; flex-direction: column; padding: 14px 16px; gap: 8px; }
+  .mock-title { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
+  .mock-card { border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; border: 1px solid; }
+  .mock-dot { width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .mock-dot svg { width: 14px; height: 14px; }
+  .mock-lines { flex: 1; }
+  .mock-line1 { height: 7px; border-radius: 3px; width: 70%; margin-bottom: 4px; }
+  .mock-line2 { height: 5px; border-radius: 3px; width: 45%; opacity: 0.4; }
+  .mock-btn { border-radius: 8px; padding: 7px 14px; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; display: inline-block; margin-top: 2px; align-self: flex-start; }
+  .mock-badge { border-radius: 20px; padding: 3px 10px; font-size: 9px; font-weight: 600; display: inline-block; border: 1px solid; margin-left: auto; align-self: center; }
+</style>
+</head>
+<body>
+<h1>Digital Checkout — Theme Exploration</h1>
+<div class="themes">
+
+  <!-- CURRENT: Dark Ocean -->
+  <div class="theme">
+    <div class="theme-name">① Dark Ocean <span style="color:#4DD0E1;font-size:10px;margin-left:8px;">CURRENT</span></div>
+    <div class="theme-desc">Near-black navy · Teal accents · Sailing logbook inspired</div>
+    <div class="swatches">
+      <div class="swatch" style="background:#0D1B2A;"><span class="swatch-label" style="color:#fff;">Background</span><span class="swatch-hex" style="color:#fff;">#0D1B2A</span></div>
+      <div class="swatch" style="background:#162032;"><span class="swatch-label" style="color:#fff;">Card</span><span class="swatch-hex" style="color:#fff;">#162032</span></div>
+      <div class="swatch" style="background:#263749;"><span class="swatch-label" style="color:#fff;">Divider</span><span class="swatch-hex" style="color:#fff;">#263749</span></div>
+      <div class="swatch" style="background:#00ACC1;"><span class="swatch-label" style="color:#fff;">Primary</span><span class="swatch-hex" style="color:#fff;">#00ACC1</span></div>
+      <div class="swatch" style="background:#4DD0E1;"><span class="swatch-label" style="color:#000;">Highlight</span><span class="swatch-hex" style="color:#000;">#4DD0E1</span></div>
+      <div class="swatch" style="background:#90CAF9;"><span class="swatch-label" style="color:#000;">Text 2°</span><span class="swatch-hex" style="color:#000;">#90CAF9</span></div>
+      <div class="swatch" style="background:#546E7A;"><span class="swatch-label" style="color:#fff;">Muted</span><span class="swatch-hex" style="color:#fff;">#546E7A</span></div>
+      <div class="swatch" style="background:#FFB300;"><span class="swatch-label" style="color:#000;">Amber</span><span class="swatch-hex" style="color:#000;">#FFB300</span></div>
+      <div class="swatch" style="background:#E53935;"><span class="swatch-label" style="color:#fff;">Danger</span><span class="swatch-hex" style="color:#fff;">#E53935</span></div>
+    </div>
+    <div class="mock" style="background:#0D1B2A;">
+      <div class="mock-bg">
+        <div class="mock-title" style="color:#4DD0E1;">Welcome back, Alex Sailor</div>
+        <div class="mock-card" style="background:#162032;border-color:#263749;">
+          <div class="mock-dot" style="background:#0D1B2A;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#4DD0E1" stroke-width="2"><path d="M3 17l4-8 4 4 3-5 4 9H3z"/></svg>
+          </div>
+          <div class="mock-lines">
+            <div class="mock-line1" style="background:#4DD0E1;"></div>
+            <div class="mock-line2" style="background:#546E7A;"></div>
+          </div>
+          <div class="mock-badge" style="color:#FFB300;border-color:#FFB300;background:rgba(255,179,0,0.1);">Out 1h 20m</div>
+        </div>
+        <div class="mock-btn" style="background:#00ACC1;color:#fff;">Check Out</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THEME 2: Slate & Amber -->
+  <div class="theme">
+    <div class="theme-name">② Slate &amp; Amber</div>
+    <div class="theme-desc">Warm near-black · Deep amber action · Premium logbook feel</div>
+    <div class="swatches">
+      <div class="swatch" style="background:#1A1612;"><span class="swatch-label" style="color:#fff;">Background</span><span class="swatch-hex" style="color:#fff;">#1A1612</span></div>
+      <div class="swatch" style="background:#221D14;"><span class="swatch-label" style="color:#fff;">Card</span><span class="swatch-hex" style="color:#fff;">#221D14</span></div>
+      <div class="swatch" style="background:#332B1E;"><span class="swatch-label" style="color:#fff;">Divider</span><span class="swatch-hex" style="color:#fff;">#332B1E</span></div>
+      <div class="swatch" style="background:#FF8F00;"><span class="swatch-label" style="color:#fff;">Primary</span><span class="swatch-hex" style="color:#fff;">#FF8F00</span></div>
+      <div class="swatch" style="background:#FFCA28;"><span class="swatch-label" style="color:#000;">Highlight</span><span class="swatch-hex" style="color:#000;">#FFCA28</span></div>
+      <div class="swatch" style="background:#FFE082;"><span class="swatch-label" style="color:#000;">Text 2°</span><span class="swatch-hex" style="color:#000;">#FFE082</span></div>
+      <div class="swatch" style="background:#795548;"><span class="swatch-label" style="color:#fff;">Muted</span><span class="swatch-hex" style="color:#fff;">#795548</span></div>
+      <div class="swatch" style="background:#4CAF50;"><span class="swatch-label" style="color:#fff;">Success</span><span class="swatch-hex" style="color:#fff;">#4CAF50</span></div>
+      <div class="swatch" style="background:#E53935;"><span class="swatch-label" style="color:#fff;">Danger</span><span class="swatch-hex" style="color:#fff;">#E53935</span></div>
+    </div>
+    <div class="mock" style="background:#1A1612;">
+      <div class="mock-bg">
+        <div class="mock-title" style="color:#FFCA28;">Welcome back, Alex Sailor</div>
+        <div class="mock-card" style="background:#221D14;border-color:#332B1E;">
+          <div class="mock-dot" style="background:#1A1612;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#FFCA28" stroke-width="2"><path d="M3 17l4-8 4 4 3-5 4 9H3z"/></svg>
+          </div>
+          <div class="mock-lines">
+            <div class="mock-line1" style="background:#FFCA28;"></div>
+            <div class="mock-line2" style="background:#795548;"></div>
+          </div>
+          <div class="mock-badge" style="color:#FF8F00;border-color:#FF8F00;background:rgba(255,143,0,0.1);">Out 1h 20m</div>
+        </div>
+        <div class="mock-btn" style="background:#FF8F00;color:#fff;">Check Out</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THEME 3: Forest Green -->
+  <div class="theme">
+    <div class="theme-name">③ Forest Green</div>
+    <div class="theme-desc">Deep forest black · Natural greens · Outdoorsy &amp; grounded</div>
+    <div class="swatches">
+      <div class="swatch" style="background:#0D1A0F;"><span class="swatch-label" style="color:#fff;">Background</span><span class="swatch-hex" style="color:#fff;">#0D1A0F</span></div>
+      <div class="swatch" style="background:#111E13;"><span class="swatch-label" style="color:#fff;">Card</span><span class="swatch-hex" style="color:#fff;">#111E13</span></div>
+      <div class="swatch" style="background:#1E3320;"><span class="swatch-label" style="color:#fff;">Divider</span><span class="swatch-hex" style="color:#fff;">#1E3320</span></div>
+      <div class="swatch" style="background:#388E3C;"><span class="swatch-label" style="color:#fff;">Primary</span><span class="swatch-hex" style="color:#fff;">#388E3C</span></div>
+      <div class="swatch" style="background:#81C784;"><span class="swatch-label" style="color:#000;">Highlight</span><span class="swatch-hex" style="color:#000;">#81C784</span></div>
+      <div class="swatch" style="background:#A5D6A7;"><span class="swatch-label" style="color:#000;">Text 2°</span><span class="swatch-hex" style="color:#000;">#A5D6A7</span></div>
+      <div class="swatch" style="background:#4A6741;"><span class="swatch-label" style="color:#fff;">Muted</span><span class="swatch-hex" style="color:#fff;">#4A6741</span></div>
+      <div class="swatch" style="background:#FFB300;"><span class="swatch-label" style="color:#000;">Amber</span><span class="swatch-hex" style="color:#000;">#FFB300</span></div>
+      <div class="swatch" style="background:#E53935;"><span class="swatch-label" style="color:#fff;">Danger</span><span class="swatch-hex" style="color:#fff;">#E53935</span></div>
+    </div>
+    <div class="mock" style="background:#0D1A0F;">
+      <div class="mock-bg">
+        <div class="mock-title" style="color:#81C784;">Welcome back, Alex Sailor</div>
+        <div class="mock-card" style="background:#111E13;border-color:#1E3320;">
+          <div class="mock-dot" style="background:#0D1A0F;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#81C784" stroke-width="2"><path d="M3 17l4-8 4 4 3-5 4 9H3z"/></svg>
+          </div>
+          <div class="mock-lines">
+            <div class="mock-line1" style="background:#81C784;"></div>
+            <div class="mock-line2" style="background:#4A6741;"></div>
+          </div>
+          <div class="mock-badge" style="color:#FFB300;border-color:#FFB300;background:rgba(255,179,0,0.1);">Out 1h 20m</div>
+        </div>
+        <div class="mock-btn" style="background:#388E3C;color:#fff;">Check Out</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THEME 4: Dusk Purple -->
+  <div class="theme">
+    <div class="theme-name">④ Dusk Purple</div>
+    <div class="theme-desc">Near-black violet · Lavender accents · Modern &amp; techy</div>
+    <div class="swatches">
+      <div class="swatch" style="background:#0F0D1A;"><span class="swatch-label" style="color:#fff;">Background</span><span class="swatch-hex" style="color:#fff;">#0F0D1A</span></div>
+      <div class="swatch" style="background:#141126;"><span class="swatch-label" style="color:#fff;">Card</span><span class="swatch-hex" style="color:#fff;">#141126</span></div>
+      <div class="swatch" style="background:#261E3A;"><span class="swatch-label" style="color:#fff;">Divider</span><span class="swatch-hex" style="color:#fff;">#261E3A</span></div>
+      <div class="swatch" style="background:#8E24AA;"><span class="swatch-label" style="color:#fff;">Primary</span><span class="swatch-hex" style="color:#fff;">#8E24AA</span></div>
+      <div class="swatch" style="background:#CE93D8;"><span class="swatch-label" style="color:#000;">Highlight</span><span class="swatch-hex" style="color:#000;">#CE93D8</span></div>
+      <div class="swatch" style="background:#E1BEE7;"><span class="swatch-label" style="color:#000;">Text 2°</span><span class="swatch-hex" style="color:#000;">#E1BEE7</span></div>
+      <div class="swatch" style="background:#6E5F7A;"><span class="swatch-label" style="color:#fff;">Muted</span><span class="swatch-hex" style="color:#fff;">#6E5F7A</span></div>
+      <div class="swatch" style="background:#FFB300;"><span class="swatch-label" style="color:#000;">Amber</span><span class="swatch-hex" style="color:#000;">#FFB300</span></div>
+      <div class="swatch" style="background:#E53935;"><span class="swatch-label" style="color:#fff;">Danger</span><span class="swatch-hex" style="color:#fff;">#E53935</span></div>
+    </div>
+    <div class="mock" style="background:#0F0D1A;">
+      <div class="mock-bg">
+        <div class="mock-title" style="color:#CE93D8;">Welcome back, Alex Sailor</div>
+        <div class="mock-card" style="background:#141126;border-color:#261E3A;">
+          <div class="mock-dot" style="background:#0F0D1A;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#CE93D8" stroke-width="2"><path d="M3 17l4-8 4 4 3-5 4 9H3z"/></svg>
+          </div>
+          <div class="mock-lines">
+            <div class="mock-line1" style="background:#CE93D8;"></div>
+            <div class="mock-line2" style="background:#6E5F7A;"></div>
+          </div>
+          <div class="mock-badge" style="color:#FFB300;border-color:#FFB300;background:rgba(255,179,0,0.1);">Out 1h 20m</div>
+        </div>
+        <div class="mock-btn" style="background:#8E24AA;color:#fff;">Check Out</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THEME 5: Arctic White -->
+  <div class="theme">
+    <div class="theme-name">⑤ Arctic White</div>
+    <div class="theme-desc">Light mode · Off-white · Deep sky blue — clean &amp; minimal</div>
+    <div class="swatches">
+      <div class="swatch" style="background:#F4F6F8;"><span class="swatch-label" style="color:#333;">Background</span><span class="swatch-hex" style="color:#333;">#F4F6F8</span></div>
+      <div class="swatch" style="background:#FFFFFF;border-left:1px solid #e0e0e0;"><span class="swatch-label" style="color:#333;">Card</span><span class="swatch-hex" style="color:#333;">#FFFFFF</span></div>
+      <div class="swatch" style="background:#CFD8DC;"><span class="swatch-label" style="color:#333;">Divider</span><span class="swatch-hex" style="color:#333;">#CFD8DC</span></div>
+      <div class="swatch" style="background:#01579B;"><span class="swatch-label" style="color:#fff;">Primary</span><span class="swatch-hex" style="color:#fff;">#01579B</span></div>
+      <div class="swatch" style="background:#0288D1;"><span class="swatch-label" style="color:#fff;">Highlight</span><span class="swatch-hex" style="color:#fff;">#0288D1</span></div>
+      <div class="swatch" style="background:#1565C0;"><span class="swatch-label" style="color:#fff;">Text 2°</span><span class="swatch-hex" style="color:#fff;">#1565C0</span></div>
+      <div class="swatch" style="background:#90A4AE;"><span class="swatch-label" style="color:#fff;">Muted</span><span class="swatch-hex" style="color:#fff;">#90A4AE</span></div>
+      <div class="swatch" style="background:#FF8F00;"><span class="swatch-label" style="color:#fff;">Amber</span><span class="swatch-hex" style="color:#fff;">#FF8F00</span></div>
+      <div class="swatch" style="background:#D32F2F;"><span class="swatch-label" style="color:#fff;">Danger</span><span class="swatch-hex" style="color:#fff;">#D32F2F</span></div>
+    </div>
+    <div class="mock" style="background:#F4F6F8;">
+      <div class="mock-bg">
+        <div class="mock-title" style="color:#01579B;">Welcome back, Alex Sailor</div>
+        <div class="mock-card" style="background:#FFFFFF;border-color:#CFD8DC;">
+          <div class="mock-dot" style="background:#E3F2FD;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#0288D1" stroke-width="2"><path d="M3 17l4-8 4 4 3-5 4 9H3z"/></svg>
+          </div>
+          <div class="mock-lines">
+            <div class="mock-line1" style="background:#0288D1;"></div>
+            <div class="mock-line2" style="background:#90A4AE;"></div>
+          </div>
+          <div class="mock-badge" style="color:#FF8F00;border-color:#FF8F00;background:rgba(255,143,0,0.08);">Out 1h 20m</div>
+        </div>
+        <div class="mock-btn" style="background:#01579B;color:#fff;">Check Out</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- THEME 6: Midnight Steel -->
+  <div class="theme">
+    <div class="theme-name">⑥ Midnight Steel</div>
+    <div class="theme-desc">Charcoal black · Steel blue · Cold, sharp, industrial</div>
+    <div class="swatches">
+      <div class="swatch" style="background:#111318;"><span class="swatch-label" style="color:#fff;">Background</span><span class="swatch-hex" style="color:#fff;">#111318</span></div>
+      <div class="swatch" style="background:#1C2130;"><span class="swatch-label" style="color:#fff;">Card</span><span class="swatch-hex" style="color:#fff;">#1C2130</span></div>
+      <div class="swatch" style="background:#252D3D;"><span class="swatch-label" style="color:#fff;">Divider</span><span class="swatch-hex" style="color:#fff;">#252D3D</span></div>
+      <div class="swatch" style="background:#3D6ECC;"><span class="swatch-label" style="color:#fff;">Primary</span><span class="swatch-hex" style="color:#fff;">#3D6ECC</span></div>
+      <div class="swatch" style="background:#82AAFF;"><span class="swatch-label" style="color:#000;">Highlight</span><span class="swatch-hex" style="color:#000;">#82AAFF</span></div>
+      <div class="swatch" style="background:#B0C4DE;"><span class="swatch-label" style="color:#000;">Text 2°</span><span class="swatch-hex" style="color:#000;">#B0C4DE</span></div>
+      <div class="swatch" style="background:#4A5568;"><span class="swatch-label" style="color:#fff;">Muted</span><span class="swatch-hex" style="color:#fff;">#4A5568</span></div>
+      <div class="swatch" style="background:#F6AD55;"><span class="swatch-label" style="color:#000;">Amber</span><span class="swatch-hex" style="color:#000;">#F6AD55</span></div>
+      <div class="swatch" style="background:#FC4949;"><span class="swatch-label" style="color:#fff;">Danger</span><span class="swatch-hex" style="color:#fff;">#FC4949</span></div>
+    </div>
+    <div class="mock" style="background:#111318;">
+      <div class="mock-bg">
+        <div class="mock-title" style="color:#82AAFF;">Welcome back, Alex Sailor</div>
+        <div class="mock-card" style="background:#1C2130;border-color:#252D3D;">
+          <div class="mock-dot" style="background:#111318;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#82AAFF" stroke-width="2"><path d="M3 17l4-8 4 4 3-5 4 9H3z"/></svg>
+          </div>
+          <div class="mock-lines">
+            <div class="mock-line1" style="background:#82AAFF;"></div>
+            <div class="mock-line2" style="background:#4A5568;"></div>
+          </div>
+          <div class="mock-badge" style="color:#F6AD55;border-color:#F6AD55;background:rgba(246,173,85,0.1);">Out 1h 20m</div>
+        </div>
+        <div class="mock-btn" style="background:#3D6ECC;color:#fff;">Check Out</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THEME 7: Copper & Slate -->
+  <div class="theme">
+    <div class="theme-name">⑦ Copper &amp; Slate</div>
+    <div class="theme-desc">Dark slate · Warm copper · Rich, nautical, timeless</div>
+    <div class="swatches">
+      <div class="swatch" style="background:#141618;"><span class="swatch-label" style="color:#fff;">Background</span><span class="swatch-hex" style="color:#fff;">#141618</span></div>
+      <div class="swatch" style="background:#1E2228;"><span class="swatch-label" style="color:#fff;">Card</span><span class="swatch-hex" style="color:#fff;">#1E2228</span></div>
+      <div class="swatch" style="background:#2C333B;"><span class="swatch-label" style="color:#fff;">Divider</span><span class="swatch-hex" style="color:#fff;">#2C333B</span></div>
+      <div class="swatch" style="background:#B87333;"><span class="swatch-label" style="color:#fff;">Primary</span><span class="swatch-hex" style="color:#fff;">#B87333</span></div>
+      <div class="swatch" style="background:#E8A96A;"><span class="swatch-label" style="color:#000;">Highlight</span><span class="swatch-hex" style="color:#000;">#E8A96A</span></div>
+      <div class="swatch" style="background:#F5CFA0;"><span class="swatch-label" style="color:#000;">Text 2°</span><span class="swatch-hex" style="color:#000;">#F5CFA0</span></div>
+      <div class="swatch" style="background:#6B7280;"><span class="swatch-label" style="color:#fff;">Muted</span><span class="swatch-hex" style="color:#fff;">#6B7280</span></div>
+      <div class="swatch" style="background:#34D399;"><span class="swatch-label" style="color:#000;">Active</span><span class="swatch-hex" style="color:#000;">#34D399</span></div>
+      <div class="swatch" style="background:#EF4444;"><span class="swatch-label" style="color:#fff;">Danger</span><span class="swatch-hex" style="color:#fff;">#EF4444</span></div>
+    </div>
+    <div class="mock" style="background:#141618;">
+      <div class="mock-bg">
+        <div class="mock-title" style="color:#E8A96A;">Welcome back, Alex Sailor</div>
+        <div class="mock-card" style="background:#1E2228;border-color:#2C333B;">
+          <div class="mock-dot" style="background:#141618;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#E8A96A" stroke-width="2"><path d="M3 17l4-8 4 4 3-5 4 9H3z"/></svg>
+          </div>
+          <div class="mock-lines">
+            <div class="mock-line1" style="background:#E8A96A;"></div>
+            <div class="mock-line2" style="background:#6B7280;"></div>
+          </div>
+          <div class="mock-badge" style="color:#34D399;border-color:#34D399;background:rgba(52,211,153,0.1);">Out 1h 20m</div>
+        </div>
+        <div class="mock-btn" style="background:#B87333;color:#fff;">Check Out</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THEME 8: Crimson Night -->
+  <div class="theme">
+    <div class="theme-name">⑧ Crimson Night</div>
+    <div class="theme-desc">Deep black · Blood red primary · High contrast, dramatic</div>
+    <div class="swatches">
+      <div class="swatch" style="background:#0F0A0A;"><span class="swatch-label" style="color:#fff;">Background</span><span class="swatch-hex" style="color:#fff;">#0F0A0A</span></div>
+      <div class="swatch" style="background:#1A1010;"><span class="swatch-label" style="color:#fff;">Card</span><span class="swatch-hex" style="color:#fff;">#1A1010</span></div>
+      <div class="swatch" style="background:#2E1A1A;"><span class="swatch-label" style="color:#fff;">Divider</span><span class="swatch-hex" style="color:#fff;">#2E1A1A</span></div>
+      <div class="swatch" style="background:#C62828;"><span class="swatch-label" style="color:#fff;">Primary</span><span class="swatch-hex" style="color:#fff;">#C62828</span></div>
+      <div class="swatch" style="background:#EF9A9A;"><span class="swatch-label" style="color:#000;">Highlight</span><span class="swatch-hex" style="color:#000;">#EF9A9A</span></div>
+      <div class="swatch" style="background:#FFCCBC;"><span class="swatch-label" style="color:#000;">Text 2°</span><span class="swatch-hex" style="color:#000;">#FFCCBC</span></div>
+      <div class="swatch" style="background:#6D4C41;"><span class="swatch-label" style="color:#fff;">Muted</span><span class="swatch-hex" style="color:#fff;">#6D4C41</span></div>
+      <div class="swatch" style="background:#FFB300;"><span class="swatch-label" style="color:#000;">Amber</span><span class="swatch-hex" style="color:#000;">#FFB300</span></div>
+      <div class="swatch" style="background:#64FFDA;"><span class="swatch-label" style="color:#000;">Active</span><span class="swatch-hex" style="color:#000;">#64FFDA</span></div>
+    </div>
+    <div class="mock" style="background:#0F0A0A;">
+      <div class="mock-bg">
+        <div class="mock-title" style="color:#EF9A9A;">Welcome back, Alex Sailor</div>
+        <div class="mock-card" style="background:#1A1010;border-color:#2E1A1A;">
+          <div class="mock-dot" style="background:#0F0A0A;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#EF9A9A" stroke-width="2"><path d="M3 17l4-8 4 4 3-5 4 9H3z"/></svg>
+          </div>
+          <div class="mock-lines">
+            <div class="mock-line1" style="background:#EF9A9A;"></div>
+            <div class="mock-line2" style="background:#6D4C41;"></div>
+          </div>
+          <div class="mock-badge" style="color:#FFB300;border-color:#FFB300;background:rgba(255,179,0,0.1);">Out 1h 20m</div>
+        </div>
+        <div class="mock-btn" style="background:#C62828;color:#fff;">Check Out</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THEME 9: Electric Indigo -->
+  <div class="theme">
+    <div class="theme-name">⑨ Electric Indigo</div>
+    <div class="theme-desc">Near-black · Vivid indigo · Vibrant, bold, digital-native</div>
+    <div class="swatches">
+      <div class="swatch" style="background:#08070F;"><span class="swatch-label" style="color:#fff;">Background</span><span class="swatch-hex" style="color:#fff;">#08070F</span></div>
+      <div class="swatch" style="background:#10101E;"><span class="swatch-label" style="color:#fff;">Card</span><span class="swatch-hex" style="color:#fff;">#10101E</span></div>
+      <div class="swatch" style="background:#1C1B33;"><span class="swatch-label" style="color:#fff;">Divider</span><span class="swatch-hex" style="color:#fff;">#1C1B33</span></div>
+      <div class="swatch" style="background:#5C6BC0;"><span class="swatch-label" style="color:#fff;">Primary</span><span class="swatch-hex" style="color:#fff;">#5C6BC0</span></div>
+      <div class="swatch" style="background:#7986CB;"><span class="swatch-label" style="color:#fff;">Highlight</span><span class="swatch-hex" style="color:#fff;">#7986CB</span></div>
+      <div class="swatch" style="background:#C5CAE9;"><span class="swatch-label" style="color:#000;">Text 2°</span><span class="swatch-hex" style="color:#000;">#C5CAE9</span></div>
+      <div class="swatch" style="background:#4A4870;"><span class="swatch-label" style="color:#fff;">Muted</span><span class="swatch-hex" style="color:#fff;">#4A4870</span></div>
+      <div class="swatch" style="background:#FFAB40;"><span class="swatch-label" style="color:#000;">Amber</span><span class="swatch-hex" style="color:#000;">#FFAB40</span></div>
+      <div class="swatch" style="background:#FF5252;"><span class="swatch-label" style="color:#fff;">Danger</span><span class="swatch-hex" style="color:#fff;">#FF5252</span></div>
+    </div>
+    <div class="mock" style="background:#08070F;">
+      <div class="mock-bg">
+        <div class="mock-title" style="color:#7986CB;">Welcome back, Alex Sailor</div>
+        <div class="mock-card" style="background:#10101E;border-color:#1C1B33;">
+          <div class="mock-dot" style="background:#08070F;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#7986CB" stroke-width="2"><path d="M3 17l4-8 4 4 3-5 4 9H3z"/></svg>
+          </div>
+          <div class="mock-lines">
+            <div class="mock-line1" style="background:#7986CB;"></div>
+            <div class="mock-line2" style="background:#4A4870;"></div>
+          </div>
+          <div class="mock-badge" style="color:#FFAB40;border-color:#FFAB40;background:rgba(255,171,64,0.1);">Out 1h 20m</div>
+        </div>
+        <div class="mock-btn" style="background:#5C6BC0;color:#fff;">Check Out</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THEME 10: Rose Gold -->
+  <div class="theme">
+    <div class="theme-name">⑩ Rose Gold</div>
+    <div class="theme-desc">Warm black · Dusty rose · Elegant, premium, boutique</div>
+    <div class="swatches">
+      <div class="swatch" style="background:#160E10;"><span class="swatch-label" style="color:#fff;">Background</span><span class="swatch-hex" style="color:#fff;">#160E10</span></div>
+      <div class="swatch" style="background:#201418;"><span class="swatch-label" style="color:#fff;">Card</span><span class="swatch-hex" style="color:#fff;">#201418</span></div>
+      <div class="swatch" style="background:#342028;"><span class="swatch-label" style="color:#fff;">Divider</span><span class="swatch-hex" style="color:#fff;">#342028</span></div>
+      <div class="swatch" style="background:#C48B8B;"><span class="swatch-label" style="color:#fff;">Primary</span><span class="swatch-hex" style="color:#fff;">#C48B8B</span></div>
+      <div class="swatch" style="background:#E8B4B8;"><span class="swatch-label" style="color:#000;">Highlight</span><span class="swatch-hex" style="color:#000;">#E8B4B8</span></div>
+      <div class="swatch" style="background:#F5D9D9;"><span class="swatch-label" style="color:#000;">Text 2°</span><span class="swatch-hex" style="color:#000;">#F5D9D9</span></div>
+      <div class="swatch" style="background:#7A5560;"><span class="swatch-label" style="color:#fff;">Muted</span><span class="swatch-hex" style="color:#fff;">#7A5560</span></div>
+      <div class="swatch" style="background:#D4AF37;"><span class="swatch-label" style="color:#000;">Gold</span><span class="swatch-hex" style="color:#000;">#D4AF37</span></div>
+      <div class="swatch" style="background:#E57373;"><span class="swatch-label" style="color:#fff;">Danger</span><span class="swatch-hex" style="color:#fff;">#E57373</span></div>
+    </div>
+    <div class="mock" style="background:#160E10;">
+      <div class="mock-bg">
+        <div class="mock-title" style="color:#E8B4B8;">Welcome back, Alex Sailor</div>
+        <div class="mock-card" style="background:#201418;border-color:#342028;">
+          <div class="mock-dot" style="background:#160E10;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#E8B4B8" stroke-width="2"><path d="M3 17l4-8 4 4 3-5 4 9H3z"/></svg>
+          </div>
+          <div class="mock-lines">
+            <div class="mock-line1" style="background:#E8B4B8;"></div>
+            <div class="mock-line2" style="background:#7A5560;"></div>
+          </div>
+          <div class="mock-badge" style="color:#D4AF37;border-color:#D4AF37;background:rgba(212,175,55,0.1);">Out 1h 20m</div>
+        </div>
+        <div class="mock-btn" style="background:#C48B8B;color:#fff;">Check Out</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THEME 11: Sage & Fog -->
+  <div class="theme">
+    <div class="theme-name">⑪ Sage &amp; Fog</div>
+    <div class="theme-desc">Misty grey · Muted sage green · Calm, minimal, Scandinavian</div>
+    <div class="swatches">
+      <div class="swatch" style="background:#161A18;"><span class="swatch-label" style="color:#fff;">Background</span><span class="swatch-hex" style="color:#fff;">#161A18</span></div>
+      <div class="swatch" style="background:#1E2421;"><span class="swatch-label" style="color:#fff;">Card</span><span class="swatch-hex" style="color:#fff;">#1E2421</span></div>
+      <div class="swatch" style="background:#2A322E;"><span class="swatch-label" style="color:#fff;">Divider</span><span class="swatch-hex" style="color:#fff;">#2A322E</span></div>
+      <div class="swatch" style="background:#5C8A6E;"><span class="swatch-label" style="color:#fff;">Primary</span><span class="swatch-hex" style="color:#fff;">#5C8A6E</span></div>
+      <div class="swatch" style="background:#8FBC8F;"><span class="swatch-label" style="color:#000;">Highlight</span><span class="swatch-hex" style="color:#000;">#8FBC8F</span></div>
+      <div class="swatch" style="background:#B8D4B8;"><span class="swatch-label" style="color:#000;">Text 2°</span><span class="swatch-hex" style="color:#000;">#B8D4B8</span></div>
+      <div class="swatch" style="background:#5A6B60;"><span class="swatch-label" style="color:#fff;">Muted</span><span class="swatch-hex" style="color:#fff;">#5A6B60</span></div>
+      <div class="swatch" style="background:#D4A96A;"><span class="swatch-label" style="color:#000;">Warm</span><span class="swatch-hex" style="color:#000;">#D4A96A</span></div>
+      <div class="swatch" style="background:#CC5F5F;"><span class="swatch-label" style="color:#fff;">Danger</span><span class="swatch-hex" style="color:#fff;">#CC5F5F</span></div>
+    </div>
+    <div class="mock" style="background:#161A18;">
+      <div class="mock-bg">
+        <div class="mock-title" style="color:#8FBC8F;">Welcome back, Alex Sailor</div>
+        <div class="mock-card" style="background:#1E2421;border-color:#2A322E;">
+          <div class="mock-dot" style="background:#161A18;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#8FBC8F" stroke-width="2"><path d="M3 17l4-8 4 4 3-5 4 9H3z"/></svg>
+          </div>
+          <div class="mock-lines">
+            <div class="mock-line1" style="background:#8FBC8F;"></div>
+            <div class="mock-line2" style="background:#5A6B60;"></div>
+          </div>
+          <div class="mock-badge" style="color:#D4A96A;border-color:#D4A96A;background:rgba(212,169,106,0.1);">Out 1h 20m</div>
+        </div>
+        <div class="mock-btn" style="background:#5C8A6E;color:#fff;">Check Out</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THEME 12: Solar Flare -->
+  <div class="theme">
+    <div class="theme-name">⑫ Solar Flare</div>
+    <div class="theme-desc">True black · Vivid orange-red · Energetic, sporty, high-visibility</div>
+    <div class="swatches">
+      <div class="swatch" style="background:#0A0A0A;"><span class="swatch-label" style="color:#fff;">Background</span><span class="swatch-hex" style="color:#fff;">#0A0A0A</span></div>
+      <div class="swatch" style="background:#151515;"><span class="swatch-label" style="color:#fff;">Card</span><span class="swatch-hex" style="color:#fff;">#151515</span></div>
+      <div class="swatch" style="background:#222222;"><span class="swatch-label" style="color:#fff;">Divider</span><span class="swatch-hex" style="color:#fff;">#222222</span></div>
+      <div class="swatch" style="background:#E64A19;"><span class="swatch-label" style="color:#fff;">Primary</span><span class="swatch-hex" style="color:#fff;">#E64A19</span></div>
+      <div class="swatch" style="background:#FF7043;"><span class="swatch-label" style="color:#fff;">Highlight</span><span class="swatch-hex" style="color:#fff;">#FF7043</span></div>
+      <div class="swatch" style="background:#FFAB91;"><span class="swatch-label" style="color:#000;">Text 2°</span><span class="swatch-hex" style="color:#000;">#FFAB91</span></div>
+      <div class="swatch" style="background:#4E342E;"><span class="swatch-label" style="color:#fff;">Muted</span><span class="swatch-hex" style="color:#fff;">#4E342E</span></div>
+      <div class="swatch" style="background:#FDD835;"><span class="swatch-label" style="color:#000;">Active</span><span class="swatch-hex" style="color:#000;">#FDD835</span></div>
+      <div class="swatch" style="background:#29B6F6;"><span class="swatch-label" style="color:#000;">Cool</span><span class="swatch-hex" style="color:#000;">#29B6F6</span></div>
+    </div>
+    <div class="mock" style="background:#0A0A0A;">
+      <div class="mock-bg">
+        <div class="mock-title" style="color:#FF7043;">Welcome back, Alex Sailor</div>
+        <div class="mock-card" style="background:#151515;border-color:#222222;">
+          <div class="mock-dot" style="background:#0A0A0A;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#FF7043" stroke-width="2"><path d="M3 17l4-8 4 4 3-5 4 9H3z"/></svg>
+          </div>
+          <div class="mock-lines">
+            <div class="mock-line1" style="background:#FF7043;"></div>
+            <div class="mock-line2" style="background:#4E342E;"></div>
+          </div>
+          <div class="mock-badge" style="color:#FDD835;border-color:#FDD835;background:rgba(253,216,53,0.1);">Out 1h 20m</div>
+        </div>
+        <div class="mock-btn" style="background:#E64A19;color:#fff;">Check Out</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

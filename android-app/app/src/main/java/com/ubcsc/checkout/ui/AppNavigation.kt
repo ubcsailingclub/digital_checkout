@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import com.ubcsc.checkout.ui.checkin.AwaitingCheckinCardScreen
 import com.ubcsc.checkout.ui.checkin.CheckinSelectScreen
 import com.ubcsc.checkout.ui.confirm.ConfirmScreen
+import com.ubcsc.checkout.ui.confirm.EditCheckoutScreen
 import com.ubcsc.checkout.ui.craft.BoatSelectScreen
 import com.ubcsc.checkout.ui.craft.CraftSelectScreen
 import com.ubcsc.checkout.ui.crew.AddCrewScreen
@@ -28,6 +29,7 @@ object Routes {
     const val BOAT_SELECT     = "boat_select"
     const val CREW            = "crew"
     const val CONFIRM         = "confirm"
+    const val EDIT_CHECKOUT   = "edit_checkout"
     const val CHECKIN_SELECT        = "checkin_select"
     const val AWAITING_CHECKIN_CARD = "awaiting_checkin_card"
     const val DAMAGE_REPORT   = "damage_report"
@@ -73,6 +75,9 @@ fun AppNavigation(
             }
             is CheckoutUiState.ConfirmCheckout,
             is CheckoutUiState.ConfirmCheckin -> navController.navigate(Routes.CONFIRM) {
+                popUpTo(Routes.MEMBER)
+            }
+            is CheckoutUiState.EditingCheckout -> navController.navigate(Routes.EDIT_CHECKOUT) {
                 popUpTo(Routes.MEMBER)
             }
             is CheckoutUiState.DamageReport -> navController.navigate(Routes.DAMAGE_REPORT) {
@@ -124,6 +129,11 @@ fun AppNavigation(
 
         composable(Routes.CONFIRM) {
             ConfirmScreen(uiState = uiState, viewModel = viewModel)
+        }
+
+        composable(Routes.EDIT_CHECKOUT) {
+            val state = uiState as? CheckoutUiState.EditingCheckout ?: return@composable
+            EditCheckoutScreen(member = state.member, checkout = state.checkout, viewModel = viewModel)
         }
 
         composable(Routes.CHECKIN_SELECT) {

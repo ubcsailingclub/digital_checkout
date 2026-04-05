@@ -21,8 +21,8 @@ android {
         applicationId = "com.ubcsc.checkout"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = (findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
+        versionName = (findProperty("versionCode") as String?) ?: "dev"
 
         buildConfigField("String", "API_BASE_URL",
             "\"${localProps["api.baseUrl"] ?: "http://10.0.2.2:8000/api/v1/"}\"")

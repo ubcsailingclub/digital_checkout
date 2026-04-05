@@ -74,21 +74,23 @@ fun MemberScreen(member: Member, viewModel: CheckoutViewModel) {
         viewModel.resetToIdle()
     }
     MemberContent(
-        member           = member,
-        onCheckout       = { viewModel.onCheckoutSelected(member) },
-        onCheckin        = { viewModel.onCheckinSelected(member) },
+        member            = member,
+        onCheckout        = { viewModel.onCheckoutSelected(member) },
+        onCheckin         = { viewModel.onCheckinSelected(member) },
         onCheckinForOther = { viewModel.onCheckinForOther(member) },
-        onCancel         = { viewModel.onCancel() }
+        onEditCheckout    = { viewModel.onEditCheckoutSelected(member) },
+        onCancel          = { viewModel.onCancel() }
     )
 }
 
 @Composable
 private fun MemberContent(
-    member:           Member,
-    onCheckout:       () -> Unit,
-    onCheckin:        () -> Unit,
+    member:            Member,
+    onCheckout:        () -> Unit,
+    onCheckin:         () -> Unit,
     onCheckinForOther: () -> Unit,
-    onCancel:         () -> Unit
+    onEditCheckout:    () -> Unit,
+    onCancel:          () -> Unit
 ) {
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
@@ -129,8 +131,8 @@ private fun MemberContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier
-                    .padding(48.dp)
-                    .offset(y = (-48).dp)
+                    .padding(horizontal = 48.dp, vertical = 4.dp)
+                    .offset(y = (-60).dp)
             ) {
                 // Avatar
                 Box(
@@ -149,7 +151,7 @@ private fun MemberContent(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
                     text = "Welcome back",
@@ -168,31 +170,37 @@ private fun MemberContent(
                 // Active checkout badge
                 member.activeCheckout?.let { checkout ->
                     Spacer(modifier = Modifier.height(16.dp))
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(50.dp))
-                            .background(ActiveAmber.copy(alpha = 0.15f))
-                            .border(1.dp, ActiveAmber.copy(alpha = 0.4f), RoundedCornerShape(50.dp))
-                            .padding(horizontal = 20.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.DirectionsBoat,
-                            contentDescription = null,
-                            tint = ActiveAmber,
-                            modifier = Modifier.size(18.dp)
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50.dp))
+                                .background(ActiveAmber.copy(alpha = 0.15f))
+                                .border(1.dp, ActiveAmber.copy(alpha = 0.4f), RoundedCornerShape(50.dp))
+                                .padding(horizontal = 20.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.DirectionsBoat,
+                                contentDescription = null,
+                                tint = ActiveAmber,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Currently out: ${checkout.craftName}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = ActiveAmber,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Currently out: ${checkout.craftName}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = ActiveAmber,
-                            fontWeight = FontWeight.Medium
-                        )
+                        TextButton(onClick = onEditCheckout) {
+                            Text("Edit", color = TextMuted, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // Divider
                 Box(
@@ -202,7 +210,7 @@ private fun MemberContent(
                         .background(DividerColor)
                 )
 
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // Action buttons — shifted up ~1 cm so they sit above centre on portrait tablet
                 if (member.activeCheckout == null) {
@@ -284,7 +292,7 @@ private fun MemberContent(
 @Composable
 private fun MemberPreviewNoCheckout() {
     DigitalCheckoutTheme {
-        MemberContent(Member("1", "Alex Sailor", ""), {}, {}, {}, {})
+        MemberContent(Member("1", "Alex Sailor", ""), {}, {}, {}, {}, {})
     }
 }
 
@@ -294,7 +302,7 @@ private fun MemberPreviewWithCheckout() {
     DigitalCheckoutTheme {
         MemberContent(
             Member("1", "Alex Sailor", "", ActiveCheckout(1, "LZ01", "Laser #1")),
-            {}, {}, {}, {}
+            {}, {}, {}, {}, {}
         )
     }
 }

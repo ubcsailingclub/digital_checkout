@@ -25,6 +25,8 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
@@ -95,7 +97,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             DigitalCheckoutTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
+                Surface(modifier = Modifier.fillMaxSize().padding(bottom = 48.dp)) {
                     val navController = rememberNavController()
                     AppNavigation(
                         navController = navController,
@@ -187,7 +189,7 @@ class MainActivity : ComponentActivity() {
         val view = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setBackgroundColor(0xFF0D1B2A.toInt())
+            setBackgroundColor(0xFF141618.toInt())
             addView(TextView(context).apply {
                 text = "Restarting…"
                 textSize = 22f

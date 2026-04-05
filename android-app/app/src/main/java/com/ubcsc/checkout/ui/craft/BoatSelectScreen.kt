@@ -51,8 +51,10 @@ import com.ubcsc.checkout.ui.theme.TextMuted
 import com.ubcsc.checkout.ui.theme.TextSecondary
 import com.ubcsc.checkout.ui.theme.UnavailableRed
 import com.ubcsc.checkout.ui.util.CraftImageMapper
+import androidx.compose.runtime.collectAsState
 import com.ubcsc.checkout.viewmodel.CheckoutViewModel
 import com.ubcsc.checkout.viewmodel.Craft
+import com.ubcsc.checkout.viewmodel.CraftFleetStatus
 import com.ubcsc.checkout.viewmodel.Member
 import kotlinx.coroutines.delay
 
@@ -65,26 +67,31 @@ fun BoatSelectScreen(
     crafts:     List<Craft>,
     viewModel:  CheckoutViewModel
 ) {
+    val fleetStatus by viewModel.fleetStatus.collectAsState()
     LaunchedEffect(Unit) {
         delay(BOAT_INACTIVITY_TIMEOUT_MS)
         viewModel.resetToIdle()
     }
     BoatSelectContent(
-        memberName   = member.name,
-        fleetClass   = fleetClass,
-        crafts       = crafts,
-        onBoatSelect = { craft -> viewModel.onCraftSelected(member, craft) },
-        onCancel     = { viewModel.goBack() }
+        memberName      = member.name,
+        fleetClass      = fleetClass,
+        crafts          = crafts,
+        craftFleetMap   = fleetStatus?.craft ?: emptyMap(),
+        fleetGrounded   = fleetStatus?.fleetGrounded ?: false,
+        onBoatSelect    = { craft -> viewModel.onCraftSelected(member, craft) },
+        onCancel        = { viewModel.goBack() }
     )
 }
 
 @Composable
 private fun BoatSelectContent(
-    memberName:   String,
-    fleetClass:   String,
-    crafts:       List<Craft>,
-    onBoatSelect: (Craft) -> Unit,
-    onCancel:     () -> Unit
+    memberName:    String,
+    fleetClass:    String,
+    crafts:        List<Craft>,
+    craftFleetMap: Map<String, CraftFleetStatus> = emptyMap(),
+    fleetGrounded: Boolean = false,
+    onBoatSelect:  (Craft) -> Unit,
+    onCancel:      () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -144,6 +151,25 @@ private fun BoatSelectContent(
                     .background(DividerColor)
             )
 
+            // Fleet grounding banner
+            if (fleetGrounded) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFB45309))
+                        .padding(horizontal = 28.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text       = "⚠  Fleet Grounded — conditions have been deemed unsafe. You may still check out, but sail at your own risk.",
+                        style      = MaterialTheme.typography.bodyMedium,
+                        color      = Color.White,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(12.dp))
 
             LazyVerticalGrid(
@@ -155,8 +181,9 @@ private fun BoatSelectContent(
             ) {
                 items(crafts) { craft ->
                     BoatCard(
-                        craft    = craft,
-                        onSelect = { if (craft.isAvailable) onBoatSelect(craft) }
+                        craft       = craft,
+                        fleetStatus = craftFleetMap[craft.code],
+                        onSelect    = { if (craft.isAvailable) onBoatSelect(craft) }
                     )
                 }
             }
@@ -166,10 +193,19 @@ private fun BoatSelectContent(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun BoatCard(craft: Craft, onSelect: () -> Unit) {
+private fun BoatCard(
+    craft:       Craft,
+    fleetStatus: CraftFleetStatus? = null,
+    onSelect:    () -> Unit
+) {
     val available   = craft.isAvailable
-    val accentColor = if (available) TealMid  else UnavailableRed
-    val cardAlpha   = if (available) 1f        else 0.45f
+    val hasWarning  = fleetStatus != null && fleetStatus.status != "active"
+    val accentColor = when {
+        !available  -> UnavailableRed
+        hasWarning  -> Color(0xFFB45309)   // amber when grounded/deactivated
+        else        -> TealMid
+    }
+    val cardAlpha   = if (available) 1f else 0.45f
 
     Surface(
         onClick        = onSelect,
@@ -227,7 +263,25 @@ private fun BoatCard(craft: Craft, onSelect: () -> Unit) {
                 )
 
                 // Status
-                BoatStatusChip(available = available, expectedReturnTime = craft.expectedReturnTime)
+                if (hasWarning && available) {
+                    val label = if (fleetStatus!!.status == "deactivated") "Deactivated" else "Grounded"
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50.dp))
+                            .background(Color(0xFFB45309).copy(alpha = 0.2f))
+                            .border(1.dp, Color(0xFFB45309).copy(alpha = 0.7f), RoundedCornerShape(50.dp))
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text  = "⚠ $label",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFFFFD97D),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                } else {
+                    BoatStatusChip(available = available, expectedReturnTime = craft.expectedReturnTime)
+                }
             }
         }
     }

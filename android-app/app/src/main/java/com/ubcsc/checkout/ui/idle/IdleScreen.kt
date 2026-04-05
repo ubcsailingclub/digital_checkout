@@ -99,8 +99,22 @@ private val ActiveTint  = Color(0xFFE6F4EA)   // light green tint for boats stil
 private val InkDark     = Color(0xFF1A1A2E)   // near-black — main ink
 private val InkMid      = Color(0xFF4A5568)   // secondary ink
 
-// Total number of "row slots" shown (data + date separators + empty filler)
-private const val TOTAL_ROWS = 10
+private fun normalizeAccents(s: String): String =
+    java.text.Normalizer.normalize(s, java.text.Normalizer.Form.NFD)
+        .replace(Regex("\\p{InCombiningDiacriticalMarks}+"), "")
+
+private fun filterMembers(query: String, memberList: List<MemberSummary>): List<MemberSummary> {
+    val q = normalizeAccents(query.trim())
+    if (q.length < 2) return emptyList()
+    return memberList
+        .filter { normalizeAccents(it.name).contains(q, ignoreCase = true) }
+        .sortedWith(compareBy(
+            { !normalizeAccents(it.name).startsWith(q, ignoreCase = true) },
+            { !normalizeAccents(it.name).split(" ").any { w -> w.startsWith(q, ignoreCase = true) } },
+            { it.name.lowercase() }
+        ))
+        .take(6)
+}
 
 // ---------------------------------------------------------------------------
 // Log-entry ADT used internally for grouping
@@ -133,6 +147,7 @@ private fun groupByDate(sessions: List<RecentSession>): List<LogEntry> {
 fun IdleScreen(viewModel: CheckoutViewModel, onAdminExit: () -> Unit = {}) {
     val recentSessions by viewModel.recentSessions.collectAsState()
     val memberList     by viewModel.memberList.collectAsState()
+    val fleetStatus    by viewModel.fleetStatus.collectAsState()
 
     // Keep screen on while idle — this is a kiosk, it should never sleep
     val view = LocalView.current
@@ -144,6 +159,8 @@ fun IdleScreen(viewModel: CheckoutViewModel, onAdminExit: () -> Unit = {}) {
     IdleContent(
         recentSessions          = recentSessions,
         memberList              = memberList,
+        fleetGrounded           = fleetStatus?.fleetGrounded ?: false,
+        fleetGroundReason       = fleetStatus?.fleetGroundReason ?: "",
         onMemberSelectedByName  = viewModel::onMemberSelectedByName,
         onCheckinFromIdle       = viewModel::onCheckinFromIdle,
         onAdminExit             = onAdminExit
@@ -158,6 +175,8 @@ fun IdleScreen(viewModel: CheckoutViewModel, onAdminExit: () -> Unit = {}) {
 private fun IdleContent(
     recentSessions:         List<RecentSession>,
     memberList:             List<MemberSummary>   = emptyList(),
+    fleetGrounded:          Boolean               = false,
+    fleetGroundReason:      String                = "",
     onMemberSelectedByName: ((Int) -> Unit)?      = null,
     onCheckinFromIdle:      (() -> Unit)?          = null,
     onAdminExit:            () -> Unit            = {}
@@ -168,11 +187,12 @@ private fun IdleContent(
     }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val isPortrait = maxHeight > maxWidth
-        if (isPortrait) {
+        val isLandscape = maxWidth > maxHeight
+        if (!isLandscape) {
             Column(Modifier.fillMaxSize()) {
                 SearchPromptPanel(
                     timeText               = timeText,
+                    isLandscape            = false,
                     memberList             = memberList,
                     onMemberSelectedByName = onMemberSelectedByName,
                     modifier               = Modifier.fillMaxWidth().weight(0.48f)
@@ -194,9 +214,30 @@ private fun IdleContent(
                 )
                 SearchPromptPanel(
                     timeText               = timeText,
+                    isLandscape            = true,
                     memberList             = memberList,
                     onMemberSelectedByName = onMemberSelectedByName,
                     modifier               = Modifier.weight(0.42f).fillMaxHeight()
+                )
+            }
+        // Fleet grounding banner — overlaid at top of entire idle screen
+        if (fleetGrounded) {
+            Row(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .zIndex(20f)
+                    .background(Color(0xFFB45309))
+                    .padding(horizontal = 20.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                androidx.compose.material3.Text(
+                    text       = "⚠  Fleet Grounded — ${fleetGroundReason.ifBlank { "Conditions have been deemed unsafe. You may still proceed, but sail at your own risk." }}",
+                    style      = MaterialTheme.typography.bodyMedium,
+                    color      = Color.White,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign  = TextAlign.Center
                 )
             }
         }
@@ -216,12 +257,12 @@ private fun NotebookPanel(
 ) {
     val today   = LocalDate.now()
     val entries = groupByDate(recentSessions)
-    val emptyCount = (TOTAL_ROWS - entries.size).coerceAtLeast(0)
 
     var showAdminDialog  by remember { mutableStateOf(false) }
     var showAdminMenu    by remember { mutableStateOf(false) }
     var showSyncSettings by remember { mutableStateOf(false) }
     var showDbViewer     by remember { mutableStateOf(false) }
+    var showUpdateDialog by remember { mutableStateOf(false) }
 
     if (showAdminDialog) {
         AdminCodeDialog(
@@ -234,8 +275,12 @@ private fun NotebookPanel(
             onDismiss      = { showAdminMenu = false },
             onExit         = { showAdminMenu = false; onAdminExit() },
             onSyncSettings = { showAdminMenu = false; showSyncSettings = true },
-            onDbViewer     = { showAdminMenu = false; showDbViewer = true }
+            onDbViewer     = { showAdminMenu = false; showDbViewer = true },
+            onUpdate       = { showAdminMenu = false; showUpdateDialog = true }
         )
+    }
+    if (showUpdateDialog) {
+        UpdateDialog(onDismiss = { showUpdateDialog = false })
     }
     if (showDbViewer) {
         DbViewerDialog(onDismiss = { showDbViewer = false })
@@ -258,7 +303,7 @@ private fun NotebookPanel(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(start = 56.dp, end = 16.dp, top = 14.dp, bottom = 10.dp)
+                .padding(start = 56.dp, end = 16.dp, top = 6.dp, bottom = 10.dp)
         ) {
 
             // ── Title bar ──────────────────────────────────────────────────
@@ -301,40 +346,38 @@ private fun NotebookPanel(
             }
             HorizontalDivider(color = PaperRule, thickness = 1.dp)
 
-            // ── Grouped session rows ────────────────────────────────────────
-            entries.forEach { entry ->
-                when (entry) {
-                    is LogEntry.DateSep -> {
-                        DateSeparatorRow(entry.date, today)
-                    }
-                    is LogEntry.Session -> {
-                        val s = entry.session
-                        Box(
-                            Modifier
-                                .fillMaxWidth()
-                                .background(if (s.isActive) ActiveTint else Color.Transparent)
-                        ) {
-                            LogRow(
-                                skipper = s.skipperName,
-                                crew    = s.crewNames.joinToString(", ").ifBlank { "—" },
-                                craft   = s.craft,
-                                timeOut = s.timeOut,
-                                eta     = s.eta,
-                                timeIn  = s.timeIn
-                            )
+            // ── Grouped session rows (scrollable) ──────────────────────────
+            Column(
+                Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                entries.forEach { entry ->
+                    when (entry) {
+                        is LogEntry.DateSep -> {
+                            DateSeparatorRow(entry.date, today)
+                        }
+                        is LogEntry.Session -> {
+                            val s = entry.session
+                            Box(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .background(if (s.isActive) ActiveTint else Color.Transparent)
+                            ) {
+                                LogRow(
+                                    skipper = s.skipperName,
+                                    crew    = s.crewNames.joinToString(", ").ifBlank { "—" },
+                                    craft   = s.craft,
+                                    timeOut = s.timeOut,
+                                    eta     = s.eta,
+                                    timeIn  = s.timeIn
+                                )
+                            }
                         }
                     }
+                    HorizontalDivider(color = PaperRule, thickness = 1.dp)
                 }
-                HorizontalDivider(color = PaperRule, thickness = 1.dp)
             }
-
-            // ── Empty rows ─────────────────────────────────────────────────
-            repeat(emptyCount) {
-                LogRow(skipper = "", crew = "", craft = "", timeOut = "", eta = "", timeIn = "")
-                HorizontalDivider(color = PaperRule, thickness = 1.dp)
-            }
-
-            Spacer(Modifier.weight(1f))
 
             // ── Footer instruction ─────────────────────────────────────────
             HorizontalDivider(color = PaperRule, thickness = 1.dp)
@@ -478,6 +521,7 @@ private fun ColumnDivider() {
 @Composable
 private fun SearchPromptPanel(
     timeText:               String,
+    isLandscape:            Boolean              = false,
     memberList:             List<MemberSummary>  = emptyList(),
     onMemberSelectedByName: ((Int) -> Unit)?     = null,
     modifier:               Modifier             = Modifier
@@ -489,46 +533,96 @@ private fun SearchPromptPanel(
         label         = "icon_pulse"
     )
 
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+
     Box(
         modifier.background(
             Brush.radialGradient(listOf(OceanSurface, DeepOcean), radius = 900f)
-        ),
-        contentAlignment = Alignment.Center
+        ).pointerInput(Unit) {
+            detectTapGestures { focusManager.clearFocus() }
+        }
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier            = Modifier.padding(horizontal = 24.dp)
-        ) {
-            Text(
-                text          = "UBC SAILING CLUB",
-                style         = MaterialTheme.typography.labelLarge.copy(
-                    letterSpacing = 4.sp,
-                    fontSize      = 11.sp
-                ),
-                color      = TealLight,
-                fontWeight = FontWeight.Medium
-            )
-            Spacer(Modifier.height(18.dp))
-            Icon(
-                imageVector        = Icons.Filled.Search,
-                contentDescription = null,
-                tint               = Color.White,
-                modifier           = Modifier.size((60 * iconPulse).dp)
-            )
-            Spacer(Modifier.height(10.dp))
-            Text(
-                text      = "Search your name to check out",
-                style     = MaterialTheme.typography.bodyMedium,
-                color     = Color.White.copy(alpha = 0.85f),
-                textAlign = TextAlign.Center
-            )
-            if (onMemberSelectedByName != null && memberList.isNotEmpty()) {
-                Spacer(Modifier.height(20.dp))
+        if (isLandscape && onMemberSelectedByName != null && memberList.isNotEmpty()) {
+            // ── Landscape: same look as portrait but search pinned near top,
+            //               dropdown opens upward so keyboard can never cover it ──
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 12.dp)
+            ) {
+                Spacer(Modifier.height(150.dp))
+                Text(
+                    text          = "UBC SAILING CLUB",
+                    style         = MaterialTheme.typography.labelLarge.copy(
+                        letterSpacing = 5.sp,
+                        fontSize      = 16.sp
+                    ),
+                    color      = TealLight,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(Modifier.height(10.dp))
                 NameSearchField(
                     memberList             = memberList,
-                    onMemberSelectedByName = onMemberSelectedByName
+                    onMemberSelectedByName = onMemberSelectedByName,
+                    dropUp                 = true,
+                    forceKeyboard          = false
                 )
+                Spacer(Modifier.height(18.dp))
+                // Decorative — gets clipped by keyboard, acceptable
+                Icon(
+                    imageVector        = Icons.Filled.Search,
+                    contentDescription = null,
+                    tint               = Color.White.copy(alpha = 0.25f),
+                    modifier           = Modifier.size((48 * iconPulse).dp)
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text      = "Search your name to check out",
+                    style     = MaterialTheme.typography.bodySmall,
+                    color     = Color.White.copy(alpha = 0.4f),
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
+            // ── Portrait (or no member list): original centred layout ──
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier            = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp)
+            ) {
+                Text(
+                    text          = "UBC SAILING CLUB",
+                    style         = MaterialTheme.typography.labelLarge.copy(
+                        letterSpacing = 5.sp,
+                        fontSize      = 16.sp
+                    ),
+                    color      = TealLight,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(Modifier.height(14.dp))
+                Icon(
+                    imageVector        = Icons.Filled.Search,
+                    contentDescription = null,
+                    tint               = Color.White,
+                    modifier           = Modifier.size((60 * iconPulse).dp)
+                )
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text      = "Search your name to check out",
+                    style     = MaterialTheme.typography.bodyMedium,
+                    color     = Color.White.copy(alpha = 0.85f),
+                    textAlign = TextAlign.Center
+                )
+                if (onMemberSelectedByName != null && memberList.isNotEmpty()) {
+                    Spacer(Modifier.height(20.dp))
+                    NameSearchField(
+                        memberList             = memberList,
+                        onMemberSelectedByName = onMemberSelectedByName
+                    )
+                }
             }
         }
 
@@ -548,25 +642,19 @@ private fun SearchPromptPanel(
 @Composable
 private fun NameSearchField(
     memberList:             List<MemberSummary>,
-    onMemberSelectedByName: (Int) -> Unit
+    onMemberSelectedByName: (Int) -> Unit,
+    dropUp:                 Boolean = false,
+    forceKeyboard:          Boolean = true
 ) {
     var searchText by remember { mutableStateOf("") }
+    val filtered   = remember(searchText, memberList) { filterMembers(searchText, memberList) }
 
-    // Sort by relevance: first-name-starts-with > any-word-starts-with > contains
-    val filtered = remember(searchText, memberList) {
-        val q = searchText.trim()
-        if (q.length < 2) emptyList()
-        else memberList
-            .filter { it.name.contains(q, ignoreCase = true) }
-            .sortedWith(compareBy(
-                { !it.name.startsWith(q, ignoreCase = true) },
-                { !it.name.split(" ").any { w -> w.startsWith(q, ignoreCase = true) } },
-                { it.name.lowercase() }
-            ))
-            .take(6)
-    }
+    // Each result row is ~48 dp tall; card offset is negative to appear above the field.
+    val cardOffsetY = if (dropUp && filtered.isNotEmpty())
+        -(filtered.size * 48 + 8)  // dp — moves card above the text field
+    else 0
 
-    // Use a Box so the results Card floats over content below without pushing layout
+    // Box lets the results Card float without pushing surrounding layout
     Box(Modifier.width(230.dp).zIndex(10f)) {
         OutlinedTextField(
             value         = searchText,
@@ -574,7 +662,8 @@ private fun NameSearchField(
             placeholder   = { Text("Search by name…", color = Color.White.copy(alpha = 0.4f)) },
             leadingIcon   = { Icon(Icons.Filled.Search, null, tint = Color.White.copy(alpha = 0.5f)) },
             singleLine    = true,
-            modifier      = Modifier.fillMaxWidth().forceShowSoftKeyboard(),
+            modifier      = if (forceKeyboard) Modifier.fillMaxWidth().forceShowSoftKeyboard()
+                            else Modifier.fillMaxWidth(),
             shape         = RoundedCornerShape(12.dp),
             colors        = OutlinedTextFieldDefaults.colors(
                 focusedTextColor        = Color.White,
@@ -588,11 +677,17 @@ private fun NameSearchField(
         )
 
         if (filtered.isNotEmpty()) {
+            val shape = if (dropUp)
+                RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
+            else
+                RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp)
+
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 56.dp),   // sit just below the text field
-                shape     = RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp),
+                modifier  = if (dropUp)
+                    Modifier.fillMaxWidth().offset(y = cardOffsetY.dp)
+                else
+                    Modifier.fillMaxWidth().padding(top = 56.dp),
+                shape     = shape,
                 elevation = CardDefaults.cardElevation(8.dp),
                 colors    = CardDefaults.cardColors(containerColor = Color(0xFF1A2E42))
             ) {
@@ -679,30 +774,108 @@ private fun AdminMenuDialog(
     onDismiss:      () -> Unit,
     onExit:         () -> Unit,
     onSyncSettings: () -> Unit,
-    onDbViewer:     () -> Unit
+    onDbViewer:     () -> Unit,
+    onUpdate:       () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Admin Menu", color = Color.White) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(
-                    onClick  = onSyncSettings,
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text("Sync Settings") }
-                Button(
-                    onClick  = onDbViewer,
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text("Database") }
-                Button(
-                    onClick  = onExit,
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text("Exit App") }
+                Button(onClick = onSyncSettings, modifier = Modifier.fillMaxWidth()) { Text("Sync Settings") }
+                Button(onClick = onDbViewer,     modifier = Modifier.fillMaxWidth()) { Text("Database") }
+                Button(onClick = onUpdate,       modifier = Modifier.fillMaxWidth()) { Text("Update App") }
+                Button(onClick = onExit,         modifier = Modifier.fillMaxWidth()) { Text("Exit App") }
             }
         },
         confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Cancel", color = TextSecondary) }
+        },
+        containerColor = Color(0xFF1A2E42)
+    )
+}
+
+// ---------------------------------------------------------------------------
+// OTA update dialog
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun UpdateDialog(onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val scope   = rememberCoroutineScope()
+
+    // "idle" | "checking" | "up_to_date" | "downloading" | "installing" | "error"
+    var phase    by remember { mutableStateOf("idle") }
+    var progress by remember { mutableStateOf(0) }
+    var errorMsg by remember { mutableStateOf("") }
+
+    // Kick off check immediately on open
+    LaunchedEffect(Unit) {
+        phase = "checking"
+        val info = com.ubcsc.checkout.data.AppUpdater.checkForUpdate()
+        if (info == null) {
+            phase = "up_to_date"
+        } else {
+            phase = "downloading"
+            val apk = com.ubcsc.checkout.data.AppUpdater.downloadApk(context, info.downloadUrl) { pct ->
+                progress = pct
+            }
+            if (apk == null) {
+                phase = "error"; errorMsg = "Download failed. Check your network connection."
+            } else {
+                phase = "installing"
+                com.ubcsc.checkout.data.AppUpdater.installApk(context, apk) { ok ->
+                    if (!ok) { phase = "error"; errorMsg = "Install failed." }
+                    // On success Android relaunches the app — dialog will be gone
+                }
+            }
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = { if (phase != "downloading" && phase != "installing") onDismiss() },
+        title = { Text("Update App", color = Color.White) },
+        text = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                when (phase) {
+                    "checking" -> {
+                        CircularProgressIndicator(color = TealLight)
+                        Text("Checking for updates…", color = TextSecondary)
+                    }
+                    "up_to_date" -> {
+                        Text("✓  App is up to date", color = TealLight, fontWeight = FontWeight.SemiBold)
+                        Text("Version ${com.ubcsc.checkout.BuildConfig.VERSION_CODE}", color = TextSecondary,
+                            style = MaterialTheme.typography.bodySmall)
+                    }
+                    "downloading" -> {
+                        CircularProgressIndicator(
+                            progress   = { progress / 100f },
+                            color      = TealLight,
+                            trackColor = Color.White.copy(alpha = 0.1f)
+                        )
+                        Text("Downloading… $progress%", color = TextSecondary)
+                    }
+                    "installing" -> {
+                        CircularProgressIndicator(color = TealLight)
+                        Text("Installing…", color = TextSecondary)
+                    }
+                    "error" -> {
+                        Text("Update failed", color = Color(0xFFEF4444), fontWeight = FontWeight.SemiBold)
+                        Text(errorMsg, color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            if (phase != "downloading" && phase != "installing") {
+                TextButton(onClick = onDismiss) { Text("Close", color = TextSecondary) }
+            }
         },
         containerColor = Color(0xFF1A2E42)
     )

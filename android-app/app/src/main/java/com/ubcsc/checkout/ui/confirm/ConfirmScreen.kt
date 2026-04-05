@@ -9,6 +9,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -77,6 +78,7 @@ import com.ubcsc.checkout.viewmodel.CheckoutViewModel
 import com.ubcsc.checkout.viewmodel.Craft
 import com.ubcsc.checkout.viewmodel.CrewEntry
 import com.ubcsc.checkout.viewmodel.Member
+import androidx.compose.runtime.collectAsState
 import kotlinx.coroutines.delay
 import java.time.Duration
 import java.time.LocalTime
@@ -99,17 +101,31 @@ private fun computeEtrHours(returnTime: LocalTime?): Int? {
 
 @Composable
 fun ConfirmScreen(uiState: CheckoutUiState, viewModel: CheckoutViewModel) {
+    val fleetStatus by viewModel.fleetStatus.collectAsState()
+
     LaunchedEffect(Unit) {
         delay(INACTIVITY_TIMEOUT_MS)
         viewModel.resetToIdle()
     }
     when (uiState) {
-        is CheckoutUiState.ConfirmCheckout ->
+        is CheckoutUiState.ConfirmCheckout -> {
+            // Collect all active warnings for this checkout
+            val warnings = buildList {
+                val fs = fleetStatus
+                if (fs != null && fs.fleetGrounded) add(fs.fleetGroundReason)
+                val cs = fs?.craft?.get(uiState.craft.code)
+                if (cs != null && cs.status != "active") {
+                    val label = if (cs.status == "deactivated") "Deactivated" else "Grounded"
+                    add("${uiState.craft.displayName} — $label${cs.reason?.let { ": $it" } ?: ""}")
+                }
+            }
             CheckoutConfirmContent(
                 state     = uiState,
+                warnings  = warnings,
                 onConfirm = { etr -> viewModel.onConfirmCheckout(uiState.member, uiState.craft, uiState.crew, etr) },
                 onCancel  = { viewModel.goBack() }
             )
+        }
         is CheckoutUiState.ConfirmCheckin ->
             CheckinConfirmContent(
                 state     = uiState,
@@ -129,12 +145,13 @@ fun ConfirmScreen(uiState: CheckoutUiState, viewModel: CheckoutViewModel) {
 @Composable
 private fun CheckoutConfirmContent(
     state:     CheckoutUiState.ConfirmCheckout,
+    warnings:  List<String> = emptyList(),
     onConfirm: (Int?) -> Unit,
     onCancel:  () -> Unit
 ) {
     // Default return time: now rounded to the next whole hour + 2 h
     val defaultReturnTime = remember {
-        LocalTime.now().plusHours(2).withMinute(0).withSecond(0).withNano(0)
+        LocalTime.now().plusHours(2).withSecond(0).withNano(0)
     }
     var returnTime by remember { mutableStateOf<LocalTime?>(defaultReturnTime) }
     var showTimePicker by remember { mutableStateOf(false) }
@@ -199,6 +216,40 @@ private fun CheckoutConfirmContent(
                 .background(Brush.horizontalGradient(listOf(TealMid, TealLight, TealMid)))
         )
 
+        // Fleet / craft warnings — shown above all content when active
+        if (warnings.isNotEmpty()) {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .padding(top = 4.dp)   // sits flush under the accent bar
+            ) {
+                warnings.forEach { msg ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFFB45309))   // deep amber
+                            .padding(horizontal = 20.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(
+                            imageVector        = Icons.Filled.Close,
+                            contentDescription = null,
+                            tint               = Color.White,
+                            modifier           = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text  = "⚠  $msg",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.White,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+        }
+
         AnimatedVisibility(visible = visible, enter = enterTransition()) {
             if (isPortrait) {
                 // -----------------------------------------------------------
@@ -207,14 +258,12 @@ private fun CheckoutConfirmContent(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 20.dp, vertical = 20.dp),
+                        .padding(horizontal = 20.dp, vertical = 6.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(modifier = Modifier.height(8.dp))
-
                     Box(
                         modifier = Modifier
-                            .size(100.dp)
+                            .size(88.dp)
                             .clip(RoundedCornerShape(20.dp))
                             .background(CardBlue)
                             .border(
@@ -227,13 +276,13 @@ private fun CheckoutConfirmContent(
                         Image(
                             painter = painterResource(CraftImageMapper.getDrawableRes(state.craft.craftClass)),
                             contentDescription = state.craft.craftClass,
-                            modifier = Modifier.size(68.dp),
+                            modifier = Modifier.size(60.dp),
                             contentScale = ContentScale.Fit,
                             colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(TealLight)
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Column(
                         modifier = Modifier
@@ -241,7 +290,7 @@ private fun CheckoutConfirmContent(
                             .clip(RoundedCornerShape(20.dp))
                             .background(CardBlue)
                             .border(1.dp, DividerColor, RoundedCornerShape(20.dp))
-                            .padding(20.dp),
+                            .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(0.dp)
                     ) {
                         Text(
@@ -250,36 +299,37 @@ private fun CheckoutConfirmContent(
                             color = TextSecondary,
                             fontWeight = FontWeight.Medium
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
                         DetailRow(
                             icon = { Icon(Icons.Filled.Person, null, tint = TealMid, modifier = Modifier.size(20.dp)) },
                             text = state.member.name
                         )
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp), color = DividerColor)
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = DividerColor)
                         DetailRow(
                             icon = { Icon(Icons.Filled.DirectionsBoat, null, tint = TealLight, modifier = Modifier.size(20.dp)) },
                             text = "${state.craft.displayName}  ·  ${state.craft.craftClass}"
                         )
                         if (state.crew.isNotEmpty()) {
-                            HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp), color = DividerColor)
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = DividerColor)
                             DetailRow(
                                 icon = { Icon(Icons.Filled.Group, null, tint = TealLight, modifier = Modifier.size(20.dp)) },
                                 text = "${state.crew.size} crew  ·  ${state.crew.joinToString(", ") { it.name }}"
                             )
                         }
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp), color = DividerColor)
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = DividerColor)
                         EtrRow(
                             returnTime  = returnTime,
                             onPickTime  = { showTimePicker = true },
-                            onClearTime = { returnTime = null }
+                            onClearTime = { returnTime = null },
+                            onSetTime   = { returnTime = it }
                         )
                     }
 
-                    Spacer(modifier = Modifier.weight(1f))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     ElevatedButton(
                         onClick   = { onConfirm(computeEtrHours(returnTime)) },
-                        modifier  = Modifier.fillMaxWidth().height(72.dp),
+                        modifier  = Modifier.fillMaxWidth().height(60.dp),
                         shape     = RoundedCornerShape(14.dp),
                         colors    = ButtonDefaults.elevatedButtonColors(
                             containerColor = TealMid,
@@ -294,15 +344,13 @@ private fun CheckoutConfirmContent(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     OutlinedButton(
                         onClick  = onCancel,
-                        modifier = Modifier.fillMaxWidth().height(60.dp),
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
                         shape    = RoundedCornerShape(14.dp)
                     ) { Text("← Back", color = TextSecondary) }
-
-                    Spacer(modifier = Modifier.height(8.dp))
                 }
             } else {
                 // -----------------------------------------------------------
@@ -370,7 +418,8 @@ private fun CheckoutConfirmContent(
                         EtrRow(
                             returnTime  = returnTime,
                             onPickTime  = { showTimePicker = true },
-                            onClearTime = { returnTime = null }
+                            onClearTime = { returnTime = null },
+                            onSetTime   = { returnTime = it }
                         )
                         Spacer(modifier = Modifier.height(20.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -431,14 +480,12 @@ private fun CheckinConfirmContent(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 20.dp, vertical = 20.dp),
+                        .padding(horizontal = 20.dp, vertical = 6.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(modifier = Modifier.height(8.dp))
-
                     Box(
                         modifier = Modifier
-                            .size(100.dp)
+                            .size(88.dp)
                             .clip(RoundedCornerShape(20.dp))
                             .background(CardBlue)
                             .border(
@@ -451,13 +498,13 @@ private fun CheckinConfirmContent(
                         Image(
                             painter = painterResource(CraftImageMapper.getDrawableRes(state.checkout.craftCode)),
                             contentDescription = null,
-                            modifier = Modifier.size(68.dp),
+                            modifier = Modifier.size(60.dp),
                             contentScale = ContentScale.Fit,
                             colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(UnavailableRed)
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Column(
                         modifier = Modifier
@@ -465,7 +512,7 @@ private fun CheckinConfirmContent(
                             .clip(RoundedCornerShape(20.dp))
                             .background(CardBlue)
                             .border(1.dp, DividerColor, RoundedCornerShape(20.dp))
-                            .padding(20.dp),
+                            .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(0.dp)
                     ) {
                         Text(
@@ -474,23 +521,23 @@ private fun CheckinConfirmContent(
                             color = TextSecondary,
                             fontWeight = FontWeight.Medium
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
                         DetailRow(
                             icon = { Icon(Icons.Filled.Person, null, tint = TealMid, modifier = Modifier.size(20.dp)) },
                             text = state.member.name
                         )
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp), color = DividerColor)
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = DividerColor)
                         DetailRow(
                             icon = { Icon(Icons.Filled.DirectionsBoat, null, tint = UnavailableRed, modifier = Modifier.size(20.dp)) },
                             text = state.checkout.craftName
                         )
                     }
 
-                    Spacer(modifier = Modifier.weight(1f))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     ElevatedButton(
                         onClick   = onConfirm,
-                        modifier  = Modifier.fillMaxWidth().height(72.dp),
+                        modifier  = Modifier.fillMaxWidth().height(60.dp),
                         shape     = RoundedCornerShape(14.dp),
                         colors    = ButtonDefaults.elevatedButtonColors(
                             containerColor = UnavailableRed,
@@ -505,15 +552,13 @@ private fun CheckinConfirmContent(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     OutlinedButton(
                         onClick  = onCancel,
-                        modifier = Modifier.fillMaxWidth().height(60.dp),
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
                         shape    = RoundedCornerShape(14.dp)
                     ) { Text("← Back", color = TextSecondary) }
-
-                    Spacer(modifier = Modifier.height(8.dp))
                 }
             } else {
                 Row(
@@ -600,34 +645,57 @@ private fun CheckinConfirmContent(
 private fun EtrRow(
     returnTime:  LocalTime?,
     onPickTime:  () -> Unit,
-    onClearTime: () -> Unit
+    onClearTime: () -> Unit,
+    onSetTime:   (LocalTime) -> Unit
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(Icons.Filled.AccessTime, null, tint = TextSecondary, modifier = Modifier.size(20.dp))
-        Spacer(Modifier.width(10.dp))
-        Text("Return by", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
-        Spacer(Modifier.width(12.dp))
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Filled.AccessTime, null, tint = TextSecondary, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(10.dp))
+            Text("Return by", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+            Spacer(Modifier.width(12.dp))
 
-        OutlinedButton(
-            onClick = onPickTime,
-            shape   = RoundedCornerShape(8.dp),
-            border  = BorderStroke(1.dp, if (returnTime != null) TealMid else DividerColor),
-            colors  = ButtonDefaults.outlinedButtonColors(
-                contentColor = if (returnTime != null) TealLight else TextMuted
-            ),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 14.dp, vertical = 6.dp)
-        ) {
-            Text(
-                text  = returnTime?.format(timeFormatter) ?: "Not set",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = if (returnTime != null) FontWeight.SemiBold else FontWeight.Normal
-            )
+            OutlinedButton(
+                onClick = onPickTime,
+                shape   = RoundedCornerShape(8.dp),
+                border  = BorderStroke(1.dp, if (returnTime != null) TealMid else DividerColor),
+                colors  = ButtonDefaults.outlinedButtonColors(
+                    contentColor = if (returnTime != null) TealLight else TextMuted
+                ),
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+            ) {
+                Text(
+                    text  = returnTime?.format(timeFormatter) ?: "Not set",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = if (returnTime != null) FontWeight.SemiBold else FontWeight.Normal
+                )
+            }
+
+            if (returnTime != null) {
+                Spacer(Modifier.width(2.dp))
+                IconButton(onClick = onClearTime, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Filled.Close, contentDescription = "Clear return time", tint = TextMuted, modifier = Modifier.size(16.dp))
+                }
+            }
         }
 
-        if (returnTime != null) {
-            Spacer(Modifier.width(2.dp))
-            IconButton(onClick = onClearTime, modifier = Modifier.size(32.dp)) {
-                Icon(Icons.Filled.Close, contentDescription = "Clear return time", tint = TextMuted, modifier = Modifier.size(16.dp))
+        // Quick-select presets
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf(1, 2, 3, 4).forEach { hours ->
+                val presetTime = LocalTime.now().plusHours(hours.toLong()).withSecond(0).withNano(0)
+                val isSelected = returnTime?.hour == presetTime.hour && returnTime?.minute == presetTime.minute
+                OutlinedButton(
+                    onClick = { onSetTime(presetTime) },
+                    shape   = RoundedCornerShape(8.dp),
+                    border  = BorderStroke(1.dp, if (isSelected) TealMid else DividerColor),
+                    colors  = ButtonDefaults.outlinedButtonColors(
+                        containerColor = if (isSelected) TealMid.copy(alpha = 0.15f) else Color.Transparent,
+                        contentColor   = if (isSelected) TealLight else TextMuted
+                    ),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text("+${hours}h", style = MaterialTheme.typography.labelMedium)
+                }
             }
         }
     }

@@ -115,6 +115,11 @@ class CheckoutRepository(db: AppDatabase) {
         }
     }
 
+    suspend fun updateEtr(sessionId: Int, expectedReturnHours: Int?) {
+        val etaEpoch = expectedReturnHours?.let { System.currentTimeMillis() + it * 3_600_000L }
+        sessionDao.updateEtr(sessionId, etaEpoch)
+    }
+
     suspend fun getAllActiveSessions(): List<ActiveSession> {
         val sessions = sessionDao.getAllActive()
         return sessions.mapNotNull { session ->

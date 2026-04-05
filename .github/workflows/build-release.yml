@@ -1,0 +1,56 @@
+name: Build & Release APK
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Create local.properties
+        run: |
+          cat > android-app/local.properties << 'EOF'
+          sdk.dir=/usr/local/lib/android/sdk
+          api.baseUrl=http://unused/api/v1/
+          api.kioskKey=${{ secrets.KIOSK_API_KEY }}
+          admin.code=${{ secrets.ADMIN_CODE }}
+          wa.apiKey=${{ secrets.WA_API_KEY }}
+          wa.accountId=${{ secrets.WA_ACCOUNT_ID }}
+          fleet.piUrl=
+          sheets.scriptUrl=${{ secrets.SHEETS_SCRIPT_URL }}
+          EOF
+
+      - name: Build release APK
+        working-directory: android-app
+        run: ./gradlew assembleRelease -PversionCode=${{ github.run_number }}
+
+      - name: Sign APK
+        id: sign
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: android-app/app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
+          alias: ${{ secrets.KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: "Build ${{ github.run_number }}"
+          body: "Automated build from commit ${{ github.sha }}"
+          files: ${{ steps.sign.outputs.signedReleaseFile }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

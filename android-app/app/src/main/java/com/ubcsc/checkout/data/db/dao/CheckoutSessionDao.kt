@@ -36,4 +36,7 @@ interface CheckoutSessionDao {
 
     @Query("UPDATE checkout_sessions SET status = 'completed', checkin_time = :checkinTime, notes_in = :notes, damage_reported = :damage WHERE id = :id")
     suspend fun complete(id: Int, checkinTime: Long, notes: String?, damage: Boolean)
+
+    @Query("UPDATE checkout_sessions SET expected_return_time = :etaEpoch WHERE id = :id")
+    suspend fun updateEtr(id: Int, etaEpoch: Long?)
 }

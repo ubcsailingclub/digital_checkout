@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <!-- NFC is optional — the app also works with a USB HID card reader -->
     <uses-feature
@@ -45,6 +46,17 @@
             </intent-filter>
 
         </activity>
+
+        <!-- FileProvider used to share downloaded APK with the installer -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
         <!-- Device admin receiver required for Lock Task Mode (kiosk lockdown).
              To activate: adb shell dpm set-device-owner com.ubcsc.checkout/.DeviceAdminReceiver

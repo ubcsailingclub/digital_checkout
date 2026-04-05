@@ -64,6 +64,17 @@ data class RecentSession(
 
 data class MemberSummary(val id: Int, val name: String)
 
+data class CraftFleetStatus(
+    val status: String,   // "active" | "grounded" | "deactivated"
+    val reason: String?
+)
+
+data class FleetStatus(
+    val fleetGrounded: Boolean,
+    val fleetGroundReason: String,
+    val craft: Map<String, CraftFleetStatus>   // key = craft code e.g. "LZ01"
+)
+
 data class ActiveSession(
     val sessionId: Int,
     val craftCode: String,
@@ -106,6 +117,7 @@ sealed class CheckoutUiState {
     data class AwaitingCheckinCard(val session: ActiveSession) : CheckoutUiState()
     data class ConfirmCheckin(val member: Member, val checkout: ActiveCheckout) : CheckoutUiState()
     data class DamageReport(val member: Member?, val checkout: ActiveCheckout) : CheckoutUiState()
+    data class EditingCheckout(val member: Member, val checkout: ActiveCheckout) : CheckoutUiState()
     data class Success(val message: String, val isCheckout: Boolean) : CheckoutUiState()
     data class Error(val message: String) : CheckoutUiState()
 }
@@ -148,6 +160,9 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
     private val _recentSessions = MutableStateFlow<List<RecentSession>>(emptyList())
     val recentSessions: StateFlow<List<RecentSession>> = _recentSessions.asStateFlow()
 
+    private val _fleetStatus = MutableStateFlow<FleetStatus?>(null)
+    val fleetStatus: StateFlow<FleetStatus?> = _fleetStatus.asStateFlow()
+
     init {
         viewModelScope.launch {
             uiState.collect { state ->
@@ -167,6 +182,13 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
                         }
                     }
                 }
+            }
+        }
+        // Poll fleet status from GitHub every 5 minutes
+        viewModelScope.launch {
+            while (true) {
+                _fleetStatus.value = com.ubcsc.checkout.data.FleetStatusRepository.fetch()
+                delay(5 * 60_000L)
             }
         }
     }
@@ -222,6 +244,27 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
     fun onCheckinSelected(member: Member) {
         val checkout = member.activeCheckout ?: return
         _uiState.value = CheckoutUiState.ConfirmCheckin(member, checkout)
+    }
+
+    fun onEditCheckoutSelected(member: Member) {
+        val checkout = member.activeCheckout ?: return
+        _uiState.value = CheckoutUiState.EditingCheckout(member, checkout)
+    }
+
+    fun onUpdateEtr(member: Member, checkout: ActiveCheckout, expectedReturnHours: Int?) {
+        viewModelScope.launch {
+            _uiState.value = CheckoutUiState.Loading
+            try {
+                checkouts.updateEtr(checkout.sessionId, expectedReturnHours)
+                // Reload member to reflect updated checkout
+                val entity = members.getById(member.id.toInt())
+                val activeCheckout = entity?.let { checkouts.getActiveCheckoutForMember(it.id) }
+                _uiState.value = if (entity != null) CheckoutUiState.MemberFound(entity.toDomain(member.cardUid, activeCheckout))
+                                 else CheckoutUiState.MemberFound(member)
+            } catch (e: Exception) {
+                _uiState.value = CheckoutUiState.Error("Failed to update return time.")
+            }
+        }
     }
 
     fun onCheckinForOther(member: Member) {
@@ -409,6 +452,7 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
                     _uiState.value = CheckoutUiState.AddingCrew(state.member, state.craft, state.crew)
             }
             is CheckoutUiState.ConfirmCheckin       -> _uiState.value = CheckoutUiState.MemberFound(state.member)
+            is CheckoutUiState.EditingCheckout      -> _uiState.value = CheckoutUiState.MemberFound(state.member)
             is CheckoutUiState.SelectingCheckin     -> _uiState.value = CheckoutUiState.MemberFound(state.member)
             is CheckoutUiState.DamageReport         -> _uiState.value =
                 if (state.member != null) CheckoutUiState.MemberFound(state.member)

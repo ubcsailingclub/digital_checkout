@@ -6,7 +6,7 @@
  * Sheet: https://docs.google.com/spreadsheets/d/1_rwrA2d7mJvMnd99wtfv6Yubnx-5kMmHSw8RIMirbu0
  *
  * Tab "Checkout Log" headers (row 1):
- *   Timestamp | Event | Member | Craft | Code | Session ID | Party Size | ETR | Checked Out | Checked In | Duration (min) | Notes | Damage?
+ *   Timestamp | Event | Member | Crew | Craft | Code | Session ID | Party Size | ETR | Checked Out | Checked In | Duration (min) | Notes | Damage?
  *
  * Tab "Damage Reports" headers (row 1):
  *   Timestamp | Member | Craft | Session ID | Notes
@@ -15,16 +15,17 @@
  *   A=1  Timestamp
  *   B=2  Event
  *   C=3  Member
- *   D=4  Craft
- *   E=5  Code
- *   F=6  Session ID
- *   G=7  Party Size
- *   H=8  ETR
- *   I=9  Checked Out
- *   J=10 Checked In
- *   K=11 Duration (min)
- *   L=12 Notes
- *   M=13 Damage?
+ *   D=4  Crew
+ *   E=5  Craft
+ *   F=6  Code
+ *   G=7  Session ID
+ *   H=8  Party Size
+ *   I=9  ETR
+ *   J=10 Checked Out
+ *   K=11 Checked In
+ *   L=12 Duration (min)
+ *   M=13 Notes
+ *   N=14 Damage?
  */
 
 const SPREADSHEET_ID = '1_rwrA2d7mJvMnd99wtfv6Yubnx-5kMmHSw8RIMirbu0';
@@ -40,20 +41,22 @@ function doPost(e) {
       const sheet      = ss.getSheetByName(CHECKOUT_SHEET);
       const checkedOut = new Date(data.checkoutEpoch);
       const etr        = data.etaEpoch ? new Date(data.etaEpoch) : '';
+      const crewStr = Array.isArray(data.crew) ? data.crew.join(', ') : '';
       sheet.appendRow([
         new Date(),      // A: Timestamp
         'Checkout',      // B: Event
         data.skipper,    // C: Member
-        data.craft,      // D: Craft
-        data.code,       // E: Code
-        data.sessionId,  // F: Session ID
-        data.partySize,  // G: Party Size
-        etr,             // H: ETR
-        checkedOut,      // I: Checked Out
-        '',              // J: Checked In   (filled on checkin)
-        '',              // K: Duration     (filled on checkin)
-        '',              // L: Notes        (filled on checkin)
-        ''               // M: Damage?      (filled on checkin)
+        crewStr,         // D: Crew
+        data.craft,      // E: Craft
+        data.code,       // F: Code
+        data.sessionId,  // G: Session ID
+        data.partySize,  // H: Party Size
+        etr,             // I: ETR
+        checkedOut,      // J: Checked Out
+        '',              // K: Checked In   (filled on checkin)
+        '',              // L: Duration     (filled on checkin)
+        '',              // M: Notes        (filled on checkin)
+        ''               // N: Damage?      (filled on checkin)
       ]);
 
     } else if (data.type === 'checkin') {
@@ -61,13 +64,13 @@ function doPost(e) {
       const checkedIn = new Date(data.checkinEpoch);
       const values    = sheet.getDataRange().getValues();
       for (let i = 1; i < values.length; i++) {
-        if (String(values[i][5]) === String(data.sessionId)) {  // col F = index 5
+        if (String(values[i][6]) === String(data.sessionId)) {  // col G = index 6
           const row = i + 1;
           sheet.getRange(row, 2).setValue('Completed');                  // B: Event
-          sheet.getRange(row, 10).setValue(checkedIn);                   // J: Checked In
-          sheet.getRange(row, 11).setValue(data.durationMin);            // K: Duration (min)
-          sheet.getRange(row, 12).setValue(data.notes || '');            // L: Notes
-          sheet.getRange(row, 13).setValue(data.damage ? 'Yes' : 'No'); // M: Damage?
+          sheet.getRange(row, 11).setValue(checkedIn);                   // K: Checked In
+          sheet.getRange(row, 12).setValue(data.durationMin);            // L: Duration (min)
+          sheet.getRange(row, 13).setValue(data.notes || '');            // M: Notes
+          sheet.getRange(row, 14).setValue(data.damage ? 'Yes' : 'No'); // N: Damage?
           break;
         }
       }
