@@ -9,7 +9,7 @@ import org.json.JSONObject
 object FleetStatusRepository {
 
     private const val URL =
-        "https://raw.githubusercontent.com/ubcsailingclub/fleet-status/main/fleet_status.json"
+        "https://raw.githubusercontent.com/ubcsailingclub/digital_checkout/master/fleet_status.json"
 
     suspend fun fetch(): FleetStatus? = withContext(Dispatchers.IO) {
         try {
