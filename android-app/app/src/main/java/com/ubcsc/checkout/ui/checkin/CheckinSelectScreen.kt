@@ -47,10 +47,8 @@ import com.ubcsc.checkout.ui.theme.CardBlue
 import com.ubcsc.checkout.ui.theme.DeepOcean
 import com.ubcsc.checkout.ui.theme.DigitalCheckoutTheme
 import com.ubcsc.checkout.ui.theme.DividerColor
-import com.ubcsc.checkout.ui.theme.TealLight
-import com.ubcsc.checkout.ui.theme.TealMid
+import com.ubcsc.checkout.ui.theme.LocalKioskColors
 import com.ubcsc.checkout.ui.theme.TextMuted
-import com.ubcsc.checkout.ui.theme.TextSecondary
 import com.ubcsc.checkout.ui.theme.UnavailableRed
 import com.ubcsc.checkout.viewmodel.ActiveSession
 import com.ubcsc.checkout.viewmodel.CheckoutViewModel
@@ -99,7 +97,7 @@ private fun CheckinSelectContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(4.dp)
-                .background(Brush.horizontalGradient(listOf(TealMid, TealLight, TealMid)))
+                .background(Brush.horizontalGradient(listOf(LocalKioskColors.current.accentMid, LocalKioskColors.current.accent, LocalKioskColors.current.accentMid)))
         )
 
         Column(
@@ -125,7 +123,7 @@ private fun CheckinSelectContent(
                     if (memberName != null) Text(
                         text          = memberName,
                         style         = MaterialTheme.typography.bodyMedium,
-                        color         = TealLight,
+                        color         = LocalKioskColors.current.accent,
                         letterSpacing = 0.5.sp
                     )
                 }
@@ -167,7 +165,7 @@ private fun CheckinSelectContent(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SessionCard(session: ActiveSession, onSelect: () -> Unit) {
-    val accentColor = if (session.isOverdue) UnavailableRed else TealMid
+    val accentColor = if (session.isOverdue) UnavailableRed else LocalKioskColors.current.accentMid
 
     Surface(
         onClick        = onSelect,
@@ -232,7 +230,7 @@ private fun SessionCard(session: ActiveSession, onSelect: () -> Unit) {
                 Text(
                     text  = session.memberName,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary,
+                    color = LocalKioskColors.current.textWarm,
                     maxLines = 1
                 )
 
@@ -265,14 +263,14 @@ private fun EtrBadge(label: String) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(50.dp))
-            .background(TealMid.copy(alpha = 0.15f))
-            .border(1.dp, TealMid.copy(alpha = 0.4f), RoundedCornerShape(50.dp))
+            .background(LocalKioskColors.current.accentMid.copy(alpha = 0.15f))
+            .border(1.dp, LocalKioskColors.current.accentMid.copy(alpha = 0.4f), RoundedCornerShape(50.dp))
             .padding(horizontal = 10.dp, vertical = 3.dp)
     ) {
         Text(
             text       = label,
             style      = MaterialTheme.typography.labelSmall,
-            color      = TealLight,
+            color      = LocalKioskColors.current.accent,
             fontWeight = FontWeight.Medium
         )
     }

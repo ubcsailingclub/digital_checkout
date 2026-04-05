@@ -39,11 +39,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ubcsc.checkout.ui.theme.DeepOcean
 import com.ubcsc.checkout.ui.theme.DigitalCheckoutTheme
+import com.ubcsc.checkout.ui.theme.LocalKioskColors
 import com.ubcsc.checkout.ui.theme.OceanSurface
-import com.ubcsc.checkout.ui.theme.TealLight
-import com.ubcsc.checkout.ui.theme.TealMid
 import com.ubcsc.checkout.ui.theme.TextMuted
-import com.ubcsc.checkout.ui.theme.TextSecondary
 import com.ubcsc.checkout.viewmodel.ActiveSession
 import com.ubcsc.checkout.viewmodel.CheckoutViewModel
 import kotlinx.coroutines.delay
@@ -103,7 +101,7 @@ private fun AwaitingCheckinCardContent(
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
                 .height(4.dp)
-                .background(Brush.horizontalGradient(listOf(TealMid, TealLight, TealMid)))
+                .background(Brush.horizontalGradient(listOf(LocalKioskColors.current.accentMid, LocalKioskColors.current.accent, LocalKioskColors.current.accentMid)))
         )
 
         // Ripple rings drawn behind content
@@ -111,7 +109,7 @@ private fun AwaitingCheckinCardContent(
             val center    = Offset(size.width / 2f, size.height / 2f)
             val maxRadius = size.minDimension * 0.35f
             fun ring(p: Float) = drawCircle(
-                color  = TealMid.copy(alpha = (1f - p) * 0.35f),
+                color  = LocalKioskColors.current.accentMid.copy(alpha = (1f - p) * 0.35f),
                 radius = maxRadius * p,
                 center = center,
                 style  = Stroke(width = 3.dp.toPx())
@@ -130,7 +128,7 @@ private fun AwaitingCheckinCardContent(
                     letterSpacing = 4.sp,
                     fontSize      = 11.sp
                 ),
-                color      = TealLight,
+                color      = LocalKioskColors.current.accent,
                 fontWeight = FontWeight.Medium
             )
 
@@ -158,7 +156,7 @@ private fun AwaitingCheckinCardContent(
             Text(
                 text      = "Scan your Jericho card or card reader to authorize",
                 style     = MaterialTheme.typography.bodyLarge,
-                color     = TextSecondary,
+                color     = LocalKioskColors.current.textWarm,
                 textAlign = TextAlign.Center
             )
         }

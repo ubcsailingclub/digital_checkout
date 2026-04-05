@@ -38,6 +38,11 @@ class KioskPreferences(context: Context) {
         get() = prefs.getString(KEY_SHEETS_SCRIPT_URL, BuildConfig.SHEETS_SCRIPT_URL) ?: BuildConfig.SHEETS_SCRIPT_URL
         set(v) = prefs.edit().putString(KEY_SHEETS_SCRIPT_URL, v.trim()).apply()
 
+    /** Persisted app theme name — see AppTheme enum */
+    var appTheme: String
+        get() = prefs.getString(KEY_APP_THEME, "COPPER_SLATE") ?: "COPPER_SLATE"
+        set(v) = prefs.edit().putString(KEY_APP_THEME, v).apply()
+
     val isWaConfigured     get() = waApiKey.isNotBlank() && waAccountId.isNotBlank()
     val isPiConfigured     get() = piSyncUrl.isNotBlank()
     val isSheetsConfigured get() = sheetsScriptUrl.isNotBlank()
@@ -47,5 +52,6 @@ class KioskPreferences(context: Context) {
         const val KEY_WA_ACCOUNT_ID      = "wa_account_id"
         const val KEY_PI_SYNC_URL        = "pi_sync_url"
         const val KEY_SHEETS_SCRIPT_URL  = "sheets_script_url"
+        const val KEY_APP_THEME          = "app_theme"
     }
 }

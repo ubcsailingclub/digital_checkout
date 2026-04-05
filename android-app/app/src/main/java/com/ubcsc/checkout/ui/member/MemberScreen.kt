@@ -53,10 +53,8 @@ import com.ubcsc.checkout.ui.theme.CardBlue
 import com.ubcsc.checkout.ui.theme.DeepOcean
 import com.ubcsc.checkout.ui.theme.DigitalCheckoutTheme
 import com.ubcsc.checkout.ui.theme.DividerColor
-import com.ubcsc.checkout.ui.theme.TealLight
-import com.ubcsc.checkout.ui.theme.TealMid
+import com.ubcsc.checkout.ui.theme.LocalKioskColors
 import com.ubcsc.checkout.ui.theme.TextMuted
-import com.ubcsc.checkout.ui.theme.TextSecondary
 import com.ubcsc.checkout.ui.theme.UnavailableRed
 import com.ubcsc.checkout.viewmodel.ActiveCheckout
 import com.ubcsc.checkout.viewmodel.CheckoutViewModel
@@ -108,7 +106,7 @@ private fun MemberContent(
                 .fillMaxWidth()
                 .height(4.dp)
                 .background(
-                    Brush.horizontalGradient(listOf(TealMid, TealLight, TealMid))
+                    Brush.horizontalGradient(listOf(LocalKioskColors.current.accentMid, LocalKioskColors.current.accent, LocalKioskColors.current.accentMid))
                 )
         )
 
@@ -140,13 +138,13 @@ private fun MemberContent(
                         .size(80.dp)
                         .clip(CircleShape)
                         .background(CardBlue)
-                        .border(2.dp, TealMid, CircleShape),
+                        .border(2.dp, LocalKioskColors.current.accentMid, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Person,
                         contentDescription = null,
-                        tint = TealLight,
+                        tint = LocalKioskColors.current.accent,
                         modifier = Modifier.size(44.dp)
                     )
                 }
@@ -156,7 +154,7 @@ private fun MemberContent(
                 Text(
                     text = "Welcome back",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = TextSecondary,
+                    color = LocalKioskColors.current.textWarm,
                     letterSpacing = 1.sp
                 )
 
@@ -226,7 +224,7 @@ private fun MemberContent(
                                 .width(260.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.elevatedButtonColors(
-                                containerColor = TealMid,
+                                containerColor = LocalKioskColors.current.accentMid,
                                 contentColor   = Color.White
                             ),
                             elevation = ButtonDefaults.elevatedButtonElevation(8.dp)
@@ -248,7 +246,7 @@ private fun MemberContent(
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.filledTonalButtonColors(
                                 containerColor = CardBlue,
-                                contentColor   = TextSecondary
+                                contentColor   = LocalKioskColors.current.textWarm
                             )
                         ) {
                             Icon(Icons.Filled.DirectionsBoat, null, Modifier.size(18.dp))

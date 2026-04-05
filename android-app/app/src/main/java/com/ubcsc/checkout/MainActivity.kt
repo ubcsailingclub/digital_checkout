@@ -29,6 +29,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.compose.rememberNavController
 import com.ubcsc.checkout.nfc.NfcReader
 import com.ubcsc.checkout.ui.AppNavigation
@@ -96,7 +98,8 @@ class MainActivity : ComponentActivity() {
         intent?.let { handleNfcIntent(it) }
 
         setContent {
-            DigitalCheckoutTheme {
+            val appTheme by viewModel.appTheme.collectAsState()
+            DigitalCheckoutTheme(theme = appTheme) {
                 Surface(modifier = Modifier.fillMaxSize().padding(bottom = 48.dp)) {
                     val navController = rememberNavController()
                     AppNavigation(

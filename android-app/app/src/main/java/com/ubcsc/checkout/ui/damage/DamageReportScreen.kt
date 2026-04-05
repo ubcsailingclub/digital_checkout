@@ -52,9 +52,8 @@ import com.ubcsc.checkout.ui.theme.CardBlue
 import com.ubcsc.checkout.ui.theme.DeepOcean
 import com.ubcsc.checkout.ui.theme.DigitalCheckoutTheme
 import com.ubcsc.checkout.ui.theme.DividerColor
-import com.ubcsc.checkout.ui.theme.TealMid
+import com.ubcsc.checkout.ui.theme.LocalKioskColors
 import com.ubcsc.checkout.ui.theme.TextMuted
-import com.ubcsc.checkout.ui.theme.TextSecondary
 import com.ubcsc.checkout.viewmodel.ActiveCheckout
 import com.ubcsc.checkout.viewmodel.CheckoutUiState
 import com.ubcsc.checkout.viewmodel.CheckoutViewModel
@@ -150,7 +149,7 @@ private fun DamageReportContent(
             Text(
                 text      = "Before you go — did you encounter any issues?",
                 style     = MaterialTheme.typography.bodyLarge,
-                color     = TextSecondary,
+                color     = LocalKioskColors.current.textWarm,
                 textAlign = TextAlign.Center
             )
 
@@ -211,11 +210,11 @@ private fun DamageReportContent(
                     .height(130.dp),
                 placeholder   = { Text("Describe any damage, broken equipment, or other issues…", color = TextMuted) },
                 colors        = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor   = TealMid,
+                    focusedBorderColor   = LocalKioskColors.current.accentMid,
                     unfocusedBorderColor = DividerColor,
                     focusedTextColor     = Color.White,
                     unfocusedTextColor   = Color.White,
-                    cursorColor          = TealMid,
+                    cursorColor          = LocalKioskColors.current.accentMid,
                     focusedContainerColor   = CardBlue,
                     unfocusedContainerColor = CardBlue,
                 ),
@@ -239,8 +238,8 @@ private fun DamageReportContent(
                 modifier      = Modifier
                     .fillMaxWidth(0.35f)
                     .height(3.dp),
-                color         = TealMid,
-                trackColor    = TealMid.copy(alpha = 0.15f),
+                color         = LocalKioskColors.current.accentMid,
+                trackColor    = LocalKioskColors.current.accentMid.copy(alpha = 0.15f),
                 strokeCap     = StrokeCap.Round
             )
         }

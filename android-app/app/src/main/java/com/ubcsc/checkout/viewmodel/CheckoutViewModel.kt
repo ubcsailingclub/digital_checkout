@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.ubcsc.checkout.data.KioskPreferences
 import com.ubcsc.checkout.data.db.AppDatabase
+import com.ubcsc.checkout.ui.theme.AppTheme
 import com.ubcsc.checkout.data.repository.CheckoutRepository
 import com.ubcsc.checkout.data.repository.CraftRepository
 import com.ubcsc.checkout.data.repository.MemberRepository
@@ -162,6 +163,14 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
 
     private val _fleetStatus = MutableStateFlow<FleetStatus?>(null)
     val fleetStatus: StateFlow<FleetStatus?> = _fleetStatus.asStateFlow()
+
+    private val _appTheme = MutableStateFlow(AppTheme.fromName(prefs.appTheme))
+    val appTheme: StateFlow<AppTheme> = _appTheme.asStateFlow()
+
+    fun setTheme(theme: AppTheme) {
+        _appTheme.value = theme
+        prefs.appTheme  = theme.name
+    }
 
     init {
         viewModelScope.launch {

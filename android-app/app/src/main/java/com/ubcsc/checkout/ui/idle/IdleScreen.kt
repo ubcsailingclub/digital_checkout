@@ -71,10 +71,9 @@ import com.ubcsc.checkout.sync.SyncWorker
 import com.ubcsc.checkout.ui.admin.DbViewerDialog
 import com.ubcsc.checkout.ui.theme.DeepOcean
 import com.ubcsc.checkout.ui.theme.DigitalCheckoutTheme
+import com.ubcsc.checkout.ui.theme.AppTheme
+import com.ubcsc.checkout.ui.theme.LocalKioskColors
 import com.ubcsc.checkout.ui.theme.OceanSurface
-import com.ubcsc.checkout.ui.theme.TealLight
-import com.ubcsc.checkout.ui.theme.TealMid
-import com.ubcsc.checkout.ui.theme.TextSecondary
 import com.ubcsc.checkout.ui.util.forceShowSoftKeyboard
 import com.ubcsc.checkout.viewmodel.CheckoutViewModel
 import com.ubcsc.checkout.viewmodel.MemberSummary
@@ -146,6 +145,7 @@ fun IdleScreen(viewModel: CheckoutViewModel, onAdminExit: () -> Unit = {}) {
     val recentSessions by viewModel.recentSessions.collectAsState()
     val memberList     by viewModel.memberList.collectAsState()
     val fleetStatus    by viewModel.fleetStatus.collectAsState()
+    val currentTheme   by viewModel.appTheme.collectAsState()
 
     // Keep screen on while idle — this is a kiosk, it should never sleep
     val view = LocalView.current
@@ -159,6 +159,8 @@ fun IdleScreen(viewModel: CheckoutViewModel, onAdminExit: () -> Unit = {}) {
         memberList              = memberList,
         fleetGrounded           = fleetStatus?.fleetGrounded ?: false,
         fleetGroundReason       = fleetStatus?.fleetGroundReason ?: "",
+        currentTheme            = currentTheme,
+        onThemeChange           = viewModel::setTheme,
         onMemberSelectedByName  = viewModel::onMemberSelectedByName,
         onCheckinFromIdle       = viewModel::onCheckinFromIdle,
         onAdminExit             = onAdminExit
@@ -175,6 +177,8 @@ private fun IdleContent(
     memberList:             List<MemberSummary>   = emptyList(),
     fleetGrounded:          Boolean               = false,
     fleetGroundReason:      String                = "",
+    currentTheme:           AppTheme              = AppTheme.COPPER_SLATE,
+    onThemeChange:          (AppTheme) -> Unit    = {},
     onMemberSelectedByName: ((Int) -> Unit)?      = null,
     onCheckinFromIdle:      (() -> Unit)?          = null,
     onAdminExit:            () -> Unit            = {}
@@ -199,6 +203,8 @@ private fun IdleContent(
                     recentSessions    = recentSessions,
                     onCheckinFromIdle = onCheckinFromIdle,
                     onAdminExit       = onAdminExit,
+                    currentTheme      = currentTheme,
+                    onThemeChange     = onThemeChange,
                     modifier          = Modifier.fillMaxWidth().weight(0.52f)
                 )
             }
@@ -208,6 +214,8 @@ private fun IdleContent(
                     recentSessions    = recentSessions,
                     onCheckinFromIdle = onCheckinFromIdle,
                     onAdminExit       = onAdminExit,
+                    currentTheme      = currentTheme,
+                    onThemeChange     = onThemeChange,
                     modifier          = Modifier.weight(0.58f).fillMaxHeight()
                 )
                 SearchPromptPanel(
@@ -252,6 +260,8 @@ private fun NotebookPanel(
     recentSessions:    List<RecentSession>,
     onCheckinFromIdle: (() -> Unit)? = null,
     onAdminExit:       () -> Unit    = {},
+    currentTheme:      AppTheme      = AppTheme.COPPER_SLATE,
+    onThemeChange:     (AppTheme) -> Unit = {},
     modifier:          Modifier      = Modifier
 ) {
     val today   = LocalDate.now()
@@ -262,6 +272,7 @@ private fun NotebookPanel(
     var showSyncSettings by remember { mutableStateOf(false) }
     var showDbViewer     by remember { mutableStateOf(false) }
     var showUpdateDialog by remember { mutableStateOf(false) }
+    var showThemePicker  by remember { mutableStateOf(false) }
 
     if (showAdminDialog) {
         AdminCodeDialog(
@@ -275,7 +286,15 @@ private fun NotebookPanel(
             onExit         = { showAdminMenu = false; onAdminExit() },
             onSyncSettings = { showAdminMenu = false; showSyncSettings = true },
             onDbViewer     = { showAdminMenu = false; showDbViewer = true },
-            onUpdate       = { showAdminMenu = false; showUpdateDialog = true }
+            onUpdate       = { showAdminMenu = false; showUpdateDialog = true },
+            onTheme        = { showAdminMenu = false; showThemePicker  = true }
+        )
+    }
+    if (showThemePicker) {
+        ThemePickerDialog(
+            currentTheme  = currentTheme,
+            onThemeChange = onThemeChange,
+            onDismiss     = { showThemePicker = false }
         )
     }
     if (showUpdateDialog) {
@@ -557,7 +576,7 @@ private fun SearchPromptPanel(
                         letterSpacing = 5.sp,
                         fontSize      = 16.sp
                     ),
-                    color      = TealLight,
+                    color      = LocalKioskColors.current.accent,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(Modifier.height(10.dp))
@@ -598,7 +617,7 @@ private fun SearchPromptPanel(
                         letterSpacing = 5.sp,
                         fontSize      = 16.sp
                     ),
-                    color      = TealLight,
+                    color      = LocalKioskColors.current.accent,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(Modifier.height(14.dp))
@@ -628,7 +647,7 @@ private fun SearchPromptPanel(
         Text(
             text     = timeText,
             style    = MaterialTheme.typography.bodyMedium,
-            color    = TextSecondary.copy(alpha = 0.6f),
+            color    = LocalKioskColors.current.textWarm.copy(alpha = 0.6f),
             modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
         )
     }
@@ -667,9 +686,9 @@ private fun NameSearchField(
             colors        = OutlinedTextFieldDefaults.colors(
                 focusedTextColor        = Color.White,
                 unfocusedTextColor      = Color.White.copy(alpha = 0.8f),
-                focusedBorderColor      = TealLight,
+                focusedBorderColor      = LocalKioskColors.current.accent,
                 unfocusedBorderColor    = Color.White.copy(alpha = 0.25f),
-                cursorColor             = TealLight,
+                cursorColor             = LocalKioskColors.current.accent,
                 focusedContainerColor   = Color.White.copy(alpha = 0.06f),
                 unfocusedContainerColor = Color.White.copy(alpha = 0.04f),
             )
@@ -733,11 +752,11 @@ private fun AdminCodeDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
                     isError             = hasError,
                     modifier            = Modifier.fillMaxWidth(),
                     colors              = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor   = TealMid,
-                        unfocusedBorderColor = TextSecondary.copy(alpha = 0.4f),
+                        focusedBorderColor   = LocalKioskColors.current.accentMid,
+                        unfocusedBorderColor = LocalKioskColors.current.textWarm.copy(alpha = 0.4f),
                         focusedTextColor     = Color.White,
                         unfocusedTextColor   = Color.White,
-                        cursorColor          = TealLight,
+                        cursorColor          = LocalKioskColors.current.accent,
                         errorBorderColor     = Color(0xFFCF6679),
                         errorLabelColor      = Color(0xFFCF6679)
                     )
@@ -755,10 +774,10 @@ private fun AdminCodeDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
             TextButton(onClick = {
                 if (code == BuildConfig.ADMIN_CODE) onSuccess()
                 else { hasError = true; code = "" }
-            }) { Text("Unlock", color = TealLight) }
+            }) { Text("Unlock", color = LocalKioskColors.current.accent) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel", color = TextSecondary) }
+            TextButton(onClick = onDismiss) { Text("Cancel", color = LocalKioskColors.current.textWarm) }
         },
         containerColor = Color(0xFF1A2E42)
     )
@@ -774,7 +793,8 @@ private fun AdminMenuDialog(
     onExit:         () -> Unit,
     onSyncSettings: () -> Unit,
     onDbViewer:     () -> Unit,
-    onUpdate:       () -> Unit
+    onUpdate:       () -> Unit,
+    onTheme:        () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -783,13 +803,72 @@ private fun AdminMenuDialog(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = onSyncSettings, modifier = Modifier.fillMaxWidth()) { Text("Sync Settings") }
                 Button(onClick = onDbViewer,     modifier = Modifier.fillMaxWidth()) { Text("Database") }
+                Button(onClick = onTheme,        modifier = Modifier.fillMaxWidth()) { Text("Theme") }
                 Button(onClick = onUpdate,       modifier = Modifier.fillMaxWidth()) { Text("Update App") }
                 Button(onClick = onExit,         modifier = Modifier.fillMaxWidth()) { Text("Exit App") }
             }
         },
         confirmButton = {},
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel", color = TextSecondary) }
+            TextButton(onClick = onDismiss) { Text("Cancel", color = LocalKioskColors.current.textWarm) }
+        },
+        containerColor = Color(0xFF1A2E42)
+    )
+}
+
+// ---------------------------------------------------------------------------
+// Theme picker dialog
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun ThemePickerDialog(
+    currentTheme:  AppTheme,
+    onThemeChange: (AppTheme) -> Unit,
+    onDismiss:     () -> Unit
+) {
+    val colors = LocalKioskColors.current
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Choose Theme", color = Color.White) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                AppTheme.entries.forEach { theme ->
+                    val selected = theme == currentTheme
+                    val c        = theme.colors
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onThemeChange(theme); onDismiss() }
+                            .background(
+                                if (selected) colors.accentMid.copy(alpha = 0.15f)
+                                else          Color.Transparent,
+                                RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment    = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Colour swatch
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Box(Modifier.size(20.dp).background(c.accentMid, RoundedCornerShape(4.dp)))
+                            Box(Modifier.size(20.dp).background(c.accent,    RoundedCornerShape(4.dp)))
+                        }
+                        Text(
+                            text       = theme.label,
+                            color      = if (selected) colors.accent else Color.White,
+                            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                            modifier   = Modifier.weight(1f)
+                        )
+                        if (selected) {
+                            Text("✓", color = colors.accent, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel", color = colors.textWarm) }
         },
         containerColor = Color(0xFF1A2E42)
     )
@@ -842,29 +921,29 @@ private fun UpdateDialog(onDismiss: () -> Unit) {
             ) {
                 when (phase) {
                     "checking" -> {
-                        CircularProgressIndicator(color = TealLight)
-                        Text("Checking for updates…", color = TextSecondary)
+                        CircularProgressIndicator(color = LocalKioskColors.current.accent)
+                        Text("Checking for updates…", color = LocalKioskColors.current.textWarm)
                     }
                     "up_to_date" -> {
-                        Text("✓  App is up to date", color = TealLight, fontWeight = FontWeight.SemiBold)
-                        Text("Version ${com.ubcsc.checkout.BuildConfig.VERSION_CODE}", color = TextSecondary,
+                        Text("✓  App is up to date", color = LocalKioskColors.current.accent, fontWeight = FontWeight.SemiBold)
+                        Text("Version ${com.ubcsc.checkout.BuildConfig.VERSION_CODE}", color = LocalKioskColors.current.textWarm,
                             style = MaterialTheme.typography.bodySmall)
                     }
                     "downloading" -> {
                         CircularProgressIndicator(
                             progress   = { progress / 100f },
-                            color      = TealLight,
+                            color      = LocalKioskColors.current.accent,
                             trackColor = Color.White.copy(alpha = 0.1f)
                         )
-                        Text("Downloading… $progress%", color = TextSecondary)
+                        Text("Downloading… $progress%", color = LocalKioskColors.current.textWarm)
                     }
                     "installing" -> {
-                        CircularProgressIndicator(color = TealLight)
-                        Text("Installing…", color = TextSecondary)
+                        CircularProgressIndicator(color = LocalKioskColors.current.accent)
+                        Text("Installing…", color = LocalKioskColors.current.textWarm)
                     }
                     "error" -> {
                         Text("Update failed", color = Color(0xFFEF4444), fontWeight = FontWeight.SemiBold)
-                        Text(errorMsg, color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                        Text(errorMsg, color = LocalKioskColors.current.textWarm, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
@@ -872,7 +951,7 @@ private fun UpdateDialog(onDismiss: () -> Unit) {
         confirmButton = {},
         dismissButton = {
             if (phase != "downloading" && phase != "installing") {
-                TextButton(onClick = onDismiss) { Text("Close", color = TextSecondary) }
+                TextButton(onClick = onDismiss) { Text("Close", color = LocalKioskColors.current.textWarm) }
             }
         },
         containerColor = Color(0xFF1A2E42)
@@ -897,11 +976,11 @@ private fun SyncSettingsDialog(onDismiss: () -> Unit) {
     var syncStatus  by remember { mutableStateOf("idle") }
 
     val fieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor   = TealMid,
-        unfocusedBorderColor = TextSecondary.copy(alpha = 0.4f),
+        focusedBorderColor   = LocalKioskColors.current.accentMid,
+        unfocusedBorderColor = LocalKioskColors.current.textWarm.copy(alpha = 0.4f),
         focusedTextColor     = Color.White,
         unfocusedTextColor   = Color.White,
-        cursorColor          = TealLight
+        cursorColor          = LocalKioskColors.current.accent
     )
 
     AlertDialog(
@@ -912,7 +991,7 @@ private fun SyncSettingsDialog(onDismiss: () -> Unit) {
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Text("Wild Apricot", color = TealLight, style = MaterialTheme.typography.labelMedium)
+                Text("Wild Apricot", color = LocalKioskColors.current.accent, style = MaterialTheme.typography.labelMedium)
                 OutlinedTextField(
                     value         = waApiKey,
                     onValueChange = { waApiKey = it },
@@ -929,7 +1008,7 @@ private fun SyncSettingsDialog(onDismiss: () -> Unit) {
                     modifier      = Modifier.fillMaxWidth(),
                     colors        = fieldColors
                 )
-                Text("Pi (Tailscale)", color = TealLight, style = MaterialTheme.typography.labelMedium)
+                Text("Pi (Tailscale)", color = LocalKioskColors.current.accent, style = MaterialTheme.typography.labelMedium)
                 OutlinedTextField(
                     value         = piSyncUrl,
                     onValueChange = { piSyncUrl = it },
@@ -938,7 +1017,7 @@ private fun SyncSettingsDialog(onDismiss: () -> Unit) {
                     modifier      = Modifier.fillMaxWidth(),
                     colors        = fieldColors
                 )
-                Text("Google Sheets", color = TealLight, style = MaterialTheme.typography.labelMedium)
+                Text("Google Sheets", color = LocalKioskColors.current.accent, style = MaterialTheme.typography.labelMedium)
                 OutlinedTextField(
                     value         = sheetsScriptUrl,
                     onValueChange = { sheetsScriptUrl = it },
@@ -951,7 +1030,7 @@ private fun SyncSettingsDialog(onDismiss: () -> Unit) {
                 if (syncStatus == "queued") {
                     Text(
                         "Sync queued — running in background, safe to close.",
-                        color = TealLight,
+                        color = LocalKioskColors.current.accent,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -972,7 +1051,7 @@ private fun SyncSettingsDialog(onDismiss: () -> Unit) {
         },
         confirmButton = {},
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Close", color = TextSecondary) }
+            TextButton(onClick = onDismiss) { Text("Close", color = LocalKioskColors.current.textWarm) }
         },
         containerColor = Color(0xFF1A2E42)
     )

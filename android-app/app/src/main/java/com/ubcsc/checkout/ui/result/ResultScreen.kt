@@ -42,8 +42,7 @@ import com.ubcsc.checkout.R
 import com.ubcsc.checkout.ui.theme.AvailableGreen
 import com.ubcsc.checkout.ui.theme.DeepOcean
 import com.ubcsc.checkout.ui.theme.DigitalCheckoutTheme
-import com.ubcsc.checkout.ui.theme.TextSecondary
-import com.ubcsc.checkout.ui.theme.TealMid
+import com.ubcsc.checkout.ui.theme.LocalKioskColors
 import com.ubcsc.checkout.ui.theme.UnavailableRed
 import com.ubcsc.checkout.viewmodel.CheckoutUiState
 import com.ubcsc.checkout.viewmodel.CheckoutViewModel
@@ -155,7 +154,7 @@ private fun ResultContent(headline: String, detail: String, isSuccess: Boolean) 
             Text(
                 text  = detail,
                 style = MaterialTheme.typography.titleMedium,
-                color = TextSecondary,
+                color = LocalKioskColors.current.textWarm,
                 textAlign = TextAlign.Center
             )
 
@@ -164,7 +163,7 @@ private fun ResultContent(headline: String, detail: String, isSuccess: Boolean) 
             Text(
                 text  = stringResource(R.string.result_returning),
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary.copy(alpha = 0.5f)
+                color = LocalKioskColors.current.textWarm.copy(alpha = 0.5f)
             )
 
             Spacer(modifier = Modifier.height(10.dp))

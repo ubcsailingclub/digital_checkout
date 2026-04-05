@@ -73,10 +73,8 @@ import com.ubcsc.checkout.ui.theme.CardBlue
 import com.ubcsc.checkout.ui.theme.DeepOcean
 import com.ubcsc.checkout.ui.theme.DigitalCheckoutTheme
 import com.ubcsc.checkout.ui.theme.DividerColor
-import com.ubcsc.checkout.ui.theme.TealLight
-import com.ubcsc.checkout.ui.theme.TealMid
+import com.ubcsc.checkout.ui.theme.LocalKioskColors
 import com.ubcsc.checkout.ui.theme.TextMuted
-import com.ubcsc.checkout.ui.theme.TextSecondary
 import com.ubcsc.checkout.ui.theme.UnavailableRed
 import com.ubcsc.checkout.viewmodel.CheckoutUiState
 import com.ubcsc.checkout.viewmodel.CheckoutViewModel
@@ -155,7 +153,7 @@ private fun AddCrewContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(4.dp)
-                .background(Brush.horizontalGradient(listOf(TealMid, TealLight, TealMid)))
+                .background(Brush.horizontalGradient(listOf(LocalKioskColors.current.accentMid, LocalKioskColors.current.accent, LocalKioskColors.current.accentMid)))
         )
 
         Column(
@@ -181,7 +179,7 @@ private fun AddCrewContent(
                     Text(
                         text          = "$craftName  ·  $memberName",
                         style         = MaterialTheme.typography.bodyMedium,
-                        color         = TealLight,
+                        color         = LocalKioskColors.current.accent,
                         letterSpacing = 0.5.sp
                     )
                 }
@@ -243,8 +241,8 @@ private fun AddCrewContent(
                                         modifier = Modifier.weight(1f).height(48.dp),
                                         shape    = RoundedCornerShape(12.dp),
                                         colors   = ButtonDefaults.filledTonalButtonColors(
-                                            containerColor = TealMid.copy(alpha = 0.15f),
-                                            contentColor   = TealLight
+                                            containerColor = LocalKioskColors.current.accentMid.copy(alpha = 0.15f),
+                                            contentColor   = LocalKioskColors.current.accent
                                         )
                                     ) {
                                         Icon(Icons.Filled.CreditCard, null, modifier = Modifier.size(18.dp))
@@ -258,11 +256,11 @@ private fun AddCrewContent(
                                     ) {
                                         Icon(
                                             Icons.Filled.PersonAdd, null,
-                                            tint     = TextSecondary,
+                                            tint     = LocalKioskColors.current.textWarm,
                                             modifier = Modifier.size(18.dp)
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
-                                        Text("Guest", color = TextSecondary, fontWeight = FontWeight.Medium)
+                                        Text("Guest", color = LocalKioskColors.current.textWarm, fontWeight = FontWeight.Medium)
                                     }
                                 }
                             }
@@ -283,7 +281,7 @@ private fun AddCrewContent(
                             Text(
                                 text          = "Crew  (${crew.size})",
                                 style         = MaterialTheme.typography.labelMedium,
-                                color         = TealLight,
+                                color         = LocalKioskColors.current.accent,
                                 letterSpacing = 1.5.sp,
                                 fontWeight    = FontWeight.Bold
                             )
@@ -325,9 +323,9 @@ private fun AddCrewContent(
                                 modifier  = Modifier.fillMaxWidth().height(72.dp),
                                 shape     = RoundedCornerShape(12.dp),
                                 colors    = ButtonDefaults.elevatedButtonColors(
-                                    containerColor         = TealMid,
+                                    containerColor         = LocalKioskColors.current.accentMid,
                                     contentColor           = Color.White,
-                                    disabledContainerColor = TealMid.copy(alpha = 0.2f),
+                                    disabledContainerColor = LocalKioskColors.current.accentMid.copy(alpha = 0.2f),
                                     disabledContentColor   = TextMuted
                                 ),
                                 elevation = ButtonDefaults.elevatedButtonElevation(8.dp)
@@ -363,7 +361,7 @@ private fun AddCrewContent(
                             Text(
                                 text          = "Crew  (${crew.size})",
                                 style         = MaterialTheme.typography.labelMedium,
-                                color         = TealLight,
+                                color         = LocalKioskColors.current.accent,
                                 letterSpacing = 1.5.sp,
                                 fontWeight    = FontWeight.Bold
                             )
@@ -405,9 +403,9 @@ private fun AddCrewContent(
                                 modifier  = Modifier.fillMaxWidth().height(72.dp),
                                 shape     = RoundedCornerShape(12.dp),
                                 colors    = ButtonDefaults.elevatedButtonColors(
-                                    containerColor         = TealMid,
+                                    containerColor         = LocalKioskColors.current.accentMid,
                                     contentColor           = Color.White,
-                                    disabledContainerColor = TealMid.copy(alpha = 0.2f),
+                                    disabledContainerColor = LocalKioskColors.current.accentMid.copy(alpha = 0.2f),
                                     disabledContentColor   = TextMuted
                                 ),
                                 elevation = ButtonDefaults.elevatedButtonElevation(8.dp)
@@ -450,8 +448,8 @@ private fun AddCrewContent(
                                         modifier = Modifier.fillMaxWidth().height(52.dp),
                                         shape    = RoundedCornerShape(12.dp),
                                         colors   = ButtonDefaults.filledTonalButtonColors(
-                                            containerColor = TealMid.copy(alpha = 0.15f),
-                                            contentColor   = TealLight
+                                            containerColor = LocalKioskColors.current.accentMid.copy(alpha = 0.15f),
+                                            contentColor   = LocalKioskColors.current.accent
                                         )
                                     ) {
                                         Icon(Icons.Filled.CreditCard, null, modifier = Modifier.size(20.dp))
@@ -466,11 +464,11 @@ private fun AddCrewContent(
                                     ) {
                                         Icon(
                                             Icons.Filled.PersonAdd, null,
-                                            tint     = TextSecondary,
+                                            tint     = LocalKioskColors.current.textWarm,
                                             modifier = Modifier.size(20.dp)
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Add Guest", color = TextSecondary, fontWeight = FontWeight.Medium)
+                                        Text("Add Guest", color = LocalKioskColors.current.textWarm, fontWeight = FontWeight.Medium)
                                     }
                                 }
                             }
@@ -497,12 +495,12 @@ private fun CrewRow(entry: CrewEntry, onRemove: () -> Unit) {
                 modifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(if (entry.isGuest) UnavailableRed.copy(0.15f) else TealMid.copy(0.15f)),
+                    .background(if (entry.isGuest) UnavailableRed.copy(0.15f) else LocalKioskColors.current.accentMid.copy(0.15f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     Icons.Filled.Person, null,
-                    tint     = if (entry.isGuest) UnavailableRed else TealLight,
+                    tint     = if (entry.isGuest) UnavailableRed else LocalKioskColors.current.accent,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -572,11 +570,11 @@ private fun MemberSearchField(
                 modifier = Modifier.fillMaxWidth().forceShowSoftKeyboard(),
                 shape  = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor   = TealMid,
+                    focusedBorderColor   = LocalKioskColors.current.accentMid,
                     unfocusedBorderColor = DividerColor,
                     focusedTextColor     = Color.White,
                     unfocusedTextColor   = Color.White,
-                    cursorColor          = TealLight
+                    cursorColor          = LocalKioskColors.current.accent
                 )
             )
             ElevatedButton(
@@ -585,9 +583,9 @@ private fun MemberSearchField(
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape    = RoundedCornerShape(12.dp),
                 colors   = ButtonDefaults.elevatedButtonColors(
-                    containerColor         = TealMid.copy(alpha = 0.9f),
+                    containerColor         = LocalKioskColors.current.accentMid.copy(alpha = 0.9f),
                     contentColor           = Color.White,
-                    disabledContainerColor = TealMid.copy(alpha = 0.2f),
+                    disabledContainerColor = LocalKioskColors.current.accentMid.copy(alpha = 0.2f),
                     disabledContentColor   = TextMuted
                 )
             ) { Text("Add as Non-Member", fontWeight = FontWeight.Medium) }
@@ -633,19 +631,19 @@ private fun NfcWaitPanel() {
             .fillMaxWidth()
             .height(180.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(TealMid.copy(alpha = 0.08f))
-            .border(1.dp, TealMid.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
+            .background(LocalKioskColors.current.accentMid.copy(alpha = 0.08f))
+            .border(1.dp, LocalKioskColors.current.accentMid.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Icon(Icons.Filled.Nfc, null, tint = TealLight.copy(alpha = alpha), modifier = Modifier.size(56.dp))
+            Icon(Icons.Filled.Nfc, null, tint = LocalKioskColors.current.accent.copy(alpha = alpha), modifier = Modifier.size(56.dp))
             Text(
                 "Tap crew member's card",
                 style      = MaterialTheme.typography.titleMedium,
-                color      = TealLight.copy(alpha = alpha),
+                color      = LocalKioskColors.current.accent.copy(alpha = alpha),
                 fontWeight = FontWeight.SemiBold
             )
             Text("Or tap Cancel Scan to go back", style = MaterialTheme.typography.bodySmall, color = TextMuted)

@@ -47,8 +47,7 @@ import com.ubcsc.checkout.ui.theme.CardBlue
 import com.ubcsc.checkout.ui.theme.DeepOcean
 import com.ubcsc.checkout.ui.theme.DigitalCheckoutTheme
 import com.ubcsc.checkout.ui.theme.DividerColor
-import com.ubcsc.checkout.ui.theme.TealLight
-import com.ubcsc.checkout.ui.theme.TealMid
+import com.ubcsc.checkout.ui.theme.LocalKioskColors
 import com.ubcsc.checkout.ui.theme.TextMuted
 import com.ubcsc.checkout.ui.theme.UnavailableRed
 import com.ubcsc.checkout.ui.util.CraftImageMapper
@@ -128,7 +127,7 @@ private fun CraftSelectContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(4.dp)
-                .background(Brush.horizontalGradient(listOf(TealMid, TealLight, TealMid)))
+                .background(Brush.horizontalGradient(listOf(LocalKioskColors.current.accentMid, LocalKioskColors.current.accent, LocalKioskColors.current.accentMid)))
         )
 
         Column(
@@ -154,7 +153,7 @@ private fun CraftSelectContent(
                     Text(
                         text = memberName,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = TealLight,
+                        color = LocalKioskColors.current.accent,
                         letterSpacing = 0.5.sp
                     )
                 }
@@ -206,7 +205,7 @@ private fun CategoryHeader(title: String) {
     Text(
         text = title,
         style = MaterialTheme.typography.labelMedium,
-        color = TealLight,
+        color = LocalKioskColors.current.accent,
         letterSpacing = 2.sp,
         fontWeight = FontWeight.Bold,
         modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 4.dp)
@@ -217,7 +216,7 @@ private fun CategoryHeader(title: String) {
 @Composable
 private fun FleetCard(fleet: FleetGroup, onSelect: () -> Unit) {
     val hasAvailable = fleet.availableCount > 0
-    val accentColor  = if (hasAvailable) TealMid  else UnavailableRed
+    val accentColor  = if (hasAvailable) LocalKioskColors.current.accentMid  else UnavailableRed
     val cardAlpha    = if (hasAvailable) 1f        else 0.45f
 
     Surface(

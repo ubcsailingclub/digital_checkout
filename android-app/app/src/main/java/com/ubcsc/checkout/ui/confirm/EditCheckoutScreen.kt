@@ -48,11 +48,9 @@ import androidx.compose.ui.unit.dp
 import com.ubcsc.checkout.ui.theme.CardBlue
 import com.ubcsc.checkout.ui.theme.DeepOcean
 import com.ubcsc.checkout.ui.theme.DividerColor
+import com.ubcsc.checkout.ui.theme.LocalKioskColors
 import com.ubcsc.checkout.ui.theme.OceanSurface
-import com.ubcsc.checkout.ui.theme.TealLight
-import com.ubcsc.checkout.ui.theme.TealMid
 import com.ubcsc.checkout.ui.theme.TextMuted
-import com.ubcsc.checkout.ui.theme.TextSecondary
 import com.ubcsc.checkout.viewmodel.ActiveCheckout
 import com.ubcsc.checkout.viewmodel.CheckoutViewModel
 import com.ubcsc.checkout.viewmodel.Member
@@ -104,13 +102,13 @@ fun EditCheckoutScreen(
                     state  = timePickerState,
                     colors = TimePickerDefaults.colors(
                         clockDialColor                               = OceanSurface,
-                        selectorColor                                = TealMid,
+                        selectorColor                                = LocalKioskColors.current.accentMid,
                         containerColor                               = CardBlue,
-                        periodSelectorBorderColor                    = TealMid,
-                        timeSelectorSelectedContainerColor           = TealMid.copy(alpha = 0.3f),
+                        periodSelectorBorderColor                    = LocalKioskColors.current.accentMid,
+                        timeSelectorSelectedContainerColor           = LocalKioskColors.current.accentMid.copy(alpha = 0.3f),
                         timeSelectorUnselectedContainerColor         = OceanSurface,
-                        timeSelectorSelectedContentColor             = TealLight,
-                        timeSelectorUnselectedContentColor           = TextSecondary,
+                        timeSelectorSelectedContentColor             = LocalKioskColors.current.accent,
+                        timeSelectorUnselectedContentColor           = LocalKioskColors.current.textWarm,
                     )
                 )
             },
@@ -118,11 +116,11 @@ fun EditCheckoutScreen(
                 TextButton(onClick = {
                     returnTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
                     showTimePicker = false
-                }) { Text("Set", color = TealLight) }
+                }) { Text("Set", color = LocalKioskColors.current.accent) }
             },
             dismissButton    = {
                 TextButton(onClick = { showTimePicker = false }) {
-                    Text("Cancel", color = TextSecondary)
+                    Text("Cancel", color = LocalKioskColors.current.textWarm)
                 }
             },
             containerColor   = CardBlue
@@ -138,7 +136,7 @@ fun EditCheckoutScreen(
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
                 .height(4.dp)
-                .background(Brush.horizontalGradient(listOf(TealMid, TealLight, TealMid)))
+                .background(Brush.horizontalGradient(listOf(LocalKioskColors.current.accentMid, LocalKioskColors.current.accent, LocalKioskColors.current.accentMid)))
         )
 
         Column(
@@ -159,7 +157,7 @@ fun EditCheckoutScreen(
             Text(
                 text  = checkout.craftName,
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary
+                color = LocalKioskColors.current.textWarm
             )
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), color = DividerColor)
@@ -167,17 +165,17 @@ fun EditCheckoutScreen(
             // ETR picker + presets
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Filled.AccessTime, null, tint = TextSecondary,
+                    Icon(Icons.Filled.AccessTime, null, tint = LocalKioskColors.current.textWarm,
                         modifier = Modifier.width(20.dp).height(20.dp))
                     Spacer(Modifier.width(10.dp))
-                    Text("Back by", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+                    Text("Back by", style = MaterialTheme.typography.bodyMedium, color = LocalKioskColors.current.textWarm)
                     Spacer(Modifier.width(12.dp))
                     OutlinedButton(
                         onClick        = { showTimePicker = true },
                         shape          = RoundedCornerShape(8.dp),
-                        border         = BorderStroke(1.dp, if (returnTime != null) TealMid else DividerColor),
+                        border         = BorderStroke(1.dp, if (returnTime != null) LocalKioskColors.current.accentMid else DividerColor),
                         colors         = ButtonDefaults.outlinedButtonColors(
-                            contentColor = if (returnTime != null) TealLight else TextMuted
+                            contentColor = if (returnTime != null) LocalKioskColors.current.accent else TextMuted
                         ),
                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
                     ) {
@@ -203,10 +201,10 @@ fun EditCheckoutScreen(
                         OutlinedButton(
                             onClick        = { returnTime = presetTime },
                             shape          = RoundedCornerShape(8.dp),
-                            border         = BorderStroke(1.dp, if (isSelected) TealMid else DividerColor),
+                            border         = BorderStroke(1.dp, if (isSelected) LocalKioskColors.current.accentMid else DividerColor),
                             colors         = ButtonDefaults.outlinedButtonColors(
-                                containerColor = if (isSelected) TealMid.copy(alpha = 0.15f) else Color.Transparent,
-                                contentColor   = if (isSelected) TealLight else TextMuted
+                                containerColor = if (isSelected) LocalKioskColors.current.accentMid.copy(alpha = 0.15f) else Color.Transparent,
+                                contentColor   = if (isSelected) LocalKioskColors.current.accent else TextMuted
                             ),
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
                         ) {
@@ -223,14 +221,14 @@ fun EditCheckoutScreen(
                     onClick  = { viewModel.goBack() },
                     modifier = Modifier.height(52.dp).weight(1f),
                     shape    = RoundedCornerShape(12.dp)
-                ) { Text("← Back", color = TextSecondary) }
+                ) { Text("← Back", color = LocalKioskColors.current.textWarm) }
 
                 ElevatedButton(
                     onClick   = { viewModel.onUpdateEtr(member, checkout, computeEtrHoursFromTime(returnTime)) },
                     modifier  = Modifier.height(52.dp).weight(1.5f),
                     shape     = RoundedCornerShape(12.dp),
                     colors    = ButtonDefaults.elevatedButtonColors(
-                        containerColor = TealMid,
+                        containerColor = LocalKioskColors.current.accentMid,
                         contentColor   = Color.White
                     ),
                     elevation = ButtonDefaults.elevatedButtonElevation(8.dp)

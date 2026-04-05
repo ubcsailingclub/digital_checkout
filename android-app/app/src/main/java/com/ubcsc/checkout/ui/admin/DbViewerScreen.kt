@@ -23,10 +23,8 @@ import com.ubcsc.checkout.data.db.entities.MemberEntity
 import com.ubcsc.checkout.ui.theme.CardBlue
 import com.ubcsc.checkout.ui.theme.DeepOcean
 import com.ubcsc.checkout.ui.theme.DividerColor
-import com.ubcsc.checkout.ui.theme.TealLight
-import com.ubcsc.checkout.ui.theme.TealMid
+import com.ubcsc.checkout.ui.theme.LocalKioskColors
 import com.ubcsc.checkout.ui.theme.TextMuted
-import com.ubcsc.checkout.ui.theme.TextSecondary
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
@@ -104,10 +102,10 @@ private fun DbViewerContent(onDismiss: () -> Unit) {
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextButton(onClick = { refresh() }) {
-                    Text("Refresh", color = TealLight)
+                    Text("Refresh", color = LocalKioskColors.current.accent)
                 }
                 TextButton(onClick = onDismiss) {
-                    Text("Close", color = TextSecondary)
+                    Text("Close", color = LocalKioskColors.current.textWarm)
                 }
             }
         }
@@ -116,7 +114,7 @@ private fun DbViewerContent(onDismiss: () -> Unit) {
         TabRow(
             selectedTabIndex = selectedTab,
             containerColor   = CardBlue,
-            contentColor     = TealLight,
+            contentColor     = LocalKioskColors.current.accent,
             divider          = { HorizontalDivider(color = DividerColor) }
         ) {
             tabs.forEachIndexed { i, title ->
@@ -131,7 +129,7 @@ private fun DbViewerContent(onDismiss: () -> Unit) {
                     text     = {
                         Text(
                             "$title ($count)",
-                            color = if (selectedTab == i) TealLight else TextMuted,
+                            color = if (selectedTab == i) LocalKioskColors.current.accent else TextMuted,
                             style = MaterialTheme.typography.labelMedium
                         )
                     }
@@ -141,7 +139,7 @@ private fun DbViewerContent(onDismiss: () -> Unit) {
 
         if (loading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = TealLight)
+                CircularProgressIndicator(color = LocalKioskColors.current.accent)
             }
             return@Column
         }
@@ -157,11 +155,11 @@ private fun DbViewerContent(onDismiss: () -> Unit) {
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             shape  = RoundedCornerShape(10.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor   = TealMid,
+                focusedBorderColor   = LocalKioskColors.current.accentMid,
                 unfocusedBorderColor = DividerColor,
                 focusedTextColor     = Color.White,
                 unfocusedTextColor   = Color.White,
-                cursorColor          = TealLight
+                cursorColor          = LocalKioskColors.current.accent
             )
         )
 
@@ -199,7 +197,7 @@ private fun MembersTab(members: List<MemberEntity>, query: String) {
                         }.getOrElse { "?" }
                     } ?: "None"
                     Text("ID ${m.id}  ·  ${m.membershipStatus}", color = TextMuted, style = MaterialTheme.typography.labelSmall)
-                    Text("Certs: $certs", color = TextSecondary, style = MaterialTheme.typography.labelSmall, lineHeight = 16.sp)
+                    Text("Certs: $certs", color = LocalKioskColors.current.textWarm, style = MaterialTheme.typography.labelSmall, lineHeight = 16.sp)
                 }
             }
         }
@@ -229,7 +227,7 @@ private fun CraftTab(craft: List<CraftEntity>, query: String) {
                         Text("${c.craftCode}  ·  ${c.craftClass ?: c.fleetType}", color = TextMuted, style = MaterialTheme.typography.labelSmall)
                     }
                     val (statusColor, statusText) = when (c.status) {
-                        "available"   -> TealLight  to "Available"
+                        "available"   -> LocalKioskColors.current.accent  to "Available"
                         "checked_out" -> Color(0xFFFFA94D) to "Out"
                         "grounded"    -> Color(0xFFFF6B6B) to "Grounded"
                         else          -> TextMuted to c.status
@@ -247,7 +245,7 @@ private fun CraftTab(craft: List<CraftEntity>, query: String) {
                     }
                 }
                 if (c.statusReason != null) {
-                    Text("Reason: ${c.statusReason}", color = TextSecondary, style = MaterialTheme.typography.labelSmall)
+                    Text("Reason: ${c.statusReason}", color = LocalKioskColors.current.textWarm, style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
@@ -291,7 +289,7 @@ private fun SessionsTab(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(memberName, color = Color.White, fontWeight = FontWeight.Medium)
-                        Text(craftName, color = TealLight, style = MaterialTheme.typography.bodySmall)
+                        Text(craftName, color = LocalKioskColors.current.accent, style = MaterialTheme.typography.bodySmall)
                         Text(
                             "Out: ${fmt.format(Instant.ofEpochMilli(s.checkoutTime))}",
                             color = TextMuted,
@@ -305,7 +303,7 @@ private fun SessionsTab(
                             )
                         }
                         if (!s.notesIn.isNullOrBlank()) {
-                            Text("Notes: ${s.notesIn}", color = TextSecondary, style = MaterialTheme.typography.labelSmall)
+                            Text("Notes: ${s.notesIn}", color = LocalKioskColors.current.textWarm, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                     val (sc, st) = if (s.status == "active") Color(0xFFFFA94D) to "ACTIVE" else TextMuted to "Done"

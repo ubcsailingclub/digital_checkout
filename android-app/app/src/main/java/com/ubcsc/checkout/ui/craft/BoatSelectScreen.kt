@@ -45,10 +45,8 @@ import com.ubcsc.checkout.ui.theme.CardBlue
 import com.ubcsc.checkout.ui.theme.DeepOcean
 import com.ubcsc.checkout.ui.theme.DigitalCheckoutTheme
 import com.ubcsc.checkout.ui.theme.DividerColor
-import com.ubcsc.checkout.ui.theme.TealLight
-import com.ubcsc.checkout.ui.theme.TealMid
+import com.ubcsc.checkout.ui.theme.LocalKioskColors
 import com.ubcsc.checkout.ui.theme.TextMuted
-import com.ubcsc.checkout.ui.theme.TextSecondary
 import com.ubcsc.checkout.ui.theme.UnavailableRed
 import com.ubcsc.checkout.ui.util.CraftImageMapper
 import androidx.compose.runtime.collectAsState
@@ -104,7 +102,7 @@ private fun BoatSelectContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(4.dp)
-                .background(Brush.horizontalGradient(listOf(TealMid, TealLight, TealMid)))
+                .background(Brush.horizontalGradient(listOf(LocalKioskColors.current.accentMid, LocalKioskColors.current.accent, LocalKioskColors.current.accentMid)))
         )
 
         Column(
@@ -130,7 +128,7 @@ private fun BoatSelectContent(
                     Text(
                         text         = memberName,
                         style        = MaterialTheme.typography.bodyMedium,
-                        color        = TealLight,
+                        color        = LocalKioskColors.current.accent,
                         letterSpacing = 0.5.sp
                     )
                 }
@@ -204,7 +202,7 @@ private fun BoatCard(
     val accentColor = when {
         !available  -> UnavailableRed
         hasWarning  -> Color(0xFFB45309)   // amber when grounded/deactivated
-        else        -> TealMid
+        else        -> LocalKioskColors.current.accentMid
     }
     val cardAlpha   = if (available) 1f else 0.45f
 
