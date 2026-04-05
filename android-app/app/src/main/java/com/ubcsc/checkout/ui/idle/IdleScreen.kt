@@ -904,8 +904,12 @@ private fun UpdateDialog(onDismiss: () -> Unit) {
                     phase = "error"; errorMsg = "Download failed. Check your network connection."
                 } else {
                     phase = "installing"
+                    viewModel.suppressReopen = true   // let PackageInstaller dialog show
                     com.ubcsc.checkout.data.AppUpdater.installApk(context, apk) { ok ->
-                        if (!ok) { phase = "error"; errorMsg = "Install failed." }
+                        if (!ok) {
+                            viewModel.suppressReopen = false
+                            phase = "error"; errorMsg = "Install failed."
+                        }
                         // On success Android relaunches the app — dialog will be gone
                     }
                 }

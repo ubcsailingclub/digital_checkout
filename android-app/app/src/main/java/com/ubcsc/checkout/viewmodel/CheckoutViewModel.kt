@@ -167,6 +167,9 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
     private val _appTheme = MutableStateFlow(AppTheme.fromName(prefs.appTheme))
     val appTheme: StateFlow<AppTheme> = _appTheme.asStateFlow()
 
+    /** Set to true just before launching PackageInstaller so onUserLeaveHint doesn't fight it. */
+    var suppressReopen: Boolean = false
+
     fun setTheme(theme: AppTheme) {
         _appTheme.value = theme
         prefs.appTheme  = theme.name

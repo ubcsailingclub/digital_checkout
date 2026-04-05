@@ -115,6 +115,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         hideOverlay()
+        viewModel.suppressReopen = false   // clear after returning from installer
         nfcAdapter?.enableForegroundDispatch(this, nfcPendingIntent, null, null)
         startLockTaskIfOwner()
     }
@@ -164,6 +165,8 @@ class MainActivity : ComponentActivity() {
     // home screen is never visible, then relaunch ourselves behind it.
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
+        // Don't fight the PackageInstaller dialog during OTA installs
+        if (viewModel.suppressReopen) return
         showOverlay()
         startActivity(
             Intent(this, MainActivity::class.java).apply {
