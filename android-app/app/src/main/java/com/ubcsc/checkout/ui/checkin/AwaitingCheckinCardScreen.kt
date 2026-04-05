@@ -105,11 +105,12 @@ private fun AwaitingCheckinCardContent(
         )
 
         // Ripple rings drawn behind content
+        val ringColor = LocalKioskColors.current.accentMid
         Canvas(Modifier.fillMaxSize()) {
             val center    = Offset(size.width / 2f, size.height / 2f)
             val maxRadius = size.minDimension * 0.35f
             fun ring(p: Float) = drawCircle(
-                color  = LocalKioskColors.current.accentMid.copy(alpha = (1f - p) * 0.35f),
+                color  = ringColor.copy(alpha = (1f - p) * 0.35f),
                 radius = maxRadius * p,
                 center = center,
                 style  = Stroke(width = 3.dp.toPx())
