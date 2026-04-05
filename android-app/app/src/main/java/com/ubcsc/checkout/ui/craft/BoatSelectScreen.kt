@@ -52,6 +52,7 @@ import com.ubcsc.checkout.ui.theme.TextSecondary
 import com.ubcsc.checkout.ui.theme.UnavailableRed
 import com.ubcsc.checkout.ui.util.CraftImageMapper
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import com.ubcsc.checkout.viewmodel.CheckoutViewModel
 import com.ubcsc.checkout.viewmodel.Craft
 import com.ubcsc.checkout.viewmodel.CraftFleetStatus
