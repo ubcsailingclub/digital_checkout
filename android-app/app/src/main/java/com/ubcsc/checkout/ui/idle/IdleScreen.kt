@@ -882,31 +882,36 @@ private fun ThemePickerDialog(
 private fun UpdateDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
 
-    // "idle" | "checking" | "up_to_date" | "downloading" | "installing" | "error"
-    var phase    by remember { mutableStateOf("idle") }
-    var progress by remember { mutableStateOf(0) }
-    var errorMsg by remember { mutableStateOf("") }
+    // "checking" | "up_to_date" | "downloading" | "installing" | "error"
+    var phase      by remember { mutableStateOf("checking") }
+    var progress   by remember { mutableStateOf(0) }
+    var errorMsg   by remember { mutableStateOf("") }
+    var remoteVer  by remember { mutableStateOf(0) }
 
     // Kick off check immediately on open
     LaunchedEffect(Unit) {
-        phase = "checking"
-        val info = com.ubcsc.checkout.data.AppUpdater.checkForUpdate()
-        if (info == null) {
-            phase = "up_to_date"
-        } else {
-            phase = "downloading"
-            val apk = com.ubcsc.checkout.data.AppUpdater.downloadApk(context, info.downloadUrl) { pct ->
-                progress = pct
-            }
-            if (apk == null) {
-                phase = "error"; errorMsg = "Download failed. Check your network connection."
+        try {
+            val info = com.ubcsc.checkout.data.AppUpdater.checkForUpdate()
+            if (info == null) {
+                phase = "up_to_date"
             } else {
-                phase = "installing"
-                com.ubcsc.checkout.data.AppUpdater.installApk(context, apk) { ok ->
-                    if (!ok) { phase = "error"; errorMsg = "Install failed." }
-                    // On success Android relaunches the app — dialog will be gone
+                remoteVer = info.versionCode
+                phase = "downloading"
+                val apk = com.ubcsc.checkout.data.AppUpdater.downloadApk(context, info.downloadUrl) { pct ->
+                    progress = pct
+                }
+                if (apk == null) {
+                    phase = "error"; errorMsg = "Download failed. Check your network connection."
+                } else {
+                    phase = "installing"
+                    com.ubcsc.checkout.data.AppUpdater.installApk(context, apk) { ok ->
+                        if (!ok) { phase = "error"; errorMsg = "Install failed." }
+                        // On success Android relaunches the app — dialog will be gone
+                    }
                 }
             }
+        } catch (e: Exception) {
+            phase = "error"; errorMsg = e.message ?: "Unknown error"
         }
     }
 
@@ -926,8 +931,10 @@ private fun UpdateDialog(onDismiss: () -> Unit) {
                     }
                     "up_to_date" -> {
                         Text("✓  App is up to date", color = LocalKioskColors.current.accent, fontWeight = FontWeight.SemiBold)
-                        Text("Version ${com.ubcsc.checkout.BuildConfig.VERSION_CODE}", color = LocalKioskColors.current.textWarm,
-                            style = MaterialTheme.typography.bodySmall)
+                        Text("Installed v${com.ubcsc.checkout.BuildConfig.VERSION_CODE} — no newer release found",
+                            color = LocalKioskColors.current.textWarm,
+                            style = MaterialTheme.typography.bodySmall,
+                            textAlign = TextAlign.Center)
                     }
                     "downloading" -> {
                         CircularProgressIndicator(

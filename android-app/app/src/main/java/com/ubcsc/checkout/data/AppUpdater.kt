@@ -19,24 +19,33 @@ data class UpdateInfo(val versionCode: Int, val downloadUrl: String)
 
 object AppUpdater {
 
-    /** Returns update info if a newer release exists on GitHub, null otherwise. */
+    /**
+     * Returns update info if a newer release exists on GitHub, null if already up to date.
+     * Throws an exception on network or parse errors (caller should handle and show to user).
+     */
     suspend fun checkForUpdate(): UpdateInfo? = withContext(Dispatchers.IO) {
-        try {
-            val json = java.net.URL("https://api.github.com/repos/$REPO/releases/latest").readText()
-            val obj  = JSONObject(json)
-            val tag  = obj.getString("tag_name")          // "v42"
-            val remote = tag.trimStart('v').toIntOrNull() ?: return@withContext null
-            if (remote <= BuildConfig.VERSION_CODE) return@withContext null
+        val conn = java.net.URL("https://api.github.com/repos/$REPO/releases/latest")
+            .openConnection() as java.net.HttpURLConnection
+        conn.connectTimeout = 10_000
+        conn.readTimeout    = 10_000
+        conn.connect()
+        val code = conn.responseCode
+        if (code != 200) throw Exception("GitHub API returned HTTP $code")
+        val json   = conn.inputStream.bufferedReader().readText()
+        val obj    = JSONObject(json)
+        val tag    = obj.getString("tag_name")          // "v42"
+        val remote = tag.trimStart('v').toIntOrNull()
+            ?: throw Exception("Unexpected tag format: $tag")
+        if (remote <= BuildConfig.VERSION_CODE) return@withContext null
 
-            val assets = obj.getJSONArray("assets")
-            for (i in 0 until assets.length()) {
-                val asset = assets.getJSONObject(i)
-                if (asset.getString("name").endsWith(".apk")) {
-                    return@withContext UpdateInfo(remote, asset.getString("browser_download_url"))
-                }
+        val assets = obj.getJSONArray("assets")
+        for (i in 0 until assets.length()) {
+            val asset = assets.getJSONObject(i)
+            if (asset.getString("name").endsWith(".apk")) {
+                return@withContext UpdateInfo(remote, asset.getString("browser_download_url"))
             }
-            null
-        } catch (_: Exception) { null }
+        }
+        throw Exception("Release v$remote has no APK asset")
     }
 
     /** Downloads the APK to cache, reporting [0..100] progress. Returns the file or null on failure. */
