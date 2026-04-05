@@ -163,7 +163,8 @@ fun IdleScreen(viewModel: CheckoutViewModel, onAdminExit: () -> Unit = {}) {
         onThemeChange           = viewModel::setTheme,
         onMemberSelectedByName  = viewModel::onMemberSelectedByName,
         onCheckinFromIdle       = viewModel::onCheckinFromIdle,
-        onAdminExit             = onAdminExit
+        onAdminExit             = onAdminExit,
+        onSuppressReopen        = { suppress -> viewModel.suppressReopen = suppress }
     )
 }
 
@@ -181,7 +182,8 @@ private fun IdleContent(
     onThemeChange:          (AppTheme) -> Unit    = {},
     onMemberSelectedByName: ((Int) -> Unit)?      = null,
     onCheckinFromIdle:      (() -> Unit)?          = null,
-    onAdminExit:            () -> Unit            = {}
+    onAdminExit:            () -> Unit            = {},
+    onSuppressReopen:       (Boolean) -> Unit     = {}
 ) {
     var timeText by remember { mutableStateOf(currentTime()) }
     LaunchedEffect(Unit) {
@@ -205,6 +207,7 @@ private fun IdleContent(
                     onAdminExit       = onAdminExit,
                     currentTheme      = currentTheme,
                     onThemeChange     = onThemeChange,
+                    onSuppressReopen  = onSuppressReopen,
                     modifier          = Modifier.fillMaxWidth().weight(0.52f)
                 )
             }
@@ -216,6 +219,7 @@ private fun IdleContent(
                     onAdminExit       = onAdminExit,
                     currentTheme      = currentTheme,
                     onThemeChange     = onThemeChange,
+                    onSuppressReopen  = onSuppressReopen,
                     modifier          = Modifier.weight(0.58f).fillMaxHeight()
                 )
                 SearchPromptPanel(
@@ -262,6 +266,7 @@ private fun NotebookPanel(
     onAdminExit:       () -> Unit    = {},
     currentTheme:      AppTheme      = AppTheme.COPPER_SLATE,
     onThemeChange:     (AppTheme) -> Unit = {},
+    onSuppressReopen:  (Boolean) -> Unit  = {},
     modifier:          Modifier      = Modifier
 ) {
     val today   = LocalDate.now()
@@ -298,7 +303,10 @@ private fun NotebookPanel(
         )
     }
     if (showUpdateDialog) {
-        UpdateDialog(onDismiss = { showUpdateDialog = false })
+        UpdateDialog(
+            onDismiss        = { showUpdateDialog = false },
+            onSuppressReopen = onSuppressReopen
+        )
     }
     if (showDbViewer) {
         DbViewerDialog(onDismiss = { showDbViewer = false })
@@ -879,7 +887,7 @@ private fun ThemePickerDialog(
 // ---------------------------------------------------------------------------
 
 @Composable
-private fun UpdateDialog(onDismiss: () -> Unit) {
+private fun UpdateDialog(onDismiss: () -> Unit, onSuppressReopen: (Boolean) -> Unit = {}) {
     val context = LocalContext.current
 
     // "checking" | "up_to_date" | "downloading" | "installing" | "error"
@@ -904,10 +912,10 @@ private fun UpdateDialog(onDismiss: () -> Unit) {
                     phase = "error"; errorMsg = "Download failed. Check your network connection."
                 } else {
                     phase = "installing"
-                    viewModel.suppressReopen = true   // let PackageInstaller dialog show
+                    onSuppressReopen(true)   // let PackageInstaller dialog show
                     com.ubcsc.checkout.data.AppUpdater.installApk(context, apk) { ok ->
                         if (!ok) {
-                            viewModel.suppressReopen = false
+                            onSuppressReopen(false)
                             phase = "error"; errorMsg = "Install failed."
                         }
                         // On success Android relaunches the app — dialog will be gone
