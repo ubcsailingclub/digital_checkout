@@ -260,7 +260,7 @@ private fun FleetCard(fleet: FleetGroup, onSelect: () -> Unit) {
                         contentDescription = fleet.craftClass,
                         modifier       = Modifier.size(62.dp),
                         contentScale   = ContentScale.Fit,
-                        colorFilter    = if (hasAvailable) CraftImageMapper.filterAvailable
+                        colorFilter    = if (hasAvailable) CraftImageMapper.iconColorFilter(LocalKioskColors.current.accent)
                                          else CraftImageMapper.filterUnavailable
                     )
                 }

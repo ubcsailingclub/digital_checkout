@@ -247,7 +247,7 @@ private fun BoatCard(
                         contentDescription = craft.craftClass,
                         modifier           = Modifier.size(62.dp),
                         contentScale       = ContentScale.Fit,
-                        colorFilter        = if (available) CraftImageMapper.filterAvailable
+                        colorFilter        = if (available) CraftImageMapper.iconColorFilter(LocalKioskColors.current.accent)
                                              else CraftImageMapper.filterUnavailable
                     )
                 }

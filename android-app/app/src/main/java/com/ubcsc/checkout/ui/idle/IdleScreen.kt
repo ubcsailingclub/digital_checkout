@@ -582,7 +582,7 @@ private fun SearchPromptPanel(
                     text          = "UBC SAILING CLUB",
                     style         = MaterialTheme.typography.labelLarge.copy(
                         letterSpacing = 5.sp,
-                        fontSize      = 16.sp
+                        fontSize      = 22.sp
                     ),
                     color      = LocalKioskColors.current.accent,
                     fontWeight = FontWeight.SemiBold
@@ -599,14 +599,14 @@ private fun SearchPromptPanel(
                 Icon(
                     imageVector        = Icons.Filled.Search,
                     contentDescription = null,
-                    tint               = LocalKioskColors.current.accent.copy(alpha = 0.4f),
+                    tint               = Color.White.copy(alpha = 0.25f),
                     modifier           = Modifier.size((48 * iconPulse).dp)
                 )
                 Spacer(Modifier.height(6.dp))
                 Text(
                     text      = "Search your name to check out",
-                    style     = MaterialTheme.typography.bodySmall,
-                    color     = Color.White.copy(alpha = 0.4f),
+                    style     = MaterialTheme.typography.bodyMedium,
+                    color     = Color.White.copy(alpha = 0.6f),
                     textAlign = TextAlign.Center
                 )
             }
@@ -632,13 +632,13 @@ private fun SearchPromptPanel(
                 Icon(
                     imageVector        = Icons.Filled.Search,
                     contentDescription = null,
-                    tint               = LocalKioskColors.current.accent,
+                    tint               = Color.White,
                     modifier           = Modifier.size((60 * iconPulse).dp)
                 )
                 Spacer(Modifier.height(10.dp))
                 Text(
                     text      = "Search your name to check out",
-                    style     = MaterialTheme.typography.bodyMedium,
+                    style     = MaterialTheme.typography.bodyLarge,
                     color     = Color.White.copy(alpha = 0.85f),
                     textAlign = TextAlign.Center
                 )

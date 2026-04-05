@@ -1,5 +1,6 @@
 package com.ubcsc.checkout.ui.util
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import com.ubcsc.checkout.R
@@ -21,10 +22,15 @@ object CraftImageMapper {
             -0.299f, -0.587f, -0.114f, 0f, 255f  // A = 255 - luminance (white→transparent, black→opaque)
         )))
 
-    // TealLight  = 0xFF4DD0E1 → (77, 208, 225)
-    // TextMuted  = 0xFF546E7A → (84, 110, 122)
-    val filterAvailable   = iconColorFilter(77,  208, 225)
-    val filterUnavailable = iconColorFilter(84,  110, 122)
+    /** Convenience overload — pass a Compose [Color] directly. */
+    fun iconColorFilter(color: Color): ColorFilter = iconColorFilter(
+        (color.red   * 255).toInt(),
+        (color.green * 255).toInt(),
+        (color.blue  * 255).toInt()
+    )
+
+    // TextMuted  = 0xFF546E7A → (84, 110, 122)  — used for unavailable/greyed-out icons
+    val filterUnavailable = iconColorFilter(84, 110, 122)
 
     fun getDrawableRes(craftClass: String): Int {
         val s = craftClass.lowercase().trim()

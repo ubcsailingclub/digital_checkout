@@ -206,7 +206,7 @@ private fun SessionCard(session: ActiveSession, onSelect: () -> Unit) {
                             modifier           = Modifier.size(28.dp),
                             contentScale       = ContentScale.Fit,
                             colorFilter        = if (session.isOverdue) CraftImageMapper.filterUnavailable
-                                                 else CraftImageMapper.filterAvailable,
+                                                 else CraftImageMapper.iconColorFilter(LocalKioskColors.current.accent),
                         )
                     }
                     Spacer(modifier = Modifier.width(10.dp))
