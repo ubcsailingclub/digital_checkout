@@ -115,6 +115,14 @@ val SolarFlareColors = KioskColors(
     textWarm   = Color(0xFFFFAB91),
 )
 
+val BrassNavyColors = KioskColors(
+    label      = "Brass & Navy",
+    accent     = Color(0xFFF5C842),   // polished brass
+    accentMid  = Color(0xFFC8871A),   // aged brass
+    accentDark = Color(0xFF1B2A4A),   // deep navy
+    textWarm   = Color(0xFFDEC98A),   // worn canvas/rope
+)
+
 // ---------------------------------------------------------------------------
 // Enum — used for persistence (stored as .name string)
 // ---------------------------------------------------------------------------
@@ -131,7 +139,8 @@ enum class AppTheme(val colors: KioskColors) {
     ELECTRIC_INDIGO(ElectricIndigoColors),
     ROSE_GOLD(RoseGoldColors),
     SAGE_FOG(SageFogColors),
-    SOLAR_FLARE(SolarFlareColors);
+    SOLAR_FLARE(SolarFlareColors),
+    BRASS_NAVY(BrassNavyColors);
 
     val label: String get() = colors.label
 
