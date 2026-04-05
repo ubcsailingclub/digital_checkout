@@ -599,7 +599,7 @@ private fun SearchPromptPanel(
                 Icon(
                     imageVector        = Icons.Filled.Search,
                     contentDescription = null,
-                    tint               = Color.White.copy(alpha = 0.25f),
+                    tint               = LocalKioskColors.current.accent.copy(alpha = 0.4f),
                     modifier           = Modifier.size((48 * iconPulse).dp)
                 )
                 Spacer(Modifier.height(6.dp))
@@ -632,7 +632,7 @@ private fun SearchPromptPanel(
                 Icon(
                     imageVector        = Icons.Filled.Search,
                     contentDescription = null,
-                    tint               = Color.White,
+                    tint               = LocalKioskColors.current.accent,
                     modifier           = Modifier.size((60 * iconPulse).dp)
                 )
                 Spacer(Modifier.height(10.dp))
@@ -681,12 +681,12 @@ private fun NameSearchField(
     else 0
 
     // Box lets the results Card float without pushing surrounding layout
-    Box(Modifier.width(230.dp).zIndex(10f)) {
+    Box(Modifier.width(300.dp).zIndex(10f)) {
         OutlinedTextField(
             value         = searchText,
             onValueChange = { searchText = it },
             placeholder   = { Text("Search by name…", color = Color.White.copy(alpha = 0.4f)) },
-            leadingIcon   = { Icon(Icons.Filled.Search, null, tint = Color.White.copy(alpha = 0.5f)) },
+            leadingIcon   = { Icon(Icons.Filled.Search, null, tint = LocalKioskColors.current.accent) },
             singleLine    = true,
             modifier      = if (forceKeyboard) Modifier.fillMaxWidth().forceShowSoftKeyboard()
                             else Modifier.fillMaxWidth(),
