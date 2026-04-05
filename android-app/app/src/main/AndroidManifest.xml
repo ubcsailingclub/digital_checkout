@@ -58,6 +58,15 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
+        <!-- Relaunches the app automatically after an OTA self-update -->
+        <receiver
+            android:name=".UpdateRelaunchReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
         <!-- Device admin receiver required for Lock Task Mode (kiosk lockdown).
              To activate: adb shell dpm set-device-owner com.ubcsc.checkout/.DeviceAdminReceiver
              To deactivate: adb shell dpm remove-active-admin com.ubcsc.checkout/.DeviceAdminReceiver -->
