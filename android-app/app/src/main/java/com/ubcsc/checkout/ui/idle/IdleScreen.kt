@@ -46,9 +46,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -220,6 +218,7 @@ private fun IdleContent(
                     modifier               = Modifier.weight(0.42f).fillMaxHeight()
                 )
             }
+        }
         // Fleet grounding banner — overlaid at top of entire idle screen
         if (fleetGrounded) {
             Row(
@@ -803,7 +802,6 @@ private fun AdminMenuDialog(
 @Composable
 private fun UpdateDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
-    val scope   = rememberCoroutineScope()
 
     // "idle" | "checking" | "up_to_date" | "downloading" | "installing" | "error"
     var phase    by remember { mutableStateOf("idle") }
