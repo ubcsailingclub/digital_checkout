@@ -1,6 +1,6 @@
 {
-  "fleet_grounded": false,
-  "fleet_ground_reason": "",
+  "fleet_grounded": true,
+  "fleet_ground_reason": "Test",
 
   "craft": {
     "_comment_quest":     "── RS Quest ────────────────────────────────",
