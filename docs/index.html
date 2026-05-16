@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UBCSC Fleet Manager</title>
+  <style>
+    :root {
+      --bg:        #0d1b2a;
+      --surface:   #152232;
+      --card:      #1c2e42;
+      --border:    #2a3f57;
+      --accent:    #2e86c1;
+      --amber:     #b45309;
+      --amber-bright: #f59e0b;
+      --red:       #dc2626;
+      --green:     #16a34a;
+      --text:      #e2e8f0;
+      --muted:     #7a9ab8;
+      --radius:    10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    header h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: .5px; }
+    header span { font-size: .8rem; color: var(--muted); }
+
+    .container { max-width: 860px; margin: 0 auto; padding: 24px 16px 100px; }
+
+    /* Auth */
+    #auth-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    #auth-section h2 { font-size: .95rem; margin-bottom: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; }
+    .auth-row { display: flex; gap: 10px; }
+    .auth-row input {
+      flex: 1; background: var(--card); border: 1px solid var(--border);
+      border-radius: 6px; padding: 9px 12px; color: var(--text); font-size: .9rem;
+    }
+    .auth-row input:focus { outline: none; border-color: var(--accent); }
+    .btn {
+      padding: 9px 18px; border: none; border-radius: 6px; font-size: .9rem;
+      font-weight: 600; cursor: pointer; transition: opacity .15s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-save {
+      background: var(--green); color: #fff;
+      padding: 14px 32px; font-size: 1rem;
+    }
+    .btn-save:disabled { background: #2d4a2d; color: #5a8a5a; cursor: not-allowed; opacity: 1; }
+    #auth-status { margin-top: 10px; font-size: .85rem; color: var(--muted); }
+    #auth-status.ok  { color: #4ade80; }
+    #auth-status.err { color: #f87171; }
+
+    /* Fleet toggle */
+    .fleet-banner {
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      transition: border-color .2s, background .2s;
+    }
+    .fleet-banner.grounded { border-color: var(--amber); background: #1f1608; }
+    .fleet-banner-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .fleet-banner h2 { font-size: 1.1rem; font-weight: 700; }
+    .fleet-banner.grounded h2 { color: var(--amber-bright); }
+    .fleet-reason { margin-top: 14px; }
+    .fleet-reason input {
+      width: 100%; background: var(--card); border: 1px solid var(--border);
+      border-radius: 6px; padding: 9px 12px; color: var(--text); font-size: .9rem;
+    }
+    .fleet-reason input:focus { outline: none; border-color: var(--amber); }
+    .fleet-reason label { font-size: .8rem; color: var(--muted); display: block; margin-bottom: 6px; }
+
+    /* Toggle switch */
+    .toggle { position: relative; display: inline-block; width: 48px; height: 26px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; inset: 0;
+      background: var(--border); border-radius: 26px; transition: .2s;
+    }
+    .slider:before {
+      content: ""; position: absolute;
+      width: 20px; height: 20px; left: 3px; bottom: 3px;
+      background: white; border-radius: 50%; transition: .2s;
+    }
+    input:checked + .slider { background: var(--amber); }
+    input:checked + .slider:before { transform: translateX(22px); }
+    .toggle.green input:checked + .slider { background: var(--green); }
+
+    /* Class sections */
+    .class-section { margin-bottom: 20px; }
+    .class-header {
+      font-size: .75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--muted);
+      padding: 6px 0; margin-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .boat-list { display: flex; flex-direction: column; gap: 6px; }
+
+    /* Boat card */
+    .boat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      transition: border-color .15s;
+    }
+    .boat-card.grounded  { border-color: var(--amber); }
+    .boat-card.deactivated { opacity: .45; }
+    .boat-top { display: flex; align-items: center; gap: 12px; }
+    .boat-name { flex: 1; font-size: .95rem; font-weight: 500; }
+    .boat-code { font-size: .75rem; color: var(--muted); font-family: monospace; margin-right: 4px; }
+    .status-pill {
+      font-size: .7rem; font-weight: 700; padding: 2px 8px;
+      border-radius: 99px; text-transform: uppercase; letter-spacing: .5px;
+    }
+    .pill-active      { background: #14532d; color: #4ade80; }
+    .pill-grounded    { background: #451a03; color: var(--amber-bright); }
+    .pill-deactivated { background: #1c1c1c; color: #888; }
+
+    .boat-controls { margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .control-group { display: flex; align-items: center; gap: 8px; font-size: .85rem; color: var(--muted); }
+    .boat-reason {
+      flex: 1; min-width: 180px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 7px 10px; color: var(--text); font-size: .85rem;
+    }
+    .boat-reason:focus { outline: none; border-color: var(--amber); }
+
+    /* Status select */
+    .status-select {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 6px 10px; color: var(--text);
+      font-size: .85rem; cursor: pointer;
+    }
+    .status-select:focus { outline: none; border-color: var(--accent); }
+
+    /* Save bar */
+    .save-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--surface); border-top: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    }
+    #save-status { font-size: .85rem; color: var(--muted); }
+    #save-status.ok  { color: #4ade80; }
+    #save-status.err { color: #f87171; }
+
+    /* Loading */
+    #loading { text-align: center; padding: 48px; color: var(--muted); }
+    #error-msg { background: #2d1010; border: 1px solid #7f1d1d; border-radius: var(--radius); padding: 16px; color: #fca5a5; margin-bottom: 20px; display: none; }
+
+    @media (max-width: 500px) {
+      .auth-row { flex-direction: column; }
+      .fleet-banner-top { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>⛵ UBCSC Fleet Manager</h1>
+  <span id="header-status">Not connected</span>
+</header>
+
+<div class="container">
+  <div id="auth-section">
+    <h2>GitHub Access</h2>
+    <div class="auth-row">
+      <input type="password" id="pat-input" placeholder="GitHub Personal Access Token (repo scope)" autocomplete="off">
+      <button class="btn btn-primary" onclick="connect()">Connect</button>
+    </div>
+    <div id="auth-status">Enter a token with <strong>repo</strong> scope to save changes. <a href="https://github.com/settings/tokens/new?scopes=repo&description=UBCSC+Fleet+Manager" target="_blank" style="color:var(--accent)">Generate one here.</a></div>
+  </div>
+
+  <div id="error-msg"></div>
+  <div id="loading">Loading fleet status…</div>
+  <div id="app" style="display:none"></div>
+</div>
+
+<div class="save-bar">
+  <span id="save-status">Connect and load fleet to make changes.</span>
+  <button class="btn btn-save" id="save-btn" onclick="save()" disabled>Save to GitHub</button>
+</div>
+
+<script>
+const OWNER = 'ubcsailingclub';
+const REPO  = 'digital_checkout';
+const PATH  = 'fleet_status.json';
+
+let fleetData  = null;   // parsed JSON object
+let rawText    = null;   // original text (for SHA)
+let fileSha    = null;
+let pat        = null;
+let dirty      = false;
+
+// ── Auth ────────────────────────────────────────────────────────────────────
+
+function connect() {
+  const val = document.getElementById('pat-input').value.trim();
+  if (!val) return;
+  pat = val;
+  localStorage.setItem('ubcsc_pat', val);
+  loadFleet();
+}
+
+function savedPat() {
+  return localStorage.getItem('ubcsc_pat') || '';
+}
+
+// ── Load ────────────────────────────────────────────────────────────────────
+
+async function loadFleet() {
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('app').style.display     = 'none';
+  setError('');
+
+  try {
+    const headers = { 'Accept': 'application/vnd.github+json' };
+    if (pat) headers['Authorization'] = `Bearer ${pat}`;
+
+    const res  = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`, { headers });
+    if (!res.ok) throw new Error(`GitHub API ${res.status}: ${await res.text()}`);
+    const json = await res.json();
+    fileSha  = json.sha;
+    rawText  = atob(json.content.replace(/\n/g, ''));
+    fleetData = JSON.parse(rawText);
+
+    renderApp();
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display     = 'block';
+    document.getElementById('header-status').textContent = 'Connected ✓';
+    setAuthStatus('Connected — ' + (pat ? 'changes can be saved.' : 'read-only (no token).'), pat ? 'ok' : '');
+    if (pat) enableSave();
+  } catch (e) {
+    document.getElementById('loading').style.display = 'none';
+    setError('Failed to load: ' + e.message);
+  }
+}
+
+// ── Render ───────────────────────────────────────────────────────────────────
+
+function renderApp() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  // Fleet banner
+  const grounded = fleetData.fleet_grounded || false;
+  const reason   = fleetData.fleet_ground_reason || '';
+  const banner   = document.createElement('div');
+  banner.className = 'fleet-banner' + (grounded ? ' grounded' : '');
+  banner.id = 'fleet-banner';
+  banner.innerHTML = `
+    <div class="fleet-banner-top">
+      <h2 id="fleet-title">${grounded ? '⚠ Fleet Grounded' : 'Fleet Status'}</h2>
+      <label class="toggle">
+        <input type="checkbox" id="fleet-toggle" ${grounded ? 'checked' : ''} onchange="toggleFleet(this)">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="fleet-reason" id="fleet-reason-row" style="display:${grounded ? 'block' : 'none'}">
+      <label>Grounding reason (shown to members)</label>
+      <input type="text" id="fleet-reason" value="${escHtml(reason)}" placeholder="e.g. High winds — conditions unsafe" oninput="updateFleetReason(this.value)">
+    </div>`;
+  app.appendChild(banner);
+
+  // Boats
+  const craft = fleetData.craft || {};
+  const classes = [];
+  let current = { label: 'Other', boats: [] };
+
+  Object.entries(craft).forEach(([code, val]) => {
+    if (code.startsWith('_comment_')) {
+      if (current.boats.length) classes.push(current);
+      const label = typeof val === 'string'
+        ? val.replace(/^─+\s*/, '').replace(/\s*─+$/, '').trim()
+        : code.replace('_comment_', '').replace(/_/g, ' ');
+      current = { label, boats: [] };
+    } else {
+      current.boats.push({ code, ...val });
+    }
+  });
+  if (current.boats.length) classes.push(current);
+
+  classes.forEach(cls => {
+    const section = document.createElement('div');
+    section.className = 'class-section';
+    section.innerHTML = `<div class="class-header">${escHtml(cls.label)}</div><div class="boat-list" id="list-${cls.label.replace(/\s+/g,'-')}"></div>`;
+    app.appendChild(section);
+    const list = section.querySelector('.boat-list');
+    cls.boats.forEach(boat => list.appendChild(boatCard(boat)));
+  });
+}
+
+function boatCard(boat) {
+  const { code, active = true, grounded = false, reason = '', name = code } = boat;
+  const status = !active ? 'deactivated' : grounded ? 'grounded' : 'active';
+  const pillClass = { active: 'pill-active', grounded: 'pill-grounded', deactivated: 'pill-deactivated' }[status];
+  const pillLabel = { active: 'Active', grounded: 'Grounded', deactivated: 'Deactivated' }[status];
+
+  const card = document.createElement('div');
+  card.className = `boat-card ${status}`;
+  card.id = `card-${code}`;
+  card.innerHTML = `
+    <div class="boat-top">
+      <span class="boat-code">${escHtml(code)}</span>
+      <span class="boat-name">${escHtml(name)}</span>
+      <span class="status-pill ${pillClass}" id="pill-${code}">${pillLabel}</span>
+    </div>
+    <div class="boat-controls">
+      <div class="control-group">
+        <span>Status:</span>
+        <select class="status-select" onchange="setBoatStatus('${code}', this.value)">
+          <option value="active"      ${status === 'active'      ? 'selected' : ''}>Active</option>
+          <option value="grounded"    ${status === 'grounded'    ? 'selected' : ''}>Grounded</option>
+          <option value="deactivated" ${status === 'deactivated' ? 'selected' : ''}>Deactivated</option>
+        </select>
+      </div>
+      <input type="text" class="boat-reason" id="reason-${code}"
+        value="${escHtml(reason)}"
+        placeholder="Reason (optional)"
+        style="display:${status !== 'active' ? 'block' : 'none'}"
+        oninput="setBoatReason('${code}', this.value)">
+    </div>`;
+  return card;
+}
+
+// ── Interactions ─────────────────────────────────────────────────────────────
+
+function toggleFleet(el) {
+  fleetData.fleet_grounded = el.checked;
+  document.getElementById('fleet-banner').className = 'fleet-banner' + (el.checked ? ' grounded' : '');
+  document.getElementById('fleet-title').textContent = el.checked ? '⚠ Fleet Grounded' : 'Fleet Status';
+  document.getElementById('fleet-reason-row').style.display = el.checked ? 'block' : 'none';
+  markDirty();
+}
+
+function updateFleetReason(val) {
+  fleetData.fleet_ground_reason = val;
+  markDirty();
+}
+
+function setBoatStatus(code, status) {
+  const craft = fleetData.craft;
+  craft[code].active   = status !== 'deactivated';
+  craft[code].grounded = status === 'grounded';
+
+  const card   = document.getElementById(`card-${code}`);
+  const pill   = document.getElementById(`pill-${code}`);
+  const reason = document.getElementById(`reason-${code}`);
+
+  card.className = `boat-card ${status}`;
+  const labels = { active: 'Active', grounded: 'Grounded', deactivated: 'Deactivated' };
+  const pills  = { active: 'pill-active', grounded: 'pill-grounded', deactivated: 'pill-deactivated' };
+  pill.className = `status-pill ${pills[status]}`;
+  pill.textContent = labels[status];
+  reason.style.display = status !== 'active' ? 'block' : 'none';
+  markDirty();
+}
+
+function setBoatReason(code, val) {
+  fleetData.craft[code].reason = val;
+  markDirty();
+}
+
+// ── Save ─────────────────────────────────────────────────────────────────────
+
+async function save() {
+  if (!pat || !fileSha) return;
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  setSaveStatus('Saving…', '');
+
+  try {
+    const content = btoa(unescape(encodeURIComponent(
+      JSON.stringify(fleetData, null, 2) + '\n'
+    )));
+    const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${pat}`,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: 'Update fleet status',
+        content,
+        sha: fileSha
+      })
+    });
+    if (!res.ok) throw new Error(`GitHub API ${res.status}: ${await res.text()}`);
+    const data = await res.json();
+    fileSha = data.content.sha;
+    dirty   = false;
+    btn.textContent = 'Save to GitHub';
+    btn.disabled = false;
+    setSaveStatus('Saved ✓  — changes live within 5 minutes.', 'ok');
+  } catch (e) {
+    btn.textContent = 'Save to GitHub';
+    btn.disabled = false;
+    setSaveStatus('Save failed: ' + e.message, 'err');
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function markDirty() {
+  dirty = true;
+  setSaveStatus('Unsaved changes.', '');
+}
+
+function enableSave() {
+  document.getElementById('save-btn').disabled = false;
+  setSaveStatus('Ready — make changes and hit Save.', '');
+}
+
+function setSaveStatus(msg, cls) {
+  const el = document.getElementById('save-status');
+  el.textContent = msg;
+  el.className   = cls || '';
+}
+
+function setAuthStatus(msg, cls) {
+  const el = document.getElementById('auth-status');
+  el.textContent = msg;
+  el.className   = cls || '';
+}
+
+function setError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent  = msg;
+  el.style.display = msg ? 'block' : 'none';
+}
+
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = savedPat();
+  if (saved) {
+    document.getElementById('pat-input').value = saved;
+    pat = saved;
+  }
+  loadFleet();
+});
+</script>
+</body>
+</html>
