@@ -51,6 +51,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontStyle
@@ -66,6 +68,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.work.WorkManager
 import com.ubcsc.checkout.BuildConfig
+import com.ubcsc.checkout.MainActivity
 import com.ubcsc.checkout.data.KioskPreferences
 import com.ubcsc.checkout.sync.SyncWorker
 import com.ubcsc.checkout.ui.admin.DbViewerDialog
@@ -164,7 +167,10 @@ fun IdleScreen(viewModel: CheckoutViewModel, onAdminExit: () -> Unit = {}) {
         onMemberSelectedByName  = viewModel::onMemberSelectedByName,
         onCheckinFromIdle       = viewModel::onCheckinFromIdle,
         onAdminExit             = onAdminExit,
-        onSuppressReopen        = { suppress -> viewModel.suppressReopen = suppress }
+        onSuppressReopen        = { suppress ->
+            viewModel.suppressReopen = suppress
+            MainActivity.suppressReopen = suppress
+        }
     )
 }
 
@@ -233,22 +239,34 @@ private fun IdleContent(
         }
         // Fleet grounding banner — overlaid at top of entire idle screen
         if (fleetGrounded) {
-            Row(
+            val pulse = rememberInfiniteTransition(label = "ground_pulse")
+            val bgFraction by pulse.animateFloat(
+                initialValue = 0f, targetValue = 1f,
+                animationSpec = infiniteRepeatable(tween(900), RepeatMode.Reverse),
+                label = "bg"
+            )
+            val scale by pulse.animateFloat(
+                initialValue = 1f, targetValue = 1.04f,
+                animationSpec = infiniteRepeatable(tween(900), RepeatMode.Reverse),
+                label = "scale"
+            )
+            val bgColor = lerp(Color(0xFFB45309), Color(0xFFFF8C00), bgFraction)
+            Box(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .fillMaxWidth()
                     .zIndex(20f)
-                    .background(Color(0xFFB45309))
-                    .padding(horizontal = 20.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+                    .background(bgColor)
+                    .padding(horizontal = 24.dp, vertical = 20.dp),
+                contentAlignment = Alignment.Center
             ) {
                 androidx.compose.material3.Text(
-                    text       = "⚠  Fleet Grounded — ${fleetGroundReason.ifBlank { "Conditions have been deemed unsafe. You may still proceed, but sail at your own risk." }}",
-                    style      = MaterialTheme.typography.bodyMedium,
+                    text       = "⚠  FLEET GROUNDED — ${fleetGroundReason.ifBlank { "Conditions have been deemed unsafe. You may still proceed, but sail at your own risk." }}",
+                    style      = MaterialTheme.typography.titleLarge,
                     color      = Color.White,
-                    fontWeight = FontWeight.SemiBold,
-                    textAlign  = TextAlign.Center
+                    fontWeight = FontWeight.Bold,
+                    textAlign  = TextAlign.Center,
+                    modifier   = Modifier.graphicsLayer { scaleX = scale; scaleY = scale }
                 )
             }
         }

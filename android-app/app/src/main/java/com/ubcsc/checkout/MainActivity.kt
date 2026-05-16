@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.nfc.NfcAdapter
 import android.os.Bundle
@@ -18,6 +19,7 @@ import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -59,11 +61,21 @@ class MainActivity : ComponentActivity() {
         // the old instance must be reachable by the new one.
         private var overlayView: View? = null
         private var overlayWm: WindowManager? = null
+
+        // Read by KioskAccessibilityService to pause snap-back during OTA installs.
+        @Volatile var suppressReopen: Boolean = false
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Absorb back presses that would exit the app. Compose navigation registers its
+        // own callbacks after this one (LIFO dispatch), so within-app back navigation
+        // is still handled by Compose first and never reaches here.
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {}
+        })
 
         nfcAdapter = NfcAdapter.getDefaultAdapter(this)
         nfcPendingIntent = PendingIntent.getActivity(
@@ -73,7 +85,6 @@ class MainActivity : ComponentActivity() {
         )
 
         // Request "Draw over other apps" permission if not yet granted.
-        // This is needed for the instant-relaunch overlay. User is sent to Settings once.
         if (!Settings.canDrawOverlays(this)) {
             startActivity(
                 Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
@@ -81,6 +92,8 @@ class MainActivity : ComponentActivity() {
                 }
             )
         }
+
+        promptAccessibilityIfNeeded()
 
         hideSystemBars()
 
@@ -100,7 +113,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val appTheme by viewModel.appTheme.collectAsState()
             DigitalCheckoutTheme(theme = appTheme) {
-                Surface(modifier = Modifier.fillMaxSize().padding(bottom = 48.dp)) {
+                Surface(modifier = Modifier.fillMaxSize()) {
                     val navController = rememberNavController()
                     AppNavigation(
                         navController = navController,
@@ -115,7 +128,8 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         hideOverlay()
-        viewModel.suppressReopen = false   // clear after returning from installer
+        viewModel.suppressReopen = false
+        suppressReopen = false
         nfcAdapter?.enableForegroundDispatch(this, nfcPendingIntent, null, null)
         startLockTaskIfOwner()
     }
@@ -128,6 +142,31 @@ class MainActivity : ComponentActivity() {
         if (hasFocus) {
             hideSystemBars()
             hideOverlay()
+        }
+    }
+
+    private fun promptAccessibilityIfNeeded() {
+        val enabled = Settings.Secure.getString(
+            contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+        ) ?: ""
+        if (!enabled.contains("${packageName}/.KioskAccessibilityService")) {
+            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            })
+        }
+    }
+
+    // If the system somehow places the app in split-screen despite resizeableActivity=false,
+    // snap back to fullscreen immediately.
+    override fun onMultiWindowModeChanged(isInMultiWindowMode: Boolean, newConfig: Configuration) {
+        super.onMultiWindowModeChanged(isInMultiWindowMode, newConfig)
+        if (isInMultiWindowMode) {
+            showOverlay()
+            startActivity(Intent(this, MainActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_NO_ANIMATION)
+            })
+            @Suppress("DEPRECATION")
+            overridePendingTransition(0, 0)
         }
     }
 
@@ -165,7 +204,8 @@ class MainActivity : ComponentActivity() {
     // home screen is never visible, then relaunch ourselves behind it.
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        // Don't fight the PackageInstaller dialog during OTA installs
+        // Accessibility service handles snap-back when active; let it own this.
+        if (KioskAccessibilityService.isConnected) return
         if (viewModel.suppressReopen) return
         showOverlay()
         startActivity(

@@ -31,10 +31,15 @@ object FleetStatusRepository {
         val craft    = mutableMapOf<String, CraftFleetStatus>()
         craftObj.keys().forEach { key ->
             if (key.startsWith("_")) return@forEach   // skip _comment_* fields
-            val c      = craftObj.optJSONObject(key) ?: return@forEach
-            val active = c.optBoolean("active", true)
+            val c        = craftObj.optJSONObject(key) ?: return@forEach
+            val active   = c.optBoolean("active", true)
+            val grounded = c.optBoolean("grounded", false)
             craft[key] = CraftFleetStatus(
-                status = if (active) "active" else "deactivated",
+                status = when {
+                    !active  -> "deactivated"
+                    grounded -> "grounded"
+                    else     -> "active"
+                },
                 reason = c.optString("reason").takeIf { it.isNotEmpty() }
             )
         }

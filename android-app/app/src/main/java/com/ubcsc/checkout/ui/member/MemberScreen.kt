@@ -1,9 +1,15 @@
 package com.ubcsc.checkout.ui.member
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +17,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,12 +75,15 @@ private fun enterTransition() = fadeIn(tween(300)) + slideInVertically(tween(300
 
 @Composable
 fun MemberScreen(member: Member, viewModel: CheckoutViewModel) {
+    val fleetStatus by viewModel.fleetStatus.collectAsState()
     LaunchedEffect(Unit) {
         delay(INACTIVITY_TIMEOUT_MS)
         viewModel.resetToIdle()
     }
     MemberContent(
         member            = member,
+        fleetGrounded     = fleetStatus?.fleetGrounded ?: false,
+        fleetGroundReason = fleetStatus?.fleetGroundReason ?: "",
         onCheckout        = { viewModel.onCheckoutSelected(member) },
         onCheckin         = { viewModel.onCheckinSelected(member) },
         onCheckinForOther = { viewModel.onCheckinForOther(member) },
@@ -84,6 +95,8 @@ fun MemberScreen(member: Member, viewModel: CheckoutViewModel) {
 @Composable
 private fun MemberContent(
     member:            Member,
+    fleetGrounded:     Boolean = false,
+    fleetGroundReason: String  = "",
     onCheckout:        () -> Unit,
     onCheckin:         () -> Unit,
     onCheckinForOther: () -> Unit,
@@ -109,6 +122,49 @@ private fun MemberContent(
                     Brush.horizontalGradient(listOf(LocalKioskColors.current.accentMid, LocalKioskColors.current.accent, LocalKioskColors.current.accentMid))
                 )
         )
+
+        // Fleet grounding warning — large animated banner
+        if (fleetGrounded) {
+            val pulse = rememberInfiniteTransition(label = "ground_pulse")
+            val bgFraction by pulse.animateFloat(
+                initialValue = 0f, targetValue = 1f,
+                animationSpec = infiniteRepeatable(tween(900), RepeatMode.Reverse),
+                label = "bg"
+            )
+            val scale by pulse.animateFloat(
+                initialValue = 1f, targetValue = 1.04f,
+                animationSpec = infiniteRepeatable(tween(900), RepeatMode.Reverse),
+                label = "scale"
+            )
+            val bgColor = lerp(Color(0xFFB45309), Color(0xFFFF8C00), bgFraction)
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .background(bgColor)
+                    .padding(horizontal = 32.dp, vertical = 32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "⚠  FLEET GROUNDED",
+                        style = MaterialTheme.typography.displaySmall,
+                        color = Color.White,
+                        fontWeight = FontWeight.ExtraBold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.graphicsLayer { scaleX = scale; scaleY = scale }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = fleetGroundReason.ifBlank { "Conditions have been deemed unsafe. You may still proceed, but sail at your own risk." },
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color.White.copy(alpha = 0.9f),
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
 
         // Cancel — top right
         TextButton(
@@ -290,7 +346,7 @@ private fun MemberContent(
 @Composable
 private fun MemberPreviewNoCheckout() {
     DigitalCheckoutTheme {
-        MemberContent(Member("1", "Alex Sailor", ""), {}, {}, {}, {}, {})
+        MemberContent(Member("1", "Alex Sailor", ""), onCheckout = {}, onCheckin = {}, onCheckinForOther = {}, onEditCheckout = {}, onCancel = {})
     }
 }
 
@@ -300,7 +356,7 @@ private fun MemberPreviewWithCheckout() {
     DigitalCheckoutTheme {
         MemberContent(
             Member("1", "Alex Sailor", "", ActiveCheckout(1, "LZ01", "Laser #1")),
-            {}, {}, {}, {}, {}
+            onCheckout = {}, onCheckin = {}, onCheckinForOther = {}, onEditCheckout = {}, onCancel = {}
         )
     }
 }

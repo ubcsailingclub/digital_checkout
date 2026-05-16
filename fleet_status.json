@@ -2,6 +2,21 @@
   "fleet_grounded": true,
   "fleet_ground_reason": "Test",
 
+  "_comment_usage": [
+    "── How to ground the whole fleet ───────────────────────────────────────",
+    "  Set fleet_grounded to true and add a fleet_ground_reason.",
+    "",
+    "── How to ground a specific boat ───────────────────────────────────────",
+    "  Add  \"grounded\": true  and optionally  \"reason\": \"...\"  to a craft entry.",
+    "  Example:  \"LZ01\": { \"active\": true, \"grounded\": true, \"reason\": \"Broken mast\" }",
+    "",
+    "── How to permanently deactivate a boat ────────────────────────────────",
+    "  Set  \"active\": false  (removes it from the selection screen entirely).",
+    "",
+    "── To restore a boat ───────────────────────────────────────────────────",
+    "  Remove the grounded/reason fields, or set  \"grounded\": false."
+  ],
+
   "craft": {
     "_comment_quest":     "── RS Quest ────────────────────────────────",
     "QT01": { "active": true,  "name": "Quest #1" },
