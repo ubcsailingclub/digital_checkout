@@ -1,5 +1,6 @@
 package com.ubcsc.checkout.ui.craft
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -32,6 +33,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -280,6 +283,27 @@ private fun BoatCard(
                     }
                 } else {
                     BoatStatusChip(available = available, expectedReturnTime = craft.expectedReturnTime)
+                }
+            }
+
+            // Diagonal strike-through for grounded boats
+            if (fleetStatus?.status == "grounded") {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val strokeWidth = 5.dp.toPx()
+                    drawLine(
+                        color       = Color(0xFFEF4444).copy(alpha = 0.75f),
+                        start       = Offset(0f, 0f),
+                        end         = Offset(size.width, size.height),
+                        strokeWidth = strokeWidth,
+                        cap         = StrokeCap.Round
+                    )
+                    drawLine(
+                        color       = Color(0xFFEF4444).copy(alpha = 0.75f),
+                        start       = Offset(size.width, 0f),
+                        end         = Offset(0f, size.height),
+                        strokeWidth = strokeWidth,
+                        cap         = StrokeCap.Round
+                    )
                 }
             }
         }
