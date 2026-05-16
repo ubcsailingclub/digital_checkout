@@ -118,7 +118,12 @@ class MainActivity : ComponentActivity() {
                     AppNavigation(
                         navController = navController,
                         viewModel     = viewModel,
-                        onAdminExit   = { stopLockTask(); finish() }
+                        onAdminExit   = {
+                            suppressReopen = true
+                            viewModel.suppressReopen = true
+                            stopLockTask()
+                            finish()
+                        }
                     )
                 }
             }
