@@ -50,14 +50,14 @@
     "VG03": { "active": true,  "name": "Vanguard #3" },
 
     "_comment_rs500":     "── RS500 ────────────────────────────────────",
-    "R501": { "active": true,  "name": "Wibbly Wobbly" },
-    "R502": { "active": true,  "name": "Tactical Capsize" },
-    "R503": { "active": true,  "name": "Exercise in Futility" },
+    "R501": { "active": true,  "name": "X-wing" },
+    "R502": { "active": true,  "name": "Tie Fighter" },
+    "R503": { "active": true,  "name": "Wibbly Wobbly" },
 
     "_comment_rs800":     "── RS800 ────────────────────────────────────",
-    "R801": { "active": true,  "name": "Wire to Wire to Person Overboard" },
-    "R802": { "active": true,  "name": "v_max = 3 kn" },
-    "R803": { "active": true,  "name": "Last to Mark" },
+    "R801": { "active": true,  "name": "Millenium Falcon" },
+    "R802": { "active": true,  "name": "Death Star" },
+    "R803": { "active": true,  "name": "Tactical Capsize" },
 
     "_comment_hobie":     "── Hobie 16 ─────────────────────────────────",
     "HB01": { "active": true,  "name": "Coconut" },
@@ -68,8 +68,8 @@
     "_comment_nacra":     "── Nacra F18 ────────────────────────────────",
     "F181": { "active": true,  "name": "1107" },
     "F182": { "active": true,  "name": "689" },
-    "F183": { "active": true,  "name": "50k is not ok" },
-    "F184": { "active": true,  "name": "Moneysink" },
+    "F183": { "active": true,  "name": "Moneysink" },
+    "F184": { "active": true,  "name": "Spinbreaker" },
 
     "_comment_ws_l1":     "── Windsurfer L1 ────────────────────────────",
     "WL101": { "active": true, "name": "Naish Kailua 250L (2010) #1" },
