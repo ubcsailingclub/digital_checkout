@@ -16,10 +16,10 @@
     {
       "class": "RS Quest Spinnaker",
       "boats": [
-        { "code": "QS01", "name": "Quest #1 + Spinnaker" },
-        { "code": "QS02", "name": "Quest #2 + Spinnaker" },
-        { "code": "QS03", "name": "Quest #3 + Spinnaker" },
-        { "code": "QS04", "name": "Quest #4 + Spinnaker" }
+        { "code": "QS01", "name": "Quest #5 + Spinnaker" },
+        { "code": "QS02", "name": "Quest #6 + Spinnaker" },
+        { "code": "QS03", "name": "Quest #7 + Spinnaker" },
+        { "code": "QS04", "name": "Quest #8 + Spinnaker" }
       ]
     },
     {
@@ -46,8 +46,9 @@
     {
       "class": "RS500",
       "boats": [
-        { "code": "R501", "name": "Exwing" },
-        { "code": "R502", "name": "Tied Fighter" }
+        { "code": "R501", "name": "X-wing" },
+        { "code": "R502", "name": "Tie Fighter" },
+        { "code": "R503", "name": "Wibbly Wobbly" },
       ]
     },
     {
@@ -55,7 +56,7 @@
       "boats": [
         { "code": "R801", "name": "Millenium Falcon" },
         { "code": "R802", "name": "Death Star" },
-        { "code": "R803", "name": "Lady Luck" }
+        { "code": "R803", "name": "Tactical Capsize" }
       ]
     },
     {
@@ -71,7 +72,9 @@
       "class": "Nacra F18",
       "boats": [
         { "code": "F181", "name": "1107" },
-        { "code": "F182", "name": "689" }
+        { "code": "F182", "name": "689" },
+        { "code": "F183", "name": "Moneysink" },
+        { "code": "F182", "name": "Spinbreaker" }
       ]
     },
     {
