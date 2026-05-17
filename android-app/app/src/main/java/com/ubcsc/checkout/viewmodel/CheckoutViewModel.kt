@@ -67,9 +67,7 @@ data class MemberSummary(val id: Int, val name: String)
 
 data class CraftFleetStatus(
     val status: String,   // "active" | "grounded" | "deactivated"
-    val reason: String?,
-    val name: String? = null,
-    val craftClass: String? = null
+    val reason: String?
 )
 
 data class FleetStatus(
@@ -198,14 +196,10 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
                 }
             }
         }
-        // Poll fleet status from GitHub every 5 minutes; sync craft list on each fetch
+        // Poll fleet status from GitHub every 5 minutes
         viewModelScope.launch {
             while (true) {
-                val status = com.ubcsc.checkout.data.FleetStatusRepository.fetch()
-                if (status != null) {
-                    _fleetStatus.value = status
-                    crafts.syncFromFleetStatus(status.craft)
-                }
+                _fleetStatus.value = com.ubcsc.checkout.data.FleetStatusRepository.fetch()
                 delay(5 * 60_000L)
             }
         }

@@ -56,6 +56,7 @@ class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
     }
 
     private suspend fun seedCraftIfEmpty(db: AppDatabase) {
+        if (db.craftDao().getAll().isNotEmpty()) return
         try {
             val json    = applicationContext.assets.open("fleet.json").bufferedReader().readText()
             val fleets  = JSONObject(json).getJSONArray("fleets")
@@ -81,8 +82,8 @@ class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
                     )
                 }
             }
-            db.craftDao().insertIfAbsent(crafts)
-            Log.i(TAG, "Seed pass: ${crafts.size} craft from fleet.json (existing rows unchanged)")
+            db.craftDao().upsertAll(crafts)
+            Log.i(TAG, "Seeded ${crafts.size} craft from fleet.json")
         } catch (e: Exception) {
             Log.w(TAG, "Could not seed craft from assets: ${e.message}")
         }
