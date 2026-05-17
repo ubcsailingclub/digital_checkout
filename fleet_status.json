@@ -1,6 +1,7 @@
 {
   "fleet_grounded": false,
   "fleet_ground_reason": "Test",
+
   "_comment_usage": [
     "── How to ground the whole fleet ───────────────────────────────────────",
     "  Set fleet_grounded to true and add a fleet_ground_reason.",
@@ -15,480 +16,127 @@
     "── To restore a boat ───────────────────────────────────────────────────",
     "  Remove the grounded/reason fields, or set  \"grounded\": false."
   ],
+
   "craft": {
-    "_comment_quest": "── RS Quest ────────────────────────────────",
-    "QT01": {
-      "active": true,
-      "name": "Quest #1",
-      "class": "RS Quest"
-    },
-    "QT02": {
-      "active": true,
-      "name": "Quest #2",
-      "class": "RS Quest"
-    },
-    "QT03": {
-      "active": true,
-      "name": "Quest #3",
-      "class": "RS Quest"
-    },
-    "QT04": {
-      "active": true,
-      "name": "Quest #4",
-      "class": "RS Quest"
-    },
-    "QT05": {
-      "active": true,
-      "name": "Quest #5",
-      "class": "RS Quest"
-    },
-    "QT06": {
-      "active": true,
-      "grounded": true,
-      "reason": "Dismasted.",
-      "name": "Quest #6",
-      "class": "RS Quest"
-    },
-    "QT07": {
-      "active": true,
-      "name": "Quest #7",
-      "class": "RS Quest"
-    },
-    "QT08": {
-      "active": true,
-      "name": "Quest #8",
-      "class": "RS Quest"
-    },
+    "_comment_quest":     "── RS Quest ────────────────────────────────",
+    "QT01": { "active": true,  "name": "Quest #1" },
+    "QT02": { "active": true,  "name": "Quest #2" },
+    "QT03": { "active": true,  "name": "Quest #3" },
+    "QT04": { "active": true,  "name": "Quest #4" },
+    "QT05": { "active": true,  "name": "Quest #5" },
+    "QT06": { "active": true, "grounded": true, "reason": "Dismasted.",  "name": "Quest #6" },
+    "QT07": { "active": true,  "name": "Quest #7" },
+    "QT08": { "active": true,  "name": "Quest #8" },
+
     "_comment_quest_spin": "── RS Quest Spinnaker ───────────────────────",
-    "QS01": {
-      "active": true,
-      "name": "Quest #5 + Spinnaker",
-      "class": "RS Quest Spinnaker"
-    },
-    "QS02": {
-      "active": true,
-      "name": "Quest #6 + Spinnaker",
-      "class": "RS Quest Spinnaker"
-    },
-    "QS03": {
-      "active": true,
-      "name": "Quest #7 + Spinnaker",
-      "class": "RS Quest Spinnaker"
-    },
-    "QS04": {
-      "active": true,
-      "name": "Quest #8 + Spinnaker",
-      "class": "RS Quest Spinnaker"
-    },
-    "_comment_laser": "── Laser ────────────────────────────────────",
-    "LZ01": {
-      "active": true,
-      "name": "Laser 51",
-      "class": "Laser"
-    },
-    "LZ02": {
-      "active": true,
-      "name": "Laser 52",
-      "class": "Laser"
-    },
-    "LZ03": {
-      "active": true,
-      "name": "Laser 53",
-      "class": "Laser"
-    },
-    "LZ04": {
-      "active": true,
-      "name": "Laser 54",
-      "class": "Laser"
-    },
-    "LZ05": {
-      "active": true,
-      "name": "Laser 55",
-      "class": "Laser"
-    },
-    "LZ06": {
-      "active": true,
-      "name": "Laser 56",
-      "class": "Laser"
-    },
-    "LZ07": {
-      "active": true,
-      "name": "Laser 57",
-      "class": "Laser"
-    },
-    "LZ08": {
-      "active": true,
-      "name": "Laser 58",
-      "class": "Laser"
-    },
-    "_comment_vanguard": "── Vanguard 15 ──────────────────────────────",
-    "VG01": {
-      "active": true,
-      "name": "Vanguard #1",
-      "class": "Vanguard 15"
-    },
-    "VG02": {
-      "active": true,
-      "name": "Vanguard #2",
-      "class": "Vanguard 15"
-    },
-    "VG03": {
-      "active": true,
-      "name": "Vanguard #3",
-      "class": "Vanguard 15"
-    },
-    "_comment_rs500": "── RS500 ────────────────────────────────────",
-    "R501": {
-      "active": true,
-      "name": "Wibbly Wobbly",
-      "class": "RS500"
-    },
-    "R502": {
-      "active": true,
-      "name": "Tactical Capsize",
-      "class": "RS500"
-    },
-    "R503": {
-      "active": true,
-      "name": "Exercise in Futility",
-      "class": "RS500"
-    },
-    "_comment_rs800": "── RS800 ────────────────────────────────────",
-    "R801": {
-      "active": true,
-      "name": "Wire to Wire to Person Overboard",
-      "class": "RS800"
-    },
-    "R802": {
-      "active": true,
-      "name": "v_max = 3 kn",
-      "class": "RS800"
-    },
-    "R803": {
-      "active": true,
-      "name": "Last to Mark",
-      "class": "RS800"
-    },
-    "_comment_hobie": "── Hobie 16 ─────────────────────────────────",
-    "HB01": {
-      "active": true,
-      "name": "Coconut",
-      "class": "Hobie 16"
-    },
-    "HB02": {
-      "active": true,
-      "grounded": true,
-      "reason": "Submarine",
-      "name": "TBFKA Babe",
-      "class": "Hobie 16"
-    },
-    "HB03": {
-      "active": true,
-      "name": "Hobie 5",
-      "class": "Hobie 16"
-    },
-    "HB04": {
-      "active": true,
-      "name": "Other Blueberry",
-      "class": "Hobie 16"
-    },
-    "_comment_nacra": "── Nacra F18 ────────────────────────────────",
-    "F181": {
-      "active": true,
-      "name": "1107",
-      "class": "Nacra F18"
-    },
-    "F182": {
-      "active": true,
-      "name": "689",
-      "class": "Nacra F18"
-    },
-    "F183": {
-      "active": true,
-      "name": "50k is not ok",
-      "class": "Nacra F18"
-    },
-    "F184": {
-      "active": true,
-      "name": "Moneysink",
-      "class": "Nacra F18"
-    },
-    "_comment_ws_l1": "── Windsurfer L1 ────────────────────────────",
-    "WL101": {
-      "active": true,
-      "name": "Naish Kailua 250L (2010) #1",
-      "class": "Windsurfer L1"
-    },
-    "WL102": {
-      "active": true,
-      "name": "Naish Kailua 250L (2010) #2",
-      "class": "Windsurfer L1"
-    },
-    "WL103": {
-      "active": true,
-      "name": "Bic HiFly Motion 200L (2007) #1",
-      "class": "Windsurfer L1"
-    },
-    "WL104": {
-      "active": true,
-      "name": "Bic HiFly Motion 200L (2007) #2",
-      "class": "Windsurfer L1"
-    },
-    "WL105": {
-      "active": true,
-      "name": "Future Fly Yalla 230L (2024) #1",
-      "class": "Windsurfer L1"
-    },
-    "WL106": {
-      "active": true,
-      "name": "Future Fly Yalla 230L (2024) #2",
-      "class": "Windsurfer L1"
-    },
-    "WL107": {
-      "active": true,
-      "name": "Bic Breeze Wind SUP 215L #1",
-      "class": "Windsurfer L1"
-    },
-    "WL108": {
-      "active": true,
-      "name": "Bic Breeze Wind SUP 215L #2",
-      "class": "Windsurfer L1"
-    },
-    "_comment_ws_l2": "── Windsurfer L2 ────────────────────────────",
-    "WL201": {
-      "active": true,
-      "name": "Bic Breeze Wind SUP 215L #3",
-      "class": "Windsurfer L2"
-    },
-    "WL202": {
-      "active": true,
-      "name": "Bic Breeze Wind SUP 215L #4",
-      "class": "Windsurfer L2"
-    },
-    "WL203": {
-      "active": true,
-      "name": "Naish Kailua 160L (2006-2012)",
-      "class": "Windsurfer L2"
-    },
-    "WL204": {
-      "active": true,
-      "name": "Naish Kailua 140L (2010) #1",
-      "class": "Windsurfer L2"
-    },
-    "WL205": {
-      "active": true,
-      "name": "Naish Kailua 140L (2010) #2",
-      "class": "Windsurfer L2"
-    },
-    "WL206": {
-      "active": true,
-      "name": "Starboard AtomIQ 160L (~2002)",
-      "class": "Windsurfer L2"
-    },
-    "WL207": {
-      "active": true,
-      "name": "Mistral One-Design 200L (2007) #1",
-      "class": "Windsurfer L2"
-    },
-    "WL208": {
-      "active": true,
-      "name": "Mistral One-Design 200L (2007) #2",
-      "class": "Windsurfer L2"
-    },
-    "WL209": {
-      "active": true,
-      "name": "Starboard Go 150L (2004)",
-      "class": "Windsurfer L2"
-    },
-    "_comment_ws_l25": "── Windsurfer L2.5 ──────────────────────────",
-    "WL251": {
-      "active": true,
-      "name": "Tabou Rocket 145L (2015)",
-      "class": "Windsurfer L2.5"
-    },
-    "WL252": {
-      "active": true,
-      "name": "Bic Techno 133L (2011-2014) #1",
-      "class": "Windsurfer L2.5"
-    },
-    "WL253": {
-      "active": true,
-      "name": "Bic Techno 133L (2011-2014) #2",
-      "class": "Windsurfer L2.5"
-    },
-    "WL254": {
-      "active": true,
-      "name": "Fanatic Falcon 120L (2014) #1",
-      "class": "Windsurfer L2.5"
-    },
-    "WL255": {
-      "active": true,
-      "name": "Fanatic Falcon 120L (2014) #2",
-      "class": "Windsurfer L2.5"
-    },
-    "_comment_ws_l3": "── Windsurfer L3 ────────────────────────────",
-    "WL301": {
-      "active": true,
-      "name": "Naish Global Wave 78L (2009)",
-      "class": "Windsurfer L3"
-    },
-    "WL302": {
-      "active": true,
-      "name": "Roberts Slalom 8'3\" x 30\" (Custom)",
-      "class": "Windsurfer L3"
-    },
-    "WL303": {
-      "active": true,
-      "name": "Naish Global Wave 87L (2007)",
-      "class": "Windsurfer L3"
-    },
-    "WL304": {
-      "active": true,
-      "name": "Naish Freestyle 100L (2010)",
-      "class": "Windsurfer L3"
-    },
-    "WL305": {
-      "active": true,
-      "name": "JP Super-X 104L (2004)",
-      "class": "Windsurfer L3"
-    },
-    "WL306": {
-      "active": true,
-      "name": "F2 Spice 106L (2008)",
-      "class": "Windsurfer L3"
-    },
-    "WL307": {
-      "active": true,
-      "name": "RRD Freestyle Wave 108L (2013)",
-      "class": "Windsurfer L3"
-    },
-    "WL308": {
-      "active": true,
-      "name": "Naish Freeride Slalom 115L (2007)",
-      "class": "Windsurfer L3"
-    },
-    "WL309": {
-      "active": true,
-      "name": "Fanatic Quad 87L (2013)",
-      "class": "Windsurfer L3"
-    },
-    "WL310": {
-      "active": true,
-      "name": "Naish Hover 122L (2018)",
-      "class": "Windsurfer L3"
-    },
-    "WL311": {
-      "active": true,
-      "name": "Naish Freestyle Wave 90L (2010)",
-      "class": "Windsurfer L3"
-    },
-    "WL312": {
-      "active": true,
-      "name": "Starboard Carve 99L (~1997)",
-      "class": "Windsurfer L3"
-    },
-    "_comment_kayak_s": "── Kayak Single ─────────────────────────────",
-    "KP01": {
-      "active": true,
-      "name": "Plastic Single #1",
-      "class": "Kayak Single"
-    },
-    "KP02": {
-      "active": true,
-      "name": "Plastic Single #2",
-      "class": "Kayak Single"
-    },
-    "KP03": {
-      "active": true,
-      "name": "Plastic Single #3",
-      "class": "Kayak Single"
-    },
-    "KP04": {
-      "active": true,
-      "name": "Plastic Single #4",
-      "class": "Kayak Single"
-    },
-    "KP05": {
-      "active": true,
-      "name": "Plastic Single #5",
-      "class": "Kayak Single"
-    },
-    "KP06": {
-      "active": true,
-      "name": "Plastic Single #6",
-      "class": "Kayak Single"
-    },
-    "KF01": {
-      "active": true,
-      "name": "Fibreglass Single M #1",
-      "class": "Kayak Single"
-    },
-    "KF02": {
-      "active": true,
-      "name": "Fibreglass Single M #2",
-      "class": "Kayak Single"
-    },
-    "KF03": {
-      "active": true,
-      "name": "Fibreglass Single M #3",
-      "class": "Kayak Single"
-    },
-    "KF04": {
-      "active": true,
-      "name": "Fibreglass Single M #4",
-      "class": "Kayak Single"
-    },
-    "KF05": {
-      "active": true,
-      "name": "Fibreglass Single S",
-      "class": "Kayak Single"
-    },
-    "KF06": {
-      "active": true,
-      "name": "Fibreglass Single L",
-      "class": "Kayak Single"
-    },
-    "_comment_kayak_d": "── Kayak Double ─────────────────────────────",
-    "KD01": {
-      "active": true,
-      "name": "Double Kayak #1",
-      "class": "Kayak Double"
-    },
-    "KD02": {
-      "active": true,
-      "name": "Double Kayak #2",
-      "class": "Kayak Double"
-    },
-    "KD03": {
-      "active": true,
-      "name": "Double Kayak #3",
-      "class": "Kayak Double"
-    },
-    "_comment_sup": "── SUP ──────────────────────────────────────",
-    "SP01": {
-      "active": true,
-      "name": "SUP #1",
-      "class": "SUP"
-    },
-    "SP02": {
-      "active": true,
-      "name": "SUP #2",
-      "class": "SUP"
-    },
-    "SP03": {
-      "active": true,
-      "name": "SUP #3",
-      "class": "SUP"
-    },
-    "SP04": {
-      "active": true,
-      "name": "SUP #4",
-      "class": "SUP"
-    },
-    "SP05": {
-      "active": true,
-      "name": "SUP #5",
-      "class": "SUP"
-    }
+    "QS01": { "active": true,  "name": "Quest #5 + Spinnaker" },
+    "QS02": { "active": true,  "name": "Quest #6 + Spinnaker" },
+    "QS03": { "active": true,  "name": "Quest #7 + Spinnaker" },
+    "QS04": { "active": true,  "name": "Quest #8 + Spinnaker" },
+
+    "_comment_laser":     "── Laser ────────────────────────────────────",
+    "LZ01": { "active": true,  "name": "Laser 51" },
+    "LZ02": { "active": true,  "name": "Laser 52" },
+    "LZ03": { "active": true,  "name": "Laser 53" },
+    "LZ04": { "active": true,  "name": "Laser 54" },
+    "LZ05": { "active": true,  "name": "Laser 55" },
+    "LZ06": { "active": true,  "name": "Laser 56" },
+    "LZ07": { "active": true,  "name": "Laser 57" },
+    "LZ08": { "active": true,  "name": "Laser 58" },
+
+    "_comment_vanguard":  "── Vanguard 15 ──────────────────────────────",
+    "VG01": { "active": true,  "name": "Vanguard #1" },
+    "VG02": { "active": true,  "name": "Vanguard #2" },
+    "VG03": { "active": true,  "name": "Vanguard #3" },
+
+    "_comment_rs500":     "── RS500 ────────────────────────────────────",
+    "R501": { "active": true,  "name": "Wibbly Wobbly" },
+    "R502": { "active": true,  "name": "Tactical Capsize" },
+    "R503": { "active": true,  "name": "Exercise in Futility" },
+
+    "_comment_rs800":     "── RS800 ────────────────────────────────────",
+    "R801": { "active": true,  "name": "Wire to Wire to Person Overboard" },
+    "R802": { "active": true,  "name": "v_max = 3 kn" },
+    "R803": { "active": true,  "name": "Last to Mark" },
+
+    "_comment_hobie":     "── Hobie 16 ─────────────────────────────────",
+    "HB01": { "active": true,  "name": "Coconut" },
+    "HB02": { "active": true, "grounded": true, "reason": "Submarine", "name": "TBFKA Babe" },
+    "HB03": { "active": true,  "name": "Hobie 5" },
+    "HB04": { "active": true,  "name": "Other Blueberry" },
+
+    "_comment_nacra":     "── Nacra F18 ────────────────────────────────",
+    "F181": { "active": true,  "name": "1107" },
+    "F182": { "active": true,  "name": "689" },
+    "F183": { "active": true,  "name": "50k is not ok" },
+    "F184": { "active": true,  "name": "Moneysink" },
+
+    "_comment_ws_l1":     "── Windsurfer L1 ────────────────────────────",
+    "WL101": { "active": true, "name": "Naish Kailua 250L (2010) #1" },
+    "WL102": { "active": true, "name": "Naish Kailua 250L (2010) #2" },
+    "WL103": { "active": true, "name": "Bic HiFly Motion 200L (2007) #1" },
+    "WL104": { "active": true, "name": "Bic HiFly Motion 200L (2007) #2" },
+    "WL105": { "active": true, "name": "Future Fly Yalla 230L (2024) #1" },
+    "WL106": { "active": true, "name": "Future Fly Yalla 230L (2024) #2" },
+    "WL107": { "active": true, "name": "Bic Breeze Wind SUP 215L #1" },
+    "WL108": { "active": true, "name": "Bic Breeze Wind SUP 215L #2" },
+
+    "_comment_ws_l2":     "── Windsurfer L2 ────────────────────────────",
+    "WL201": { "active": true, "name": "Bic Breeze Wind SUP 215L #3" },
+    "WL202": { "active": true, "name": "Bic Breeze Wind SUP 215L #4" },
+    "WL203": { "active": true, "name": "Naish Kailua 160L (2006-2012)" },
+    "WL204": { "active": true, "name": "Naish Kailua 140L (2010) #1" },
+    "WL205": { "active": true, "name": "Naish Kailua 140L (2010) #2" },
+    "WL206": { "active": true, "name": "Starboard AtomIQ 160L (~2002)" },
+    "WL207": { "active": true, "name": "Mistral One-Design 200L (2007) #1" },
+    "WL208": { "active": true, "name": "Mistral One-Design 200L (2007) #2" },
+    "WL209": { "active": true, "name": "Starboard Go 150L (2004)" },
+
+    "_comment_ws_l25":    "── Windsurfer L2.5 ──────────────────────────",
+    "WL251": { "active": true, "name": "Tabou Rocket 145L (2015)" },
+    "WL252": { "active": true, "name": "Bic Techno 133L (2011-2014) #1" },
+    "WL253": { "active": true, "name": "Bic Techno 133L (2011-2014) #2" },
+    "WL254": { "active": true, "name": "Fanatic Falcon 120L (2014) #1" },
+    "WL255": { "active": true, "name": "Fanatic Falcon 120L (2014) #2" },
+
+    "_comment_ws_l3":     "── Windsurfer L3 ────────────────────────────",
+    "WL301": { "active": true, "name": "Naish Global Wave 78L (2009)" },
+    "WL302": { "active": true, "name": "Roberts Slalom 8'3\" x 30\" (Custom)" },
+    "WL303": { "active": true, "name": "Naish Global Wave 87L (2007)" },
+    "WL304": { "active": true, "name": "Naish Freestyle 100L (2010)" },
+    "WL305": { "active": true, "name": "JP Super-X 104L (2004)" },
+    "WL306": { "active": true, "name": "F2 Spice 106L (2008)" },
+    "WL307": { "active": true, "name": "RRD Freestyle Wave 108L (2013)" },
+    "WL308": { "active": true, "name": "Naish Freeride Slalom 115L (2007)" },
+    "WL309": { "active": true, "name": "Fanatic Quad 87L (2013)" },
+    "WL310": { "active": true, "name": "Naish Hover 122L (2018)" },
+    "WL311": { "active": true, "name": "Naish Freestyle Wave 90L (2010)" },
+    "WL312": { "active": true, "name": "Starboard Carve 99L (~1997)" },
+
+    "_comment_kayak_s":   "── Kayak Single ─────────────────────────────",
+    "KP01": { "active": true, "name": "Plastic Single #1" },
+    "KP02": { "active": true, "name": "Plastic Single #2" },
+    "KP03": { "active": true, "name": "Plastic Single #3" },
+    "KP04": { "active": true, "name": "Plastic Single #4" },
+    "KP05": { "active": true, "name": "Plastic Single #5" },
+    "KP06": { "active": true, "name": "Plastic Single #6" },
+    "KF01": { "active": true, "name": "Fibreglass Single M #1" },
+    "KF02": { "active": true, "name": "Fibreglass Single M #2" },
+    "KF03": { "active": true, "name": "Fibreglass Single M #3" },
+    "KF04": { "active": true, "name": "Fibreglass Single M #4" },
+    "KF05": { "active": true, "name": "Fibreglass Single S" },
+    "KF06": { "active": true, "name": "Fibreglass Single L" },
+
+    "_comment_kayak_d":   "── Kayak Double ─────────────────────────────",
+    "KD01": { "active": true, "name": "Double Kayak #1" },
+    "KD02": { "active": true, "name": "Double Kayak #2" },
+    "KD03": { "active": true, "name": "Double Kayak #3" },
+
+    "_comment_sup":       "── SUP ──────────────────────────────────────",
+    "SP01": { "active": true, "name": "SUP #1" },
+    "SP02": { "active": true, "name": "SUP #2" },
+    "SP03": { "active": true, "name": "SUP #3" },
+    "SP04": { "active": true, "name": "SUP #4" },
+    "SP05": { "active": true, "name": "SUP #5" }
   }
 }
