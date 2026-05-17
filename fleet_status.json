@@ -28,7 +28,7 @@
     "QT07": { "active": true,  "name": "Quest #7" },
     "QT08": { "active": true,  "name": "Quest #8" },
 
-    "_comment_quest_spin": "── RS Quest + Spinnaker ────────────────────",
+    "_comment_quest_spin": "── RS Quest Spinnaker ───────────────────────",
     "QS01": { "active": true,  "name": "Quest #5 + Spinnaker" },
     "QS02": { "active": true,  "name": "Quest #6 + Spinnaker" },
     "QS03": { "active": true,  "name": "Quest #7 + Spinnaker" },
