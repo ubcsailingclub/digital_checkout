@@ -48,7 +48,7 @@
       "boats": [
         { "code": "R501", "name": "X-wing" },
         { "code": "R502", "name": "Tie Fighter" },
-        { "code": "R503", "name": "Wibbly Wobbly" },
+        { "code": "R503", "name": "Wibbly Wobbly" }
       ]
     },
     {
@@ -74,7 +74,7 @@
         { "code": "F181", "name": "1107" },
         { "code": "F182", "name": "689" },
         { "code": "F183", "name": "Moneysink" },
-        { "code": "F182", "name": "Spinbreaker" }
+        { "code": "F184", "name": "Spinbreaker" }
       ]
     },
     {
