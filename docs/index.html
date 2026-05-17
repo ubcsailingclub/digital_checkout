@@ -108,8 +108,39 @@
       letter-spacing: 1px; color: var(--muted);
       padding: 6px 0; margin-bottom: 8px;
       border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
     }
+    .btn-add-boat {
+      font-size: .7rem; padding: 3px 10px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 6px; color: var(--muted);
+      cursor: pointer; font-weight: 600; text-transform: none; letter-spacing: 0;
+    }
+    .btn-add-boat:hover { border-color: var(--accent); color: var(--text); }
     .boat-list { display: flex; flex-direction: column; gap: 6px; }
+
+    /* Add-boat form */
+    .add-boat-form {
+      background: var(--surface); border: 1px dashed var(--border);
+      border-radius: 8px; padding: 12px 14px;
+      display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    }
+    .add-boat-form input {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 6px; padding: 7px 10px; color: var(--text); font-size: .85rem;
+    }
+    .add-boat-form input:focus { outline: none; border-color: var(--accent); }
+    .add-boat-form input.code-input { width: 90px; font-family: monospace; }
+    .add-boat-form input.name-input { flex: 1; min-width: 140px; }
+    .btn-confirm-add { background: var(--accent); color: #fff; }
+    .btn-cancel-add  { background: transparent; border: 1px solid var(--border) !important; color: var(--muted); }
+
+    /* Remove button */
+    .btn-remove {
+      font-size: .7rem; padding: 3px 8px; background: transparent;
+      border: 1px solid #7f1d1d; border-radius: 6px; color: #f87171;
+      cursor: pointer; font-weight: 600; margin-left: auto;
+    }
+    .btn-remove:hover { background: #2d1010; }
 
     /* Boat card */
     .boat-card {
@@ -281,7 +312,7 @@ function renderApp() {
   // Boats
   const craft = fleetData.craft || {};
   const classes = [];
-  let current = { label: 'Other', boats: [] };
+  let current = { label: 'Other', commentKey: null, boats: [] };
 
   Object.entries(craft).forEach(([code, val]) => {
     if (code.startsWith('_comment_')) {
@@ -289,7 +320,7 @@ function renderApp() {
       const label = typeof val === 'string'
         ? val.replace(/^─+\s*/, '').replace(/\s*─+$/, '').trim()
         : code.replace('_comment_', '').replace(/_/g, ' ');
-      current = { label, boats: [] };
+      current = { label, commentKey: code, boats: [] };
     } else {
       current.boats.push({ code, ...val });
     }
@@ -297,9 +328,15 @@ function renderApp() {
   if (current.boats.length) classes.push(current);
 
   classes.forEach(cls => {
+    const listId = `list-${cls.label.replace(/\s+/g, '-')}`;
     const section = document.createElement('div');
     section.className = 'class-section';
-    section.innerHTML = `<div class="class-header">${escHtml(cls.label)}</div><div class="boat-list" id="list-${cls.label.replace(/\s+/g,'-')}"></div>`;
+    section.innerHTML = `
+      <div class="class-header">
+        <span>${escHtml(cls.label)}</span>
+        <button class="btn-add-boat" onclick="showAddBoatForm('${escHtml(cls.commentKey || '')}', '${listId}')">+ Add Boat</button>
+      </div>
+      <div class="boat-list" id="${listId}"></div>`;
     app.appendChild(section);
     const list = section.querySelector('.boat-list');
     cls.boats.forEach(boat => list.appendChild(boatCard(boat)));
@@ -320,6 +357,7 @@ function boatCard(boat) {
       <span class="boat-code">${escHtml(code)}</span>
       <span class="boat-name">${escHtml(name)}</span>
       <span class="status-pill ${pillClass}" id="pill-${code}">${pillLabel}</span>
+      <button class="btn-remove" onclick="removeBoat('${code}')">Remove</button>
     </div>
     <div class="boat-controls">
       <div class="control-group">
@@ -374,6 +412,54 @@ function setBoatStatus(code, status) {
 
 function setBoatReason(code, val) {
   fleetData.craft[code].reason = val;
+  markDirty();
+}
+
+function showAddBoatForm(commentKey, listId) {
+  document.querySelectorAll('.add-boat-form').forEach(f => f.remove());
+  const form = document.createElement('div');
+  form.className = 'add-boat-form';
+  form.innerHTML = `
+    <input class="code-input" type="text" placeholder="Code e.g. QT09" id="new-code" maxlength="10"
+           onkeydown="if(event.key==='Enter')confirmAddBoat('${commentKey}','${listId}')">
+    <input class="name-input" type="text" placeholder="Name e.g. Quest #9" id="new-name"
+           onkeydown="if(event.key==='Enter')confirmAddBoat('${commentKey}','${listId}')">
+    <button class="btn btn-primary btn-confirm-add" onclick="confirmAddBoat('${commentKey}','${listId}')">Add</button>
+    <button class="btn btn-cancel-add" onclick="this.closest('.add-boat-form').remove()">Cancel</button>`;
+  document.getElementById(listId).appendChild(form);
+  document.getElementById('new-code').focus();
+}
+
+function confirmAddBoat(commentKey, listId) {
+  const code = document.getElementById('new-code').value.trim().toUpperCase();
+  const name = document.getElementById('new-name').value.trim();
+  if (!code || !name) { alert('Code and name are required.'); return; }
+  if (fleetData.craft[code]) { alert(`Code "${code}" already exists.`); return; }
+
+  // Rebuild craft object inserting the new boat after the target class's last entry
+  const newCraft = {};
+  let inTarget = false;
+  let inserted = false;
+  Object.entries(fleetData.craft).forEach(([k, v]) => {
+    if (k.startsWith('_comment_') && inTarget && !inserted) {
+      newCraft[code] = { active: true, name };
+      inserted = true;
+      inTarget = false;
+    }
+    newCraft[k] = v;
+    if (k === commentKey) inTarget = true;
+  });
+  if (!inserted) newCraft[code] = { active: true, name };
+  fleetData.craft = newCraft;
+  renderApp();
+  markDirty();
+}
+
+function removeBoat(code) {
+  const name = fleetData.craft[code]?.name || code;
+  if (!confirm(`Remove "${name}" (${code}) from the fleet?\n\nThis takes effect in the app within 5 minutes after saving.`)) return;
+  delete fleetData.craft[code];
+  renderApp();
   markDirty();
 }
 

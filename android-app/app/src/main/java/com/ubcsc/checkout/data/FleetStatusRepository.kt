@@ -28,9 +28,27 @@ object FleetStatusRepository {
             "Conditions have been deemed unsafe. You may still proceed, but sail at your own risk."
         )
         val craftObj = obj.optJSONObject("craft") ?: JSONObject()
-        val craft    = mutableMapOf<String, CraftFleetStatus>()
+
+        // First pass: derive code→class from _comment_* section headers (JSONObject
+        // uses LinkedHashMap on Android so insertion order is preserved).
+        val classMap = mutableMapOf<String, String>()
+        var currentClass = ""
         craftObj.keys().forEach { key ->
-            if (key.startsWith("_")) return@forEach   // skip _comment_* fields
+            if (key.startsWith("_")) {
+                val raw = craftObj.optString(key)
+                currentClass = raw
+                    .replace(Regex("^─+\\s*"), "")
+                    .replace(Regex("\\s*─+$"), "")
+                    .trim()
+                    .ifEmpty { key.removePrefix("_comment_").replace('_', ' ') }
+            } else {
+                classMap[key] = currentClass
+            }
+        }
+
+        val craft = mutableMapOf<String, CraftFleetStatus>()
+        craftObj.keys().forEach { key ->
+            if (key.startsWith("_")) return@forEach
             val c        = craftObj.optJSONObject(key) ?: return@forEach
             val active   = c.optBoolean("active", true)
             val grounded = c.optBoolean("grounded", false)
@@ -40,7 +58,9 @@ object FleetStatusRepository {
                     grounded -> "grounded"
                     else     -> "active"
                 },
-                reason = c.optString("reason").takeIf { it.isNotEmpty() }
+                reason     = c.optString("reason").takeIf { it.isNotEmpty() },
+                name       = c.optString("name").takeIf { it.isNotEmpty() },
+                craftClass = classMap[key]
             )
         }
         return FleetStatus(fleetGrounded, fleetGroundReason, craft)
