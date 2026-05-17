@@ -60,7 +60,7 @@ object FleetStatusRepository {
                 },
                 reason     = c.optString("reason").takeIf { it.isNotEmpty() },
                 name       = c.optString("name").takeIf { it.isNotEmpty() },
-                craftClass = classMap[key]
+                craftClass = c.optString("class").takeIf { it.isNotEmpty() } ?: classMap[key]
             )
         }
         return FleetStatus(fleetGrounded, fleetGroundReason, craft)
