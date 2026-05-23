@@ -32,6 +32,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -423,36 +424,25 @@ private fun NotebookPanel(
                 }
             }
 
-            // ── Footer instruction ─────────────────────────────────────────
+            // ── Footer ─────────────────────────────────────────────────────
             HorizontalDivider(color = PaperRule, thickness = 1.dp)
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(top = 6.dp, bottom = 2.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment     = Alignment.CenterVertically
-            ) {
-                Text(
-                    text      = "▶  Tap your Jericho card or card reader to begin",
-                    color     = InkMid,
-                    fontSize  = 15.sp,
-                    fontStyle = FontStyle.Italic
-                )
-            }
-            // Subtle secondary action — small and dimmed so it isn't tapped by accident
             if (onCheckinFromIdle != null) {
-                TextButton(
-                    onClick        = onCheckinFromIdle,
-                    modifier       = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(
-                        horizontal = 4.dp, vertical = 0.dp
+                Button(
+                    onClick  = onCheckinFromIdle,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                        .height(48.dp),
+                    shape    = RoundedCornerShape(10.dp),
+                    colors   = ButtonDefaults.buttonColors(
+                        containerColor = InkDark,
+                        contentColor   = Color.White
                     )
                 ) {
                     Text(
-                        text      = "↩  Check in a boat directly",
-                        color     = InkMid.copy(alpha = 0.75f),
-                        fontSize  = 15.sp,
-                        fontStyle = FontStyle.Italic
+                        text       = "↩  Check In a Boat",
+                        fontSize   = 16.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }

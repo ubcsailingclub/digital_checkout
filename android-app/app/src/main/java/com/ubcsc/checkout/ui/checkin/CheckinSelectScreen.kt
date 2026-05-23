@@ -17,10 +17,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -28,6 +33,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +52,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ubcsc.checkout.ui.theme.ActiveAmber
+import com.ubcsc.checkout.ui.theme.AvailableGreen
 import com.ubcsc.checkout.ui.theme.CardBlue
 import com.ubcsc.checkout.ui.theme.DeepOcean
 import com.ubcsc.checkout.ui.theme.DigitalCheckoutTheme
@@ -69,24 +79,31 @@ fun CheckinSelectScreen(
         delay(INACTIVITY_TIMEOUT_MS)
         viewModel.resetToIdle()
     }
+    val isIdleMode = member == null
     CheckinSelectContent(
-        memberName = member?.name,
-        sessions   = sessions,
-        onSelect   = { session ->
+        memberName      = member?.name,
+        sessions        = sessions,
+        isIdleMode      = isIdleMode,
+        onSelect        = { session ->
             if (member != null) viewModel.onSelectSessionForCheckin(member, session)
             else                viewModel.onSelectSessionIdle(session)
         },
-        onCancel   = { viewModel.goBack() }
+        onSelectMultiple = { selected -> viewModel.onSubmitBulkCheckin(selected) },
+        onCancel         = { viewModel.goBack() }
     )
 }
 
 @Composable
 private fun CheckinSelectContent(
-    memberName: String?,
-    sessions:   List<ActiveSession>,
-    onSelect:   (ActiveSession) -> Unit,
-    onCancel:   () -> Unit
+    memberName:       String?,
+    sessions:         List<ActiveSession>,
+    isIdleMode:       Boolean,
+    onSelect:         (ActiveSession) -> Unit,
+    onSelectMultiple: (List<ActiveSession>) -> Unit,
+    onCancel:         () -> Unit
 ) {
+    var selectedIds by remember { mutableStateOf(setOf<Int>()) }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -120,12 +137,20 @@ private fun CheckinSelectContent(
                         fontWeight = FontWeight.Bold,
                         color      = Color.White
                     )
-                    if (memberName != null) Text(
-                        text          = memberName,
-                        style         = MaterialTheme.typography.bodyMedium,
-                        color         = LocalKioskColors.current.accent,
-                        letterSpacing = 0.5.sp
-                    )
+                    if (memberName != null) {
+                        Text(
+                            text          = memberName,
+                            style         = MaterialTheme.typography.bodyMedium,
+                            color         = LocalKioskColors.current.accent,
+                            letterSpacing = 0.5.sp
+                        )
+                    } else {
+                        Text(
+                            text  = "Tap one or more boats to select, then tap Check In",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextMuted
+                        )
+                    }
                 }
                 TextButton(onClick = onCancel) {
                     Text(
@@ -152,10 +177,55 @@ private fun CheckinSelectContent(
                 contentPadding        = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
                 verticalArrangement   = Arrangement.spacedBy(14.dp),
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
-                modifier              = Modifier.fillMaxSize()
+                modifier              = Modifier.weight(1f)
             ) {
                 items(sessions, key = { it.sessionId }) { session ->
-                    SessionCard(session = session, onSelect = { onSelect(session) })
+                    val isSelected = session.sessionId in selectedIds
+                    SessionCard(
+                        session    = session,
+                        isSelected = isIdleMode && isSelected,
+                        onSelect   = {
+                            if (isIdleMode) {
+                                selectedIds = if (isSelected)
+                                    selectedIds - session.sessionId
+                                else
+                                    selectedIds + session.sessionId
+                            } else {
+                                onSelect(session)
+                            }
+                        }
+                    )
+                }
+            }
+
+            // Multi-select action bar (idle mode only)
+            if (isIdleMode) {
+                HorizontalDivider(color = DividerColor)
+                val count = selectedIds.size
+                Button(
+                    onClick  = {
+                        val selected = sessions.filter { it.sessionId in selectedIds }
+                        if (selected.isNotEmpty()) onSelectMultiple(selected)
+                    },
+                    enabled  = count > 0,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 12.dp)
+                        .height(56.dp),
+                    shape    = RoundedCornerShape(12.dp),
+                    colors   = ButtonDefaults.buttonColors(
+                        containerColor         = LocalKioskColors.current.accentMid,
+                        contentColor           = Color.White,
+                        disabledContainerColor = DividerColor,
+                        disabledContentColor   = TextMuted
+                    )
+                ) {
+                    Text(
+                        text       = if (count == 0) "Select boats to check in"
+                                     else "Check In $count Boat${if (count != 1) "s" else ""}",
+                        fontSize   = 17.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
         }
@@ -164,8 +234,16 @@ private fun CheckinSelectContent(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SessionCard(session: ActiveSession, onSelect: () -> Unit) {
-    val accentColor = if (session.isOverdue) UnavailableRed else LocalKioskColors.current.accentMid
+private fun SessionCard(
+    session:    ActiveSession,
+    isSelected: Boolean,
+    onSelect:   () -> Unit
+) {
+    val accentColor = when {
+        isSelected       -> LocalKioskColors.current.accent
+        session.isOverdue -> UnavailableRed
+        else             -> LocalKioskColors.current.accentMid
+    }
 
     Surface(
         onClick        = onSelect,
@@ -178,9 +256,10 @@ private fun SessionCard(session: ActiveSession, onSelect: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .border(
-                    width = 1.5.dp,
+                    width = if (isSelected) 2.dp else 1.5.dp,
                     brush = Brush.verticalGradient(
-                        listOf(accentColor.copy(alpha = 0.6f), accentColor.copy(alpha = 0.1f))
+                        listOf(accentColor.copy(alpha = if (isSelected) 0.9f else 0.6f),
+                               accentColor.copy(alpha = if (isSelected) 0.4f else 0.1f))
                     ),
                     shape = RoundedCornerShape(16.dp)
                 )
@@ -228,9 +307,9 @@ private fun SessionCard(session: ActiveSession, onSelect: () -> Unit) {
 
                 // Skipper name
                 Text(
-                    text  = session.memberName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = LocalKioskColors.current.textWarm,
+                    text     = session.memberName,
+                    style    = MaterialTheme.typography.bodyMedium,
+                    color    = LocalKioskColors.current.textWarm,
                     maxLines = 1
                 )
 
@@ -252,6 +331,25 @@ private fun SessionCard(session: ActiveSession, onSelect: () -> Unit) {
                             label = "Back by ${session.expectedReturnTime.format(ETR_FORMAT)}"
                         )
                     }
+                }
+            }
+
+            // Selection checkmark (idle multi-select mode)
+            if (isSelected) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .size(24.dp)
+                        .background(LocalKioskColors.current.accent, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector        = Icons.Filled.Check,
+                        contentDescription = "Selected",
+                        tint               = Color.White,
+                        modifier           = Modifier.size(16.dp)
+                    )
                 }
             }
         }
@@ -311,10 +409,13 @@ private fun CheckinSelectPreview() {
             sessions = listOf(
                 ActiveSession(1, "LZ01", "Laser #1",        "Laser",       "Jordan Kim",  "1h 20m", java.time.LocalTime.of(15, 30), isOverdue = false),
                 ActiveSession(2, "QT02", "Quest #2",        "RS Quest",    "Sam Chen",    "3h 05m", java.time.LocalTime.of(13, 0),  isOverdue = true),
-                ActiveSession(3, "KD01", "Double Kayak #1", "Kayak",       "Riley Park",  "45m",    null,                           isOverdue = false),
+                ActiveSession(3, "KD01", "Double Kayak #1", "Kayak Double","Riley Park",  "45m",    null,                           isOverdue = false),
                 ActiveSession(4, "WS03", "Windsurfer L2",   "Windsurfer",  "Taylor Ng",   "2h",     java.time.LocalTime.of(16, 0),  isOverdue = false),
             ),
-            onSelect = {}, onCancel = {}
+            isIdleMode       = false,
+            onSelect         = {},
+            onSelectMultiple = {},
+            onCancel         = {}
         )
     }
 }
@@ -329,7 +430,10 @@ private fun CheckinSelectIdlePreview() {
                 ActiveSession(1, "LZ01", "Laser #1", "Laser",    "Jordan Kim", "1h 20m", java.time.LocalTime.of(15, 30), isOverdue = false),
                 ActiveSession(2, "QT02", "Quest #2", "RS Quest", "Sam Chen",   "3h 05m", java.time.LocalTime.of(13, 0),  isOverdue = true),
             ),
-            onSelect = {}, onCancel = {}
+            isIdleMode       = true,
+            onSelect         = {},
+            onSelectMultiple = {},
+            onCancel         = {}
         )
     }
 }

@@ -133,7 +133,7 @@ fun AppNavigation(
 
         composable(Routes.EDIT_CHECKOUT) {
             val state = uiState as? CheckoutUiState.EditingCheckout ?: return@composable
-            EditCheckoutScreen(member = state.member, checkout = state.checkout, viewModel = viewModel)
+            EditCheckoutScreen(state = state, viewModel = viewModel)
         }
 
         composable(Routes.CHECKIN_SELECT) {

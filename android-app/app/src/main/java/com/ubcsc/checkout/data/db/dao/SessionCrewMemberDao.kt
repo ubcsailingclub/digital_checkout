@@ -13,4 +13,7 @@ interface SessionCrewMemberDao {
 
     @Query("SELECT * FROM session_crew_members WHERE session_id = :sessionId")
     suspend fun getBySession(sessionId: Int): List<SessionCrewMemberEntity>
+
+    @Query("DELETE FROM session_crew_members WHERE session_id = :sessionId")
+    suspend fun deleteBySession(sessionId: Int)
 }

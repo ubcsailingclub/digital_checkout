@@ -39,4 +39,7 @@ interface CheckoutSessionDao {
 
     @Query("UPDATE checkout_sessions SET expected_return_time = :etaEpoch WHERE id = :id")
     suspend fun updateEtr(id: Int, etaEpoch: Long?)
+
+    @Query("UPDATE checkout_sessions SET craft_id = :craftId, expected_return_time = :etaEpoch WHERE id = :id")
+    suspend fun updateCraftAndEtr(id: Int, craftId: Int, etaEpoch: Long?)
 }

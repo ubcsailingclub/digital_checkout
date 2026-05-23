@@ -33,7 +33,8 @@ data class Member(
 data class ActiveCheckout(
     val sessionId: Int,
     val craftCode: String,
-    val craftName: String
+    val craftName: String,
+    val expectedReturnTime: java.time.LocalTime? = null
 )
 
 data class Craft(
@@ -118,7 +119,13 @@ sealed class CheckoutUiState {
     data class AwaitingCheckinCard(val session: ActiveSession) : CheckoutUiState()
     data class ConfirmCheckin(val member: Member, val checkout: ActiveCheckout) : CheckoutUiState()
     data class DamageReport(val member: Member?, val checkout: ActiveCheckout) : CheckoutUiState()
-    data class EditingCheckout(val member: Member, val checkout: ActiveCheckout) : CheckoutUiState()
+    data class EditingCheckout(
+        val member:        Member,
+        val checkout:      ActiveCheckout,
+        val crew:          List<CrewEntry> = emptyList(),
+        val crafts:        List<Craft>     = emptyList(),   // member-authorized crafts for selection
+        val selectedCraft: Craft?          = null           // currently chosen craft
+    ) : CheckoutUiState()
     data class Success(val message: String, val isCheckout: Boolean) : CheckoutUiState()
     data class Error(val message: String) : CheckoutUiState()
 }
@@ -260,21 +267,61 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
 
     fun onEditCheckoutSelected(member: Member) {
         val checkout = member.activeCheckout ?: return
-        _uiState.value = CheckoutUiState.EditingCheckout(member, checkout)
-    }
-
-    fun onUpdateEtr(member: Member, checkout: ActiveCheckout, expectedReturnHours: Int?) {
         viewModelScope.launch {
             _uiState.value = CheckoutUiState.Loading
             try {
-                checkouts.updateEtr(checkout.sessionId, expectedReturnHours)
-                // Reload member to reflect updated checkout
-                val entity = members.getById(member.id.toInt())
-                val activeCheckout = entity?.let { checkouts.getActiveCheckoutForMember(it.id) }
-                _uiState.value = if (entity != null) CheckoutUiState.MemberFound(entity.toDomain(member.cardUid, activeCheckout))
-                                 else CheckoutUiState.MemberFound(member)
+                val allCrafts = crafts.getAll()
+                cachedCrafts  = if ("*" in member.certifications) allCrafts
+                                else allCrafts.filter { it.craftClass in member.certifications }
+                val crew         = checkouts.getCrewForSession(checkout.sessionId)
+                val currentCraft = cachedCrafts.firstOrNull { it.code == checkout.craftCode }
+                _uiState.value = CheckoutUiState.EditingCheckout(
+                    member        = member,
+                    checkout      = checkout,
+                    crew          = crew,
+                    crafts        = cachedCrafts,
+                    selectedCraft = currentCraft
+                )
             } catch (e: Exception) {
-                _uiState.value = CheckoutUiState.Error("Failed to update return time.")
+                _uiState.value = CheckoutUiState.Error("Failed to load checkout details.")
+            }
+        }
+    }
+
+    fun onSaveCheckoutEdit(
+        member:              Member,
+        checkout:            ActiveCheckout,
+        craft:               Craft,
+        crew:                List<CrewEntry>,
+        expectedReturnHours: Int?
+    ) {
+        viewModelScope.launch {
+            _uiState.value = CheckoutUiState.Loading
+            try {
+                checkouts.updateCheckout(checkout.sessionId, craft.id.toInt(), crew, expectedReturnHours)
+                val entity        = members.getById(member.id.toInt())
+                val activeCheckout = entity?.let { checkouts.getActiveCheckoutForMember(it.id) }
+                _uiState.value = if (entity != null)
+                    CheckoutUiState.MemberFound(entity.toDomain(member.cardUid, activeCheckout))
+                else
+                    CheckoutUiState.MemberFound(member)
+            } catch (e: Exception) {
+                _uiState.value = CheckoutUiState.Error("Failed to save checkout changes.")
+            }
+        }
+    }
+
+    fun onSubmitBulkCheckin(sessions: List<ActiveSession>) {
+        viewModelScope.launch {
+            _uiState.value = CheckoutUiState.Loading
+            try {
+                sessions.forEach { session ->
+                    checkouts.completeCheckin(session.sessionId, null, false, prefs.sheetsScriptUrl)
+                }
+                val noun = if (sessions.size == 1) "boat" else "boats"
+                _uiState.value = CheckoutUiState.Success("${sessions.size} $noun checked in", isCheckout = false)
+            } catch (e: Exception) {
+                _uiState.value = CheckoutUiState.Error("Check-in failed: ${e.message}")
             }
         }
     }

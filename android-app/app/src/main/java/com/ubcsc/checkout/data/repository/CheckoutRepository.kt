@@ -20,11 +20,43 @@ class CheckoutRepository(db: AppDatabase) {
     suspend fun getActiveCheckoutForMember(memberId: Int): ActiveCheckout? {
         val session = sessionDao.getActiveByMember(memberId) ?: return null
         val craft   = craftDao.getAll().firstOrNull { it.id == session.craftId } ?: return null
+        val etr = session.expectedReturnTime?.let { millis ->
+            java.time.Instant.ofEpochMilli(millis)
+                .atZone(java.time.ZoneId.systemDefault())
+                .toLocalTime()
+        }
         return ActiveCheckout(
-            sessionId = session.id,
-            craftCode = craft.craftCode,
-            craftName = craft.displayName
+            sessionId          = session.id,
+            craftCode          = craft.craftCode,
+            craftName          = craft.displayName,
+            expectedReturnTime = etr
         )
+    }
+
+    suspend fun getCrewForSession(sessionId: Int): List<CrewEntry> =
+        crewDao.getBySession(sessionId).map {
+            CrewEntry(name = it.displayName, isGuest = it.isGuest, memberId = it.memberId)
+        }
+
+    suspend fun updateCheckout(
+        sessionId:           Int,
+        craftId:             Int,
+        crew:                List<CrewEntry>,
+        expectedReturnHours: Int?
+    ) {
+        val etaEpoch = expectedReturnHours?.let { System.currentTimeMillis() + it * 3_600_000L }
+        sessionDao.updateCraftAndEtr(sessionId, craftId, etaEpoch)
+        crewDao.deleteBySession(sessionId)
+        if (crew.isNotEmpty()) {
+            crewDao.insertAll(crew.map { entry ->
+                SessionCrewMemberEntity(
+                    sessionId   = sessionId,
+                    memberId    = entry.memberId,
+                    displayName = entry.name,
+                    isGuest     = entry.isGuest
+                )
+            })
+        }
     }
 
     suspend fun createCheckout(
