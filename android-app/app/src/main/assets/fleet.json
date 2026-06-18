@@ -69,6 +69,18 @@
       ]
     },
     {
+      "class": "Topaz 14",
+      "boats": [
+        { "code": "TP14", "name": "Topaz 14" }
+      ]
+    },
+    {
+      "class": "Topaz 16",
+      "boats": [
+        { "code": "TP16", "name": "Topaz 16" }
+      ]
+    },
+    {
       "class": "Nacra F18",
       "boats": [
         { "code": "F181", "name": "1107" },

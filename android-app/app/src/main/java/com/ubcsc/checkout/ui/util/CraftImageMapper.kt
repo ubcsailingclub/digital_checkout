@@ -47,6 +47,7 @@ object CraftImageMapper {
             s.contains("windsurf") || s.startsWith("ws")               -> R.drawable.ic_windsurfer
             s.contains("kayak") || s.startsWith("kd") || s.startsWith("ks") -> R.drawable.ic_kayak
             s.contains("sup") || s.contains("paddle") || s.startsWith("sp") -> R.drawable.ic_sup
+            s.contains("topaz")                                         -> R.drawable.ic_quest
             else                                                        -> R.drawable.ic_vanguard
         }
     }
