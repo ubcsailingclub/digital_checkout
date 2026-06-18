@@ -82,25 +82,27 @@ fun BoatSelectScreen(
         viewModel.resetToIdle()
     }
     BoatSelectContent(
-        memberName      = member.name,
-        fleetClass      = fleetClass,
-        crafts          = crafts,
-        craftFleetMap   = fleetStatus?.craft ?: emptyMap(),
-        fleetGrounded   = fleetStatus?.fleetGrounded ?: false,
-        onBoatSelect    = { craft -> viewModel.onCraftSelected(member, craft) },
-        onCancel        = { viewModel.goBack() }
+        memberName        = member.name,
+        fleetClass        = fleetClass,
+        crafts            = crafts,
+        craftFleetMap     = fleetStatus?.craft ?: emptyMap(),
+        fleetGrounded     = fleetStatus?.fleetGrounded ?: false,
+        classFleetStatus  = fleetStatus?.classes?.get(fleetClass),
+        onBoatSelect      = { craft -> viewModel.onCraftSelected(member, craft) },
+        onCancel          = { viewModel.goBack() }
     )
 }
 
 @Composable
 private fun BoatSelectContent(
-    memberName:    String,
-    fleetClass:    String,
-    crafts:        List<Craft>,
-    craftFleetMap: Map<String, CraftFleetStatus> = emptyMap(),
-    fleetGrounded: Boolean = false,
-    onBoatSelect:  (Craft) -> Unit,
-    onCancel:      () -> Unit
+    memberName:       String,
+    fleetClass:       String,
+    crafts:           List<Craft>,
+    craftFleetMap:    Map<String, CraftFleetStatus> = emptyMap(),
+    fleetGrounded:    Boolean = false,
+    classFleetStatus: CraftFleetStatus? = null,
+    onBoatSelect:     (Craft) -> Unit,
+    onCancel:         () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -172,6 +174,28 @@ private fun BoatSelectContent(
                 ) {
                     Text(
                         text       = "⚠  Fleet Grounded — conditions have been deemed unsafe. You may still check out, but sail at your own risk.",
+                        style      = MaterialTheme.typography.bodyMedium,
+                        color      = Color.White,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+
+            // Class grounding banner
+            if (classFleetStatus?.status == "grounded") {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFB45309))
+                        .padding(horizontal = 28.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "⚠  $fleetClass Class Grounded — ${
+                            classFleetStatus.reason?.takeIf { it.isNotBlank() }
+                                ?: "Contact the club for details."
+                        }  You may still check out, but proceed with caution.",
                         style      = MaterialTheme.typography.bodyMedium,
                         color      = Color.White,
                         fontWeight = FontWeight.SemiBold

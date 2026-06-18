@@ -1,6 +1,9 @@
 {
   "fleet_grounded": false,
   "fleet_ground_reason": "Test",
+  "classes": {
+    "_comment": "Ground a whole craft class: e.g. \"Topaz\": { \"grounded\": true, \"reason\": \"Fleet inspection\" }"
+  },
   "_comment_usage": [
     "======== How to ground the whole fleet ================================================================================================================ÃÂÃÂÃÂÃÂ",
     "  Set fleet_grounded to true and add a fleet_ground_reason.",

@@ -74,7 +74,8 @@ data class CraftFleetStatus(
 data class FleetStatus(
     val fleetGrounded: Boolean,
     val fleetGroundReason: String,
-    val craft: Map<String, CraftFleetStatus>   // key = craft code e.g. "LZ01"
+    val craft: Map<String, CraftFleetStatus>,           // key = craft code  e.g. "LZ01"
+    val classes: Map<String, CraftFleetStatus> = emptyMap() // key = craft class e.g. "Topaz"
 )
 
 data class ActiveSession(

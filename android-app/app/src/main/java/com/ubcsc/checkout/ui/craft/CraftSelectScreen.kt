@@ -26,6 +26,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -53,6 +55,7 @@ import com.ubcsc.checkout.ui.theme.UnavailableRed
 import com.ubcsc.checkout.ui.util.CraftImageMapper
 import com.ubcsc.checkout.viewmodel.CheckoutViewModel
 import com.ubcsc.checkout.viewmodel.Craft
+import com.ubcsc.checkout.viewmodel.CraftFleetStatus
 import com.ubcsc.checkout.viewmodel.Member
 import kotlinx.coroutines.delay
 
@@ -79,6 +82,7 @@ private data class FleetGroup(
 
 @Composable
 fun CraftSelectScreen(member: Member, crafts: List<Craft>, viewModel: CheckoutViewModel) {
+    val fleetStatus by viewModel.fleetStatus.collectAsState()
     LaunchedEffect(Unit) {
         delay(INACTIVITY_TIMEOUT_MS)
         viewModel.resetToIdle()
@@ -86,6 +90,7 @@ fun CraftSelectScreen(member: Member, crafts: List<Craft>, viewModel: CheckoutVi
     CraftSelectContent(
         memberName    = member.name,
         crafts        = crafts,
+        classFleetMap = fleetStatus?.classes ?: emptyMap(),
         onFleetSelect = { fleetClass -> viewModel.onFleetSelected(member, fleetClass) },
         onCancel      = { viewModel.goBack() }
     )
@@ -95,6 +100,7 @@ fun CraftSelectScreen(member: Member, crafts: List<Craft>, viewModel: CheckoutVi
 private fun CraftSelectContent(
     memberName: String,
     crafts: List<Craft>,
+    classFleetMap: Map<String, CraftFleetStatus> = emptyMap(),
     onFleetSelect: (String) -> Unit,
     onCancel: () -> Unit
 ) {
@@ -190,8 +196,9 @@ private fun CraftSelectContent(
                     }
                     items(fleets, key = { it.craftClass }) { fleet ->
                         FleetCard(
-                            fleet    = fleet,
-                            onSelect = { if (fleet.availableCount > 0) onFleetSelect(fleet.craftClass) }
+                            fleet       = fleet,
+                            classStatus = classFleetMap[fleet.craftClass],
+                            onSelect    = { if (fleet.availableCount > 0) onFleetSelect(fleet.craftClass) }
                         )
                     }
                 }
@@ -214,9 +221,14 @@ private fun CategoryHeader(title: String) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun FleetCard(fleet: FleetGroup, onSelect: () -> Unit) {
-    val hasAvailable = fleet.availableCount > 0
-    val accentColor  = if (hasAvailable) LocalKioskColors.current.accentMid  else UnavailableRed
+private fun FleetCard(fleet: FleetGroup, classStatus: CraftFleetStatus? = null, onSelect: () -> Unit) {
+    val hasAvailable    = fleet.availableCount > 0
+    val isClassGrounded = classStatus?.status == "grounded"
+    val accentColor  = when {
+        isClassGrounded -> Color(0xFFB45309)
+        hasAvailable    -> LocalKioskColors.current.accentMid
+        else            -> UnavailableRed
+    }
     val cardAlpha    = if (hasAvailable) 1f        else 0.45f
 
     Surface(
@@ -277,9 +289,10 @@ private fun FleetCard(fleet: FleetGroup, onSelect: () -> Unit) {
 
                 // Availability count pill
                 AvailabilityChip(
-                    available     = fleet.availableCount,
-                    total         = fleet.totalCount,
-                    soonestReturn = fleet.soonestReturn
+                    available      = fleet.availableCount,
+                    total          = fleet.totalCount,
+                    soonestReturn  = fleet.soonestReturn,
+                    classGrounded  = isClassGrounded
                 )
             }
         }
@@ -290,15 +303,23 @@ private fun FleetCard(fleet: FleetGroup, onSelect: () -> Unit) {
 private fun AvailabilityChip(
     available: Int,
     total: Int,
-    soonestReturn: java.time.LocalTime? = null
+    soonestReturn: java.time.LocalTime? = null,
+    classGrounded: Boolean = false
 ) {
+    // If the whole class is grounded and boats are still available, show an amber warning
+    // instead of the green count — fleet grounding is advisory so boats remain selectable.
     val hasAny = available > 0
-    val color  = if (hasAny) AvailableGreen else UnavailableRed
+    val color  = when {
+        classGrounded && hasAny -> Color(0xFFB45309)
+        hasAny                  -> AvailableGreen
+        else                    -> UnavailableRed
+    }
     val label  = when {
-        hasAny -> "$available / $total available"
-        soonestReturn != null ->
+        classGrounded && hasAny -> "⚠ Class Grounded"
+        hasAny                  -> "$available / $total available"
+        soonestReturn != null   ->
             "Back by ${soonestReturn.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a"))}"
-        else -> "All out"
+        else                    -> "All out"
     }
 
     Box(
@@ -311,7 +332,7 @@ private fun AvailabilityChip(
         Text(
             text       = label,
             style      = MaterialTheme.typography.labelSmall,
-            color      = color,
+            color      = if (classGrounded && hasAny) Color(0xFFFFD97D) else color,
             fontWeight = FontWeight.Medium
         )
     }

@@ -43,6 +43,18 @@ object FleetStatusRepository {
                 reason = c.optString("reason").takeIf { it.isNotEmpty() }
             )
         }
-        return FleetStatus(fleetGrounded, fleetGroundReason, craft)
+
+        val classesObj = obj.optJSONObject("classes") ?: JSONObject()
+        val classes    = mutableMapOf<String, CraftFleetStatus>()
+        classesObj.keys().forEach { key ->
+            val c        = classesObj.optJSONObject(key) ?: return@forEach
+            val grounded = c.optBoolean("grounded", false)
+            classes[key] = CraftFleetStatus(
+                status = if (grounded) "grounded" else "active",
+                reason = c.optString("reason").takeIf { it.isNotEmpty() }
+            )
+        }
+
+        return FleetStatus(fleetGrounded, fleetGroundReason, craft, classes)
     }
 }
