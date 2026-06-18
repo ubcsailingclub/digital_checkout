@@ -205,7 +205,10 @@ private fun CheckinSelectContent(
                 Button(
                     onClick  = {
                         val selected = sessions.filter { it.sessionId in selectedIds }
-                        if (selected.isNotEmpty()) onSelectMultiple(selected)
+                        when {
+                            selected.size == 1 -> onSelect(selected.first())
+                            selected.size > 1  -> onSelectMultiple(selected)
+                        }
                     },
                     enabled  = count > 0,
                     modifier = Modifier
