@@ -69,14 +69,9 @@
       ]
     },
     {
-      "class": "Topaz 14",
+      "class": "Topaz",
       "boats": [
-        { "code": "TP14", "name": "Topaz 14" }
-      ]
-    },
-    {
-      "class": "Topaz 16",
-      "boats": [
+        { "code": "TP14", "name": "Topaz 14" },
         { "code": "TP16", "name": "Topaz 16" }
       ]
     },

@@ -16,9 +16,9 @@
   "Sailing - Advanced III":        ["RS Quest", "Vanguard 15", "Laser",
                                     "RS Quest Spinnaker", "RS500", "RS800"],
 
-  "Sailing - Cat I":               ["Hobie 16", "Topaz 14", "Topaz 16", "RS Quest", "Vanguard 15"],
-  "Sailing - Cat II":              ["Hobie 16", "Topaz 14", "Topaz 16", "Nacra F18", "RS Quest", "Vanguard 15"],
-  "Sailing - Cat III":             ["Hobie 16", "Topaz 14", "Topaz 16", "Nacra F18",
+  "Sailing - Cat I":               ["Hobie 16", "Topaz", "RS Quest", "Vanguard 15"],
+  "Sailing - Cat II":              ["Hobie 16", "Topaz", "Nacra F18", "RS Quest", "Vanguard 15"],
+  "Sailing - Cat III":             ["Hobie 16", "Topaz", "Nacra F18",
                                     "RS Quest", "Vanguard 15"],
 
   "Windsurfing I":                 ["Windsurfer L1", "SUP"],

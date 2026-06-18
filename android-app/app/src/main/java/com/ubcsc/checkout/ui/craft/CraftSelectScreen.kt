@@ -64,7 +64,7 @@ private fun craftCategory(craftClass: String): String {
     val upper = craftClass.uppercase().trim()
     return when {
         upper.startsWith("WINDSURFER") -> "WINDSURF"
-        upper in setOf("RS QUEST", "RS QUEST SPINNAKER", "LASER", "VANGUARD 15", "RS500", "RS800", "HOBIE 16", "NACRA F18", "TOPAZ 14", "TOPAZ 16") -> "SAILING"
+        upper in setOf("RS QUEST", "RS QUEST SPINNAKER", "LASER", "VANGUARD 15", "RS500", "RS800", "HOBIE 16", "NACRA F18", "TOPAZ") -> "SAILING"
         upper.startsWith("KAYAK") || upper == "SUP" -> "KAYAK & SUP"
         else -> "OTHER"
     }
