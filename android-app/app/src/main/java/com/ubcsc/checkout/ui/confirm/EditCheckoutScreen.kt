@@ -52,6 +52,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -99,6 +101,10 @@ fun EditCheckoutScreen(
         delay(EDIT_INACTIVITY_TIMEOUT_MS)
         viewModel.resetToIdle()
     }
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager       = LocalFocusManager.current
+    fun dismissKeyboard()  { keyboardController?.hide(); focusManager.clearFocus() }
 
     // ── Local editable state ─────────────────────────────────────────────────
     val crewList     = remember { mutableStateListOf<CrewEntry>().also { it.addAll(state.crew) } }
@@ -191,7 +197,7 @@ fun EditCheckoutScreen(
                         color = LocalKioskColors.current.accent
                     )
                 }
-                TextButton(onClick = { viewModel.goBack() }) {
+                TextButton(onClick = { dismissKeyboard(); viewModel.goBack() }) {
                     Text("← Back", color = TextMuted, style = MaterialTheme.typography.bodyMedium)
                 }
             }
@@ -252,13 +258,14 @@ fun EditCheckoutScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 OutlinedButton(
-                    onClick  = { viewModel.goBack() },
+                    onClick  = { dismissKeyboard(); viewModel.goBack() },
                     modifier = Modifier.height(52.dp).weight(1f),
                     shape    = RoundedCornerShape(12.dp)
                 ) { Text("← Back", color = LocalKioskColors.current.textWarm) }
 
                 ElevatedButton(
                     onClick   = {
+                        dismissKeyboard()
                         val craft = selectedCraft ?: return@ElevatedButton
                         viewModel.onSaveCheckoutEdit(
                             member              = state.member,
@@ -479,6 +486,9 @@ private fun CrewSection(
     onRemove:     (Int) -> Unit,
     modifier:     Modifier = Modifier
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager       = LocalFocusManager.current
+
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             SectionLabel("CREW")
@@ -570,10 +580,18 @@ private fun CrewSection(
                     cursorColor          = LocalKioskColors.current.accent
                 ),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { onAddName() })
+                keyboardActions = KeyboardActions(onDone = {
+                    keyboardController?.hide()
+                    focusManager.clearFocus()
+                    onAddName()
+                })
             )
             ElevatedButton(
-                onClick   = onAddName,
+                onClick   = {
+                    keyboardController?.hide()
+                    focusManager.clearFocus()
+                    onAddName()
+                },
                 modifier  = Modifier.height(52.dp),
                 shape     = RoundedCornerShape(10.dp),
                 colors    = ButtonDefaults.elevatedButtonColors(
