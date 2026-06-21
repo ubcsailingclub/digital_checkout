@@ -155,9 +155,7 @@
       "name": "Coconut"
     },
     "HB02": {
-      "active": true,
-      "grounded": true,
-      "reason": "Submarine - portside gunwhale fully delaminated",
+      "active": false,
       "name": "TBFKA Babe"
     },
     "HB03": {
@@ -167,10 +165,8 @@
       "reason": "Dismasted and likely submarine"
     },
     "HB04": {
-      "active": true,
-      "name": "Other Blueberry",
-      "grounded": true,
-      "reason": "Broken main halyard"
+      "active": false,
+      "name": "Other Blueberry"
     },
     "_comment_topaz": "Ã¢ÂÂÃ¢ÂÂ Topaz Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ",
     "TP14": {

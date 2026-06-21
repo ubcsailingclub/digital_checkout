@@ -63,9 +63,7 @@
       "class": "Hobie 16",
       "boats": [
         { "code": "HB01", "name": "Coconut" },
-        { "code": "HB02", "name": "TBFKA Babe" },
-        { "code": "HB03", "name": "Hobie 5" },
-        { "code": "HB04", "name": "Other Blueberry" }
+        { "code": "HB03", "name": "Hobie 5" }
       ]
     },
     {

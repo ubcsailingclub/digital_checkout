@@ -20,4 +20,7 @@ interface CraftDao {
 
     @Query("UPDATE craft SET status = :status, status_reason = :reason WHERE craft_class = :craftClass")
     suspend fun updateStatusByClass(craftClass: String, status: String, reason: String?)
+
+    @Query("UPDATE craft SET is_active = :active WHERE craft_code = :code")
+    suspend fun setActive(code: String, active: Boolean)
 }

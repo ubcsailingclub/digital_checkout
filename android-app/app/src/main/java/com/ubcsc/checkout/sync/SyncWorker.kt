@@ -64,7 +64,8 @@ class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
             val existingCodes = existing.map { it.craftCode }.toSet()
             var nextId        = (existing.maxOfOrNull { it.id } ?: 0) + 1
 
-            val newCrafts = mutableListOf<CraftEntity>()
+            val fleetCodes = mutableSetOf<String>()
+            val newCrafts  = mutableListOf<CraftEntity>()
             for (fi in 0 until fleets.length()) {
                 val fleet = fleets.getJSONObject(fi)
                 val cls   = fleet.getString("class")
@@ -72,7 +73,8 @@ class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
                 for (bi in 0 until boats.length()) {
                     val boat = boats.getJSONObject(bi)
                     val code = boat.getString("code")
-                    if (code in existingCodes) continue   // already in DB, skip
+                    fleetCodes += code
+                    if (code in existingCodes) continue
                     newCrafts += CraftEntity(
                         id               = nextId++,
                         craftCode        = code,
@@ -90,6 +92,13 @@ class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
             if (newCrafts.isNotEmpty()) {
                 db.craftDao().upsertAll(newCrafts)
                 Log.i(TAG, "Seeded ${newCrafts.size} new craft from fleet.json")
+            }
+
+            // Deactivate craft that have been removed from fleet.json
+            val toDeactivate = existing.filter { it.isActive && it.craftCode !in fleetCodes }
+            for (craft in toDeactivate) {
+                db.craftDao().setActive(craft.craftCode, false)
+                Log.i(TAG, "Deactivated removed craft ${craft.craftCode} (${craft.displayName})")
             }
         } catch (e: Exception) {
             Log.w(TAG, "Could not seed craft from assets: ${e.message}")
