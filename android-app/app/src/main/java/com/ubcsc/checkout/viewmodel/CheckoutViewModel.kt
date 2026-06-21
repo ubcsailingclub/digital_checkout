@@ -34,6 +34,7 @@ data class ActiveCheckout(
     val sessionId: Int,
     val craftCode: String,
     val craftName: String,
+    val craftClass: String = "",
     val expectedReturnTime: java.time.LocalTime? = null
 )
 

@@ -94,11 +94,16 @@ class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
                 Log.i(TAG, "Seeded ${newCrafts.size} new craft from fleet.json")
             }
 
-            // Deactivate craft that have been removed from fleet.json
-            val toDeactivate = existing.filter { it.isActive && it.craftCode !in fleetCodes }
-            for (craft in toDeactivate) {
-                db.craftDao().setActive(craft.craftCode, false)
-                Log.i(TAG, "Deactivated removed craft ${craft.craftCode} (${craft.displayName})")
+            // Sync active flag: deactivate craft removed from fleet.json, reactivate craft returned to it
+            for (craft in existing) {
+                val inFleet = craft.craftCode in fleetCodes
+                if (craft.isActive && !inFleet) {
+                    db.craftDao().setActive(craft.craftCode, false)
+                    Log.i(TAG, "Deactivated removed craft ${craft.craftCode} (${craft.displayName})")
+                } else if (!craft.isActive && inFleet) {
+                    db.craftDao().setActive(craft.craftCode, true)
+                    Log.i(TAG, "Reactivated restored craft ${craft.craftCode} (${craft.displayName})")
+                }
             }
         } catch (e: Exception) {
             Log.w(TAG, "Could not seed craft from assets: ${e.message}")

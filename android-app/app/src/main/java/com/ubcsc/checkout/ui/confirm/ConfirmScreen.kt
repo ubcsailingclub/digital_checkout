@@ -276,7 +276,7 @@ private fun CheckoutConfirmContent(
                             contentDescription = state.craft.craftClass,
                             modifier = Modifier.size(60.dp),
                             contentScale = ContentScale.Fit,
-                            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(LocalKioskColors.current.accent)
+                            colorFilter = CraftImageMapper.iconColorFilter(LocalKioskColors.current.accent)
                         )
                     }
 
@@ -376,7 +376,7 @@ private fun CheckoutConfirmContent(
                             contentDescription = state.craft.craftClass,
                             modifier = Modifier.size(120.dp),
                             contentScale = ContentScale.Fit,
-                            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(LocalKioskColors.current.accent)
+                            colorFilter = CraftImageMapper.iconColorFilter(LocalKioskColors.current.accent)
                         )
                     }
 
@@ -494,11 +494,11 @@ private fun CheckinConfirmContent(
                         contentAlignment = Alignment.Center
                     ) {
                         Image(
-                            painter = painterResource(CraftImageMapper.getDrawableRes(state.checkout.craftCode)),
+                            painter = painterResource(CraftImageMapper.getDrawableRes(state.checkout.craftClass)),
                             contentDescription = null,
                             modifier = Modifier.size(60.dp),
                             contentScale = ContentScale.Fit,
-                            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(UnavailableRed)
+                            colorFilter = CraftImageMapper.iconColorFilter(UnavailableRed)
                         )
                     }
 
@@ -577,11 +577,11 @@ private fun CheckinConfirmContent(
                         contentAlignment = Alignment.Center
                     ) {
                         Image(
-                            painter = painterResource(CraftImageMapper.getDrawableRes(state.checkout.craftCode)),
+                            painter = painterResource(CraftImageMapper.getDrawableRes(state.checkout.craftClass)),
                             contentDescription = null,
                             modifier = Modifier.size(120.dp),
                             contentScale = ContentScale.Fit,
-                            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(UnavailableRed)
+                            colorFilter = CraftImageMapper.iconColorFilter(UnavailableRed)
                         )
                     }
 

@@ -29,6 +29,7 @@ class CheckoutRepository(db: AppDatabase) {
             sessionId          = session.id,
             craftCode          = craft.craftCode,
             craftName          = craft.displayName,
+            craftClass         = craft.craftClass ?: craft.fleetType,
             expectedReturnTime = etr
         )
     }
