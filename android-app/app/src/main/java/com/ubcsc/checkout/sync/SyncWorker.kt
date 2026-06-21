@@ -56,21 +56,26 @@ class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
     }
 
     private suspend fun seedCraftIfEmpty(db: AppDatabase) {
-        if (db.craftDao().getAll().isNotEmpty()) return
         try {
             val json    = applicationContext.assets.open("fleet.json").bufferedReader().readText()
             val fleets  = JSONObject(json).getJSONArray("fleets")
-            val crafts  = mutableListOf<CraftEntity>()
-            var id      = 1
+
+            val existing      = db.craftDao().getAll()
+            val existingCodes = existing.map { it.craftCode }.toSet()
+            var nextId        = (existing.maxOfOrNull { it.id } ?: 0) + 1
+
+            val newCrafts = mutableListOf<CraftEntity>()
             for (fi in 0 until fleets.length()) {
                 val fleet = fleets.getJSONObject(fi)
                 val cls   = fleet.getString("class")
                 val boats = fleet.getJSONArray("boats")
                 for (bi in 0 until boats.length()) {
                     val boat = boats.getJSONObject(bi)
-                    crafts += CraftEntity(
-                        id               = id++,
-                        craftCode        = boat.getString("code"),
+                    val code = boat.getString("code")
+                    if (code in existingCodes) continue   // already in DB, skip
+                    newCrafts += CraftEntity(
+                        id               = nextId++,
+                        craftCode        = code,
                         displayName      = boat.getString("name"),
                         fleetType        = cls,
                         craftClass       = cls,
@@ -82,8 +87,10 @@ class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
                     )
                 }
             }
-            db.craftDao().upsertAll(crafts)
-            Log.i(TAG, "Seeded ${crafts.size} craft from fleet.json")
+            if (newCrafts.isNotEmpty()) {
+                db.craftDao().upsertAll(newCrafts)
+                Log.i(TAG, "Seeded ${newCrafts.size} new craft from fleet.json")
+            }
         } catch (e: Exception) {
             Log.w(TAG, "Could not seed craft from assets: ${e.message}")
         }
