@@ -27,12 +27,12 @@
     "QT05": {
       "active": true,
       "name": "Quest #5",
-      "grounded": true,
+      "grounded": false,
       "reason": "Regatta "
     },
     "QT06": {
       "active": true,
-      "grounded": true,
+      "grounded": false,
       "reason": "Regatta",
       "name": "Quest #6"
     },
@@ -45,7 +45,7 @@
     "QT08": {
       "active": true,
       "name": "Quest #8",
-      "grounded": true,
+      "grounded": false,
       "reason": "Regatta"
     },
     "_comment_quest_spin": "Quest Spin",
@@ -77,7 +77,7 @@
     "LZ03": {
       "active": true,
       "name": "Laser 53",
-      "grounded": true,
+      "grounded": false,
       "reason": "Regatta"
     },
     "LZ04": {
@@ -97,7 +97,7 @@
     "LZ07": {
       "active": true,
       "name": "Laser 57",
-      "grounded": true,
+      "grounded": false,
       "reason": "Regatta"
     },
     "LZ08": {
@@ -110,7 +110,7 @@
     "VG01": {
       "active": true,
       "name": "Vanguard #1",
-      "grounded": true,
+      "grounded": false,
       "reason": "Regatta"
     },
     "VG02": {
