@@ -77,7 +77,7 @@
     "LZ03": {
       "active": true,
       "name": "Laser 53",
-      "grounded": false,
+      "grounded": true,
       "reason": "Regatta"
     },
     "LZ04": {
@@ -103,7 +103,7 @@
     "LZ08": {
       "active": true,
       "name": "Laser 58",
-      "grounded": false,
+      "grounded": true,
       "reason": "Regatta"
     },
     "_comment_vanguard": "Vanguard",
