@@ -86,7 +86,9 @@
     },
     "LZ05": {
       "active": true,
-      "name": "Laser 55"
+      "name": "Laser 55",
+      "grounded": true,
+      "reason": "Small leak at daggerboard hole and will be epoxied soon"
     },
     "LZ06": {
       "active": true,
