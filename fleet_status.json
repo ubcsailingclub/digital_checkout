@@ -72,7 +72,9 @@
     },
     "LZ02": {
       "active": true,
-      "name": "Laser 50"
+      "name": "Laser 50",
+      "grounded": true,
+      "reason": "Big leak at bow"
     },
     "LZ03": {
       "active": true,
@@ -88,7 +90,7 @@
       "active": true,
       "name": "Laser 55",
       "grounded": true,
-      "reason": "Small leak at daggerboard hole and will be epoxied soon"
+      "reason": "Epoxied at daggerboard area"
     },
     "LZ06": {
       "active": true,
