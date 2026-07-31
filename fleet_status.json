@@ -89,7 +89,7 @@
     "LZ05": {
       "active": true,
       "name": "Laser 55",
-      "grounded": true,
+      "grounded": false,
       "reason": "Epoxied at daggerboard area"
     },
     "LZ06": {
