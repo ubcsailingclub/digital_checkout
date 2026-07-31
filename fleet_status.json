@@ -181,7 +181,9 @@
     },
     "TP16": {
       "active": true,
-      "name": "Topaz 16"
+      "name": "Topaz 16",
+      "grounded": true,
+      "reason": "Epoxy on port rudder needs sanding"
     },
     "_comment_nacra": "Nacra F18",
     "F181": {
