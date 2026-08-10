@@ -84,7 +84,9 @@
     },
     "LZ04": {
       "active": true,
-      "name": "Laser 54"
+      "name": "Laser 54",
+      "grounded": true,
+      "reason": "Took lots of water "
     },
     "LZ05": {
       "active": true,
