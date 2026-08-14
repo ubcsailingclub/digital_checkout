@@ -73,7 +73,7 @@
     "LZ02": {
       "active": true,
       "name": "Laser 50",
-      "grounded": true,
+      "grounded": false,
       "reason": "Big leak at bow"
     },
     "LZ03": {
@@ -171,8 +171,8 @@
     "HB04": {
       "active": true,
       "name": "Other Blueberry",
-      "grounded": false,
-      "reason": "No main halyard"
+      "grounded": true,
+      "reason": "Epoxy dry one day"
     },
     "_comment_topaz": "Topaz",
     "TP14": {
