@@ -68,7 +68,9 @@
     "_comment_laser": "Laser",
     "LZ01": {
       "active": true,
-      "name": "Laser 51"
+      "name": "Laser 51",
+      "grounded": true,
+      "reason": "epoxy & sealant at screw. allow 1 day to dry."
     },
     "LZ02": {
       "active": true,
@@ -85,8 +87,8 @@
     "LZ04": {
       "active": true,
       "name": "Laser 54",
-      "grounded": false,
-      "reason": "Took lots of water "
+      "grounded": true,
+      "reason": "epoxy & sealant at screw. allow 1 day to dry."
     },
     "LZ05": {
       "active": true,
