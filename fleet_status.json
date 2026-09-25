@@ -69,7 +69,7 @@
     "LZ01": {
       "active": true,
       "name": "Laser 51",
-      "grounded": true,
+      "grounded": false,
       "reason": "epoxy & sealant at screw. allow 1 day to dry."
     },
     "LZ02": {
@@ -87,7 +87,7 @@
     "LZ04": {
       "active": true,
       "name": "Laser 54",
-      "grounded": true,
+      "grounded": false,
       "reason": "epoxy & sealant at screw. allow 1 day to dry."
     },
     "LZ05": {
