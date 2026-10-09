@@ -1,6 +1,6 @@
 {
-  "fleet_grounded": false,
-  "fleet_ground_reason": "Test",
+  "fleet_grounded": true,
+  "fleet_ground_reason": "High wind, L3 follow windsurfing wind limits ",
   "classes": {},
   "craft": {
     "_comment_quest": "Quest",
