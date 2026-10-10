@@ -1,5 +1,5 @@
 {
-  "fleet_grounded": true,
+  "fleet_grounded": false,
   "fleet_ground_reason": "High wind, L3 follow windsurfing wind limits ",
   "classes": {},
   "craft": {
