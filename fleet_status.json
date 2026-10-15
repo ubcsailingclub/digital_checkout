@@ -201,12 +201,14 @@
       "reason": "Dismasted while changing job halyard system."
     },
     "F183": {
-      "active": true,
-      "name": "Moneysink"
+      "active": false,
+      "name": "Moneysink",
+      "grounded": false
     },
     "F184": {
-      "active": true,
-      "name": "Spinbreaker"
+      "active": false,
+      "name": "Spinbreaker",
+      "grounded": false
     },
     "_comment_ws_l1": "Windsurfer L1",
     "WL101": {
