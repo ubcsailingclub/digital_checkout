@@ -203,12 +203,14 @@
     "F183": {
       "active": false,
       "name": "Moneysink",
-      "grounded": false
+      "grounded": false,
+      "reason": "sold"
     },
     "F184": {
       "active": false,
       "name": "Spinbreaker",
-      "grounded": false
+      "grounded": false,
+      "reason": "sold"
     },
     "_comment_ws_l1": "Windsurfer L1",
     "WL101": {
