@@ -291,6 +291,10 @@ private fun NotebookPanel(
     val today   = LocalDate.now()
     val entries = groupByDate(recentSessions)
 
+    val context      = LocalContext.current
+    val prefs        = remember { KioskPreferences(context) }
+    var waConfigured by remember { mutableStateOf(prefs.isWaConfigured) }
+
     var showAdminDialog  by remember { mutableStateOf(false) }
     var showAdminMenu    by remember { mutableStateOf(false) }
     var showSyncSettings by remember { mutableStateOf(false) }
@@ -331,7 +335,7 @@ private fun NotebookPanel(
         DbViewerDialog(onDismiss = { showDbViewer = false })
     }
     if (showSyncSettings) {
-        SyncSettingsDialog(onDismiss = { showSyncSettings = false })
+        SyncSettingsDialog(onDismiss = { showSyncSettings = false; waConfigured = prefs.isWaConfigured })
     }
 
     Box(modifier.background(PaperBg)) {
@@ -421,6 +425,24 @@ private fun NotebookPanel(
                         }
                     }
                     HorizontalDivider(color = PaperRule, thickness = 1.dp)
+                }
+            }
+
+            // ── Setup banner (shown only when WA is not yet configured) ───
+            if (!waConfigured) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFB45309))
+                        .clickable { showSyncSettings = true }
+                        .padding(horizontal = 12.dp, vertical = 10.dp)
+                ) {
+                    Text(
+                        "⚙  Wild Apricot not configured — tap to set up",
+                        color      = Color.White,
+                        fontSize   = 14.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
 
