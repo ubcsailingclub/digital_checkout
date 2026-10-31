@@ -3,7 +3,6 @@ package com.ubcsc.checkout.data
 import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
-import com.ubcsc.checkout.BuildConfig
 
 /**
  * Encrypted storage for sensitive configuration:
@@ -35,8 +34,13 @@ class KioskPreferences(context: Context) {
 
     /** Deployed Google Apps Script web app URL for logging checkouts to Google Sheets */
     var sheetsScriptUrl: String
-        get() = prefs.getString(KEY_SHEETS_SCRIPT_URL, BuildConfig.SHEETS_SCRIPT_URL) ?: BuildConfig.SHEETS_SCRIPT_URL
+        get() = prefs.getString(KEY_SHEETS_SCRIPT_URL, "") ?: ""
         set(v) = prefs.edit().putString(KEY_SHEETS_SCRIPT_URL, v.trim()).apply()
+
+    /** Admin code for the long-press admin menu — set on first install by MainActivity */
+    var adminCode: String
+        get() = prefs.getString(KEY_ADMIN_CODE, "") ?: ""
+        set(v) = prefs.edit().putString(KEY_ADMIN_CODE, v).apply()
 
     /** Persisted app theme name — see AppTheme enum */
     var appTheme: String
@@ -52,6 +56,7 @@ class KioskPreferences(context: Context) {
         const val KEY_WA_ACCOUNT_ID      = "wa_account_id"
         const val KEY_PI_SYNC_URL        = "pi_sync_url"
         const val KEY_SHEETS_SCRIPT_URL  = "sheets_script_url"
+        const val KEY_ADMIN_CODE         = "admin_code"
         const val KEY_APP_THEME          = "app_theme"
     }
 }

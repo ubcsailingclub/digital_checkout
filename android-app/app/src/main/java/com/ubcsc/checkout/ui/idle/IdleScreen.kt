@@ -751,8 +751,10 @@ private fun NameSearchField(
 
 @Composable
 private fun AdminCodeDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
-    var code     by remember { mutableStateOf("") }
-    var hasError by remember { mutableStateOf(false) }
+    val context   = LocalContext.current
+    val prefs     = remember { KioskPreferences(context) }
+    var code      by remember { mutableStateOf("") }
+    var hasError  by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -788,7 +790,7 @@ private fun AdminCodeDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
         },
         confirmButton = {
             TextButton(onClick = {
-                if (code == BuildConfig.ADMIN_CODE) onSuccess()
+                if (code == prefs.adminCode) onSuccess()
                 else { hasError = true; code = "" }
             }) { Text("Unlock", color = LocalKioskColors.current.accent) }
         },
