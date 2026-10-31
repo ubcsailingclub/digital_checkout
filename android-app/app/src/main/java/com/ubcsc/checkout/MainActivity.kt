@@ -99,7 +99,7 @@ class MainActivity : ComponentActivity() {
 
         // Set a default admin code on first install; admin should change it via Admin → Settings
         com.ubcsc.checkout.data.KioskPreferences(this).apply {
-            if (adminCode.isBlank()) adminCode = "1234"
+            if (adminCode.isBlank()) adminCode = "parley"
         }
 
         // Schedule hourly member + fleet sync
