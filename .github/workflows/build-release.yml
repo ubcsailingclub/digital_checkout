@@ -22,13 +22,8 @@ jobs:
         run: |
           cat > android-app/local.properties << 'EOF'
           sdk.dir=/usr/local/lib/android/sdk
-          api.baseUrl=http://unused/api/v1/
-          api.kioskKey=${{ secrets.KIOSK_API_KEY }}
-          admin.code=${{ secrets.ADMIN_CODE }}
-          wa.apiKey=${{ secrets.WA_API_KEY }}
-          wa.accountId=${{ secrets.WA_ACCOUNT_ID }}
-          fleet.piUrl=
-          sheets.scriptUrl=${{ secrets.SHEETS_SCRIPT_URL }}
+          api.baseUrl=
+          api.kioskKey=
           EOF
 
       - name: Build release APK
