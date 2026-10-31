@@ -1027,6 +1027,7 @@ private fun SyncSettingsDialog(onDismiss: () -> Unit) {
     // "idle" | "queued"
     var syncStatus  by remember { mutableStateOf("idle") }
     var showQrScan  by remember { mutableStateOf(false) }
+    var qrScanned   by remember { mutableStateOf(false) }
 
     if (showQrScan) {
         QrScanDialog(
@@ -1036,6 +1037,7 @@ private fun SyncSettingsDialog(onDismiss: () -> Unit) {
                 if (sheetsUrl.isNotBlank())  sheetsScriptUrl = sheetsUrl
                 if (adminCd.isNotBlank())    prefs.adminCode = adminCd
                 showQrScan = false
+                qrScanned  = true
             },
             onDismiss = { showQrScan = false }
         )
@@ -1058,10 +1060,18 @@ private fun SyncSettingsDialog(onDismiss: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Button(
-                    onClick  = { showQrScan = true },
+                    onClick  = { showQrScan = true; qrScanned = false },
                     modifier = Modifier.fillMaxWidth(),
                     colors   = ButtonDefaults.buttonColors(containerColor = LocalKioskColors.current.accentMid)
-                ) { Text("Scan QR Code") }
+                ) { Text(if (qrScanned) "Scan Again" else "Scan QR Code") }
+
+                if (qrScanned) {
+                    Text(
+                        "✓  Credentials loaded — tap Save & Sync Now",
+                        color = Color(0xFF4ADE80),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
 
                 HorizontalDivider(color = LocalKioskColors.current.textWarm.copy(alpha = 0.15f))
 
