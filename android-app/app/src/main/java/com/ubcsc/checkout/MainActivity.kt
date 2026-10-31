@@ -97,11 +97,9 @@ class MainActivity : ComponentActivity() {
 
         hideSystemBars()
 
-        // Pre-load credentials from build config on first install (if not already set)
+        // Set a default admin code on first install; admin should change it via Admin → Settings
         com.ubcsc.checkout.data.KioskPreferences(this).apply {
-            if (waApiKey.isBlank()    && BuildConfig.WA_API_KEY.isNotBlank())    waApiKey    = BuildConfig.WA_API_KEY
-            if (waAccountId.isBlank() && BuildConfig.WA_ACCOUNT_ID.isNotBlank()) waAccountId = BuildConfig.WA_ACCOUNT_ID
-            if (piSyncUrl.isBlank()   && BuildConfig.PI_SYNC_URL.isNotBlank())   piSyncUrl   = BuildConfig.PI_SYNC_URL
+            if (adminCode.isBlank()) adminCode = "1234"
         }
 
         // Schedule hourly member + fleet sync

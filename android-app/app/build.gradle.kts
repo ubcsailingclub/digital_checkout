@@ -24,20 +24,10 @@ android {
         versionCode = (findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
         versionName = (findProperty("versionCode") as String?) ?: "dev"
 
-        buildConfigField("String", "API_BASE_URL",
-            "\"${localProps["api.baseUrl"] ?: "http://10.0.2.2:8000/api/v1/"}\"")
-        buildConfigField("String", "KIOSK_API_KEY",
-            "\"${localProps["api.kioskKey"] ?: ""}\"")
-        buildConfigField("String", "ADMIN_CODE",
-            "\"${localProps["admin.code"] ?: "1234"}\"")
-        buildConfigField("String", "WA_API_KEY",
-            "\"${localProps["wa.apiKey"] ?: ""}\"")
-        buildConfigField("String", "WA_ACCOUNT_ID",
-            "\"${localProps["wa.accountId"] ?: ""}\"")
-        buildConfigField("String", "PI_SYNC_URL",
-            "\"${localProps["fleet.piUrl"] ?: ""}\"")
-        buildConfigField("String", "SHEETS_SCRIPT_URL",
-            "\"${localProps["sheets.scriptUrl"] ?: ""}\"")
+        // Dead-code stubs — kept only so the legacy ApiClient/SyncWorker Pi path still compiles.
+        // All real credentials live in EncryptedSharedPreferences (KioskPreferences), not here.
+        buildConfigField("String", "API_BASE_URL",  "\"\"")
+        buildConfigField("String", "KIOSK_API_KEY", "\"\"")
     }
 
     buildTypes {
