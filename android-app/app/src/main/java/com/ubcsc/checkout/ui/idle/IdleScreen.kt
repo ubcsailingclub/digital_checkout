@@ -73,6 +73,7 @@ import com.ubcsc.checkout.MainActivity
 import com.ubcsc.checkout.data.KioskPreferences
 import com.ubcsc.checkout.sync.SyncWorker
 import com.ubcsc.checkout.ui.admin.DbViewerDialog
+import com.ubcsc.checkout.ui.admin.QrScanDialog
 import com.ubcsc.checkout.ui.theme.DeepOcean
 import com.ubcsc.checkout.ui.theme.DigitalCheckoutTheme
 import com.ubcsc.checkout.ui.theme.AppTheme
@@ -1025,6 +1026,20 @@ private fun SyncSettingsDialog(onDismiss: () -> Unit) {
 
     // "idle" | "queued"
     var syncStatus  by remember { mutableStateOf("idle") }
+    var showQrScan  by remember { mutableStateOf(false) }
+
+    if (showQrScan) {
+        QrScanDialog(
+            onResult = { apiKey, accountId, sheetsUrl, adminCd ->
+                if (apiKey.isNotBlank())     waApiKey        = apiKey
+                if (accountId.isNotBlank())  waAccountId     = accountId
+                if (sheetsUrl.isNotBlank())  sheetsScriptUrl = sheetsUrl
+                if (adminCd.isNotBlank())    prefs.adminCode = adminCd
+                showQrScan = false
+            },
+            onDismiss = { showQrScan = false }
+        )
+    }
 
     val fieldColors = OutlinedTextFieldDefaults.colors(
         focusedBorderColor   = LocalKioskColors.current.accentMid,
@@ -1042,6 +1057,14 @@ private fun SyncSettingsDialog(onDismiss: () -> Unit) {
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                Button(
+                    onClick  = { showQrScan = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors   = ButtonDefaults.buttonColors(containerColor = LocalKioskColors.current.accentMid)
+                ) { Text("Scan QR Code") }
+
+                HorizontalDivider(color = LocalKioskColors.current.textWarm.copy(alpha = 0.15f))
+
                 Text("Wild Apricot", color = LocalKioskColors.current.accent, style = MaterialTheme.typography.labelMedium)
                 OutlinedTextField(
                     value         = waApiKey,
